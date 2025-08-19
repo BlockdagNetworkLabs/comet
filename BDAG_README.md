@@ -517,3 +517,45 @@ bytes memory callData = data; // signature already in data
 **Why**: Governance proposals already include function signatures in data, simplifying execution.
 
 **Impact**: Standard timelock separates signature from data, custom timelock expects complete encoded calls.
+
+
+
+## Reconfigure Comet
+
+Comet has a **critical restriction** on reconfiguring markets:
+
+```solidity
+if (oldConfiguration.baseToken != address(0) &&
+    (oldConfiguration.baseToken != newConfiguration.baseToken ||
+     oldConfiguration.trackingIndexScale != newConfiguration.trackingIndexScale))
+    revert ConfigurationAlreadyExists();
+```
+
+### Rules
+
+**✅ Allowed**: Keep base token AND tracking index scale the same
+- Asset configurations, collateral factors, supply caps, price feeds
+
+**❌ Blocked**: Change base token OR tracking index scale
+- Base token changes (USDC → DAI)
+- Tracking index scale changes (1e18 → 1e6)
+
+### Tracking Index Scale
+
+Precision multiplier for calculations:
+```solidity
+1e18  // 18 decimals (WETH)
+1e6   // 6 decimals (USDC)
+1e8   // 8 decimals (WBTC)
+```
+
+### Examples
+
+**✅ Works**: Same base token + scale, different assets
+**❌ Fails**: Different base token or scale
+
+### Why
+
+Prevents breaking user balances and accounting errors.
+
+**Impact**: Proposals must match existing base token and tracking index scale.
