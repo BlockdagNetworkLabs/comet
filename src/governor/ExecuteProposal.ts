@@ -34,8 +34,8 @@ export default async function executeProposal(hre: HardhatRuntimeEnvironment, pr
   try {
     const result = await executeCometProposal(deploymentManager, proposalId);
     
-    trace(`✅ Proposal ${proposalId} executed successfully!`);
-    trace(`   Transaction hash: ${result.tx.transactionHash}`);
+    console.log(`✅ Proposal ${proposalId} executed successfully!`);
+    console.log(`   Transaction hash: ${result.tx.transactionHash}`);
     
     return result;
   } catch (error) {

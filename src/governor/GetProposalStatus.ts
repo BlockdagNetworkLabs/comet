@@ -32,12 +32,12 @@ export default async function getProposalStatus(hre: HardhatRuntimeEnvironment, 
   try {
     const result = await getProposalStatusInternal(deploymentManager, proposalId);
     
-    trace(`📊 Proposal ${proposalId} Status:`);
-    trace(`   State: ${result.state}`);
-    trace(`   Proposer: ${result.proposal.proposer}`);
-    trace(`   ETA: ${result.proposal.eta}`);
-    trace(`   Canceled: ${result.proposal.canceled}`);
-    trace(`   Executed: ${result.proposal.executed}`);
+    console.log(`📊 Proposal ${proposalId} Status:`);
+    console.log(`   State: ${result.state}`);
+    console.log(`   Proposer: ${result.proposal.proposer}`);
+    console.log(`   ETA: ${result.proposal.eta}`);
+    console.log(`   Canceled: ${result.proposal.canceled}`);
+    console.log(`   Executed: ${result.proposal.executed}`);
     
     return result;
   } catch (error) {

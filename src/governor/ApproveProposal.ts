@@ -39,9 +39,9 @@ export default async function approveProposal(hre: HardhatRuntimeEnvironment, pr
   try {
     const result = await approveCometProposal(deploymentManager, proposalId);
     
-    trace(`✅ Proposal ${proposalId} approved successfully!`);
-    trace(`   Proposal state: ${result.state}`);
-    trace(`   Transaction hash: ${result.tx.transactionHash}`);
+    console.log(`✅ Proposal ${proposalId} approved successfully!`);
+    console.log(`   Proposal state: ${result.state}`);
+    console.log(`   Transaction hash: ${result.tx.transactionHash}`);
     
     return result;
   } catch (error) {

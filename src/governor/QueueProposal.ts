@@ -34,8 +34,8 @@ export default async function queueProposal(hre: HardhatRuntimeEnvironment, prop
   try {
     const result = await queueCometProposal(deploymentManager, proposalId);
     
-    trace(`✅ Proposal ${proposalId} queued successfully!`);
-    trace(`   Transaction hash: ${result.tx.transactionHash}`);
+    console.log(`✅ Proposal ${proposalId} queued successfully!`);
+    console.log(`   Transaction hash: ${result.tx.transactionHash}`);
     
     return result;
   } catch (error) {
