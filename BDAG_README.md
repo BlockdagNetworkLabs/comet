@@ -497,3 +497,23 @@ yarn hardhat deploy --deployment dai
 - **Flexible Control**: Can override with `--bdag` flag
 - **Clear Logging**: Shows which governor is being used
 - **Backward Compatible**: Maintains existing functionality
+
+
+
+## Custom Timelock
+
+The **Custom Timelock** modifies signature handling in `executeTransaction()`:
+
+**Original**: Appends signature to data
+```solidity
+callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
+```
+
+**Custom**: Uses data directly (signature pre-encoded)
+```solidity
+bytes memory callData = data; // signature already in data
+```
+
+**Why**: Governance proposals already include function signatures in data, simplifying execution.
+
+**Impact**: Standard timelock separates signature from data, custom timelock expects complete encoded calls.
