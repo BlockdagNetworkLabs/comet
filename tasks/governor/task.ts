@@ -4,6 +4,7 @@ import approveProposal from "../../src/governor/ApproveProposal";
 import queueProposal from "../../src/governor/QueueProposal";
 import executeProposal from "../../src/governor/ExecuteProposal";
 import getProposalStatus from "../../src/governor/GetProposalStatus";
+import proposeCometUpgradeTask from "../../src/governor/ProposeCometUpgrade";
 
 // Helper function to create deployment manager
 async function createDeploymentManager(hre: any, deployment: string) {
@@ -111,6 +112,27 @@ task("governor:status", "Check proposal status")
       return result;
     } catch (error) {
       console.error(`❌ Failed to check proposal ${proposalId}:`, error);
+      throw error;
+    }
+  });
+
+// Task to propose Comet upgrade
+task("governor:propose-upgrade", "Propose a Comet implementation upgrade")
+  .addParam("implementation", "The new implementation address")
+  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .setAction(async (taskArgs, hre) => {
+    // Create deployment manager
+    await createDeploymentManager(hre, taskArgs.deployment);
+    
+    const newImplementationAddress = taskArgs.implementation;
+    
+    console.log(`Proposing Comet upgrade to ${newImplementationAddress}...`);
+    
+    try {
+      const result = await proposeCometUpgradeTask(hre, newImplementationAddress);
+      return result;
+    } catch (error) {
+      console.error(`❌ Failed to propose Comet upgrade:`, error);
       throw error;
     }
   }); 
