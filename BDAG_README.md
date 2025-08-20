@@ -344,6 +344,12 @@ yarn hardhat governor:propose-upgrade --network local --deployment dai --impleme
 # 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2  
 # 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2
 # 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2
+
+**4. Update Root Configuration:**
+```bash
+# After the upgrade is completed, run the spider tool to populate root.json
+yarn hardhat spider --network local --deployment dai
+```
 ```
 
 ### 1. Command Line Execution
