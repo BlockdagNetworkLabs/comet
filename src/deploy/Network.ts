@@ -396,7 +396,7 @@ async function createBDAGGov(
   };
   
   const fauceteer = await deploymentManager.deploy('fauceteer', 'test/Fauceteer.sol', []);
-  const timelock = await deploymentManager.deploy('timelock', 'CustomTimelock.sol', [admin.address]);
+  const timelock = await deploymentManager.deploy('timelock', 'test/SimpleTimelock.sol', [admin.address]);
   
   const COMP = await deploymentManager.clone('COMP', clone.comp, [admin.address]);
 
