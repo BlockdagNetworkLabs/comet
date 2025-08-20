@@ -309,7 +309,42 @@ export default async function deploy(
 
 ## Understanding execution flow
 
-When you run `yarn hardhat deploy --network hardhat --deployment dai`, here's exactly what happens:
+When you run the deployment commands, here's exactly what happens:
+
+**1. Deploy Infrastructure:**
+```bash
+DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
+```
+*Note: If you're deploying DAI, you need to configure DAI configuration accordingly (price feeds, etc.)*
+
+**2. Deploy Deployment:**
+```bash
+DEBUG=* yarn hardhat deploy --network local --deployment dai --bdag
+```
+
+**3. Governance Flow:**
+```bash
+# Check proposal status
+yarn hardhat governor:status --network local --proposal-id 1
+
+# Approve proposal
+yarn hardhat governor:approve --network local --proposal-id 1
+
+# Queue proposal
+yarn hardhat governor:queue --network local --proposal-id 1
+
+# Execute proposal
+yarn hardhat governor:execute --network local --proposal-id 1
+
+# Propose upgrade to new implementation (after previous proposal is executed)
+yarn hardhat governor:propose-upgrade --network local --deployment dai --implementation 0x...
+
+# The upgrade proposal will need to go through the same governance flow:
+# 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2
+# 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2  
+# 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2
+# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2
+```
 
 ### 1. Command Line Execution
 ```bash
@@ -500,23 +535,24 @@ yarn hardhat deploy --deployment dai
 
 
 
-## Custom Timelock
+## SimpleTimelock with Governor Integration
 
-The **Custom Timelock** modifies signature handling in `executeTransaction()`:
+The **SimpleTimelock** is used for governance execution, where the **Governor** handles signature encoding:
 
-**Original**: Appends signature to data
+**Governor**: Includes function signature in calldata
 ```solidity
-callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
+// Governor encodes the complete function call including signature
+bytes memory callData = abi.encodeWithSignature("functionName(params)", ...);
 ```
 
-**Custom**: Uses data directly (signature pre-encoded)
+**SimpleTimelock**: Uses pre-encoded calldata directly
 ```solidity
-bytes memory callData = data; // signature already in data
+bytes memory callData = data; // signature already included in data from governor
 ```
 
-**Why**: Governance proposals already include function signatures in data, simplifying execution.
+**Why**: The Governor is responsible for creating properly encoded function calls, so the SimpleTimelock can execute them directly without additional signature handling.
 
-**Impact**: Standard timelock separates signature from data, custom timelock expects complete encoded calls.
+**Impact**: Clean separation of concerns - Governor handles call encoding, SimpleTimelock handles execution timing and authorization.
 
 
 
