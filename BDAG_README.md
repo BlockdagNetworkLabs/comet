@@ -362,10 +362,10 @@ yarn hardhat governor:execute --network local --proposal-id 1 --deployment dai -
 yarn hardhat governor:propose-upgrade --network local --deployment dai --implementation 0x...
 
 # The upgrade proposal will need to go through the same governance flow:
-# 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2
-# 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2  
-# 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2
-# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2 --execution-type comet-upgrade
+# 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2 --deployment dai
+# 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2 --deployment dai
+# 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2 --deployment dai
+# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2 --deployment dai --execution-type comet-upgrade
 
 
 ## Available Execution Types
