@@ -3,6 +3,7 @@ import { Deployed, DeploymentManager } from '../../plugins/deployment_manager';
 import { DeploySpec, ProtocolConfiguration, wait, COMP_WHALES } from './index';
 import { getConfiguration } from './NetworkConfiguration';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { extractProposalIdFromLogs } from './helpers';
 
 export function sameAddress(a: string, b: string) {
   return BigInt(a) === BigInt(b);
@@ -664,7 +665,14 @@ async function proposeCometImpl(
   
   const receipt = await tx.wait();
   trace(`Proposal submitted! Transaction hash: ${receipt.transactionHash}`);
-  trace(`Proposal ID: ${await governorContract.proposalCount()}`);
+  
+  // Extract proposal ID from ProposalCreated event
+  const proposalId = extractProposalIdFromLogs(governorContract, receipt);
+  if (proposalId !== null) {
+    trace(`Proposal ID: ${proposalId}`);
+  } else {
+    trace(`Warning: Could not find ProposalCreated event in logs`);
+  }
 
   return { proposal: proposalData, configurator, cometProxy, cometFactory, tx: receipt };
 }

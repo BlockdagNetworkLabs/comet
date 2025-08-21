@@ -9,13 +9,8 @@ async function proposeCometUpgradeAction(
   adminSigner?: SignerWithAddress
 ): Promise<any> {
   const admin = adminSigner ?? await deploymentManager.getSigner();
-  const trace = deploymentManager.tracer();
-  
-  trace(`Proposing Comet upgrade to implementation ${newImplementationAddress} by admin ${admin.address}`);
-  
+
   const result = await proposeCometUpgrade(deploymentManager, newImplementationAddress, admin);
-  
-  trace(`Comet upgrade proposal submitted! Proposal ID: ${await result.governor.proposalCount()}`);
   
   return result;
 }
@@ -37,7 +32,7 @@ export default async function proposeCometUpgradeTask(
     const result = await proposeCometUpgradeAction(deploymentManager, newImplementationAddress);
     
     console.log(`✅ Comet upgrade proposal submitted successfully!`);
-    console.log(`   Proposal ID: ${await result.governor.proposalCount()}`);
+    console.log(`   Proposal ID: ${await result.proposalId}`);
     console.log(`   New implementation: ${result.newImplementation}`);
     console.log(`   Transaction hash: ${result.tx.transactionHash}`);
     console.log(`   Description: ${result.description}`);
