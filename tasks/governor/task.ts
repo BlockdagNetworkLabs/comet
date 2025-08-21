@@ -20,13 +20,6 @@ async function createDeploymentManager(hre: any, deployment: string) {
   );
   await dm.spider();
   
-  // Load infrastructure contracts (governor, timelock, etc.)
-  const infrastructureSpider = await dm.spiderOther(network, '_infrastructure');
-
-  for (const [alias, contract] of infrastructureSpider.contracts) {
-    await dm.putAlias(alias, contract);
-  }
-  
   // Attach deployment manager to hre
   (hre as any).deploymentManager = dm;
   return dm;
@@ -124,9 +117,10 @@ task("governor:propose-upgrade", "Propose a Comet implementation upgrade")
   .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
-    await createDeploymentManager(hre, taskArgs.deployment);
-    
+    const deployment = taskArgs.deployment;
     const newImplementationAddress = taskArgs.implementation;
+
+    await createDeploymentManager(hre, deployment);
     
     console.log(`Proposing Comet upgrade to ${newImplementationAddress}...`);
     
