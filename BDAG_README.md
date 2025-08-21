@@ -501,6 +501,12 @@ yarn hardhat governor:propose-upgrade --network local --deployment dai --impleme
 
 ```
 
+**4. Test deployment** 
+
+```bash
+export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
+```
+
 ## Available Execution Types
 
 The `--execution-type` parameter determines which logs to extract and analyze during proposal execution.
