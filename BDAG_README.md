@@ -325,19 +325,16 @@ DEBUG=* yarn hardhat deploy --network local --deployment dai --bdag
 **3. Governance Flow:**
 ```bash
 # Check proposal status
-yarn hardhat governor:status --network local --proposal-id 1
+yarn hardhat governor:status --network local --proposal-id 1 --deployment dai
 
 # Approve proposal
-yarn hardhat governor:approve --network local --proposal-id 1
+yarn hardhat governor:approve --network local --proposal-id 1 --deployment dai
 
 # Queue proposal
-yarn hardhat governor:queue --network local --proposal-id 1
-
-# Execute proposal
-yarn hardhat governor:execute --network local --proposal-id 1
+yarn hardhat governor:queue --network local --proposal-id 1 --deployment dai
 
 # Execute proposal with specific execution type for log parsing
-yarn hardhat governor:execute --network local --proposal-id 1 --execution-type comet-impl-in-configuration
+yarn hardhat governor:execute --network local --proposal-id 1 --deployment dai --execution-type comet-impl-in-configuration
 
 
 **You will see output like this:**

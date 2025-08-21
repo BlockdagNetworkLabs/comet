@@ -2,6 +2,22 @@ import baseRelationConfig from '../../relations';
 
 export default {
   ...baseRelationConfig,
+  // Override governor to use UUPS storage slot
+  governor: {
+    artifact: 'contracts/IProxy.sol:IProxy',
+    delegates: {
+      field: {
+        slot: '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc', // UUPS implementation slot
+      }
+    },
+    relations: {
+      COMP: {
+        field: async (governor) => {
+          return governor.comp();
+        },
+      }
+    }
+  },
   // Override rewards relation to handle infrastructure deployment (no comet yet)
   rewards: {
     relations: {
@@ -12,8 +28,8 @@ export default {
           if (!comet || comet.length === 0) {
             return null;
           }
-          const rewardToken = (await rewards.rewardConfig(comet[0].address)).token;
-          return rewardToken !== '0x0000000000000000000000000000000000000000' ? rewardToken : null;
+          const rewardConfig = await rewards.rewardConfig(comet[0].address);
+          return !rewardConfig ? null : rewardConfig.token;
         },
         alias: async (token) => token.symbol(),
       },

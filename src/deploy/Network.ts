@@ -445,11 +445,13 @@ async function deployBDAGNetworkComet(
   adminSigner?: SignerWithAddress,
 ): Promise<Deployed> {
   //TODO: proxy and comet ext if they dont exist
-  await deployOrRetrieveCometProxy(deploymentManager, deploySpec, configOverrides, withAssetList, adminSigner);
   await deployOrRetrieveCometExt(deploymentManager, deploySpec, configOverrides, withAssetList, adminSigner);
+  await deployOrRetrieveCometProxy(deploymentManager, deploySpec, configOverrides, withAssetList, adminSigner);
   await proposeCometImpl(deploymentManager, deploySpec, configOverrides, withAssetList, adminSigner);
-  const comet = await deploymentManager.getContractOrThrow('comet');
-  return { comet };
+  
+  const contracts = await deploymentManager.contracts();
+  const deployed = Object.fromEntries(contracts);
+  return {...deployed};
 }
 
 async function deployOrRetrieveCometProxy(
@@ -472,6 +474,7 @@ async function deployOrRetrieveCometProxy(
   /* Deploy contracts */
 
   const cometAdmin = await deploymentManager.getContractOrThrow('cometAdmin');
+  const cometExtension = await deploymentManager.getContractOrThrow('comet:implementation:implementation');
 
   const {
     governor,
@@ -485,11 +488,13 @@ async function deployOrRetrieveCometProxy(
     'comet:implementation',
     'Comet.sol',
     [{
-      governor: governor,
-      pauseGuardian: "0x0000000000000000000000000000000000000000",
+      //Configured values
+      governor,
       baseToken,
       baseTokenPriceFeed,
-      extensionDelegate: "0x0000000000000000000000000000000000000000",
+      extensionDelegate: cometExtension.address,
+      //Default values
+      pauseGuardian: "0x0000000000000000000000000000000000000000",
       supplyKink: 0,
       supplyPerYearInterestRateSlopeLow: 0,
       supplyPerYearInterestRateSlopeHigh: 0,
