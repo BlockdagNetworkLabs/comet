@@ -35,7 +35,7 @@ async function createDeploymentManager(hre: any, deployment: string) {
 // Task to approve a proposal
 task("governor:approve", "Approve a proposal")
   .addParam("proposalId", "The proposal ID to approve")
-  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
     await createDeploymentManager(hre, taskArgs.deployment);
@@ -56,7 +56,7 @@ task("governor:approve", "Approve a proposal")
 // Task to queue a proposal
 task("governor:queue", "Queue a proposal")
   .addParam("proposalId", "The proposal ID to queue")
-  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
     await createDeploymentManager(hre, taskArgs.deployment);
@@ -77,17 +77,19 @@ task("governor:queue", "Queue a proposal")
 // Task to execute a proposal
 task("governor:execute", "Execute a proposal")
   .addParam("proposalId", "The proposal ID to execute")
-  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .addParam("executionType", "The execution type (comet-impl-in-configuration, comet-upgrade)")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
-    // Create deployment manager
+
     await createDeploymentManager(hre, taskArgs.deployment);
     
     const proposalId = parseInt(taskArgs.proposalId);
+    const executionType = taskArgs.executionType;
     
-    console.log(`Executing proposal ${proposalId}...`);
+    console.log(`Executing proposal ${proposalId} with execution type: ${executionType}...`);
     
     try {
-      const result = await executeProposal(hre, proposalId);
+      const result = await executeProposal(hre, proposalId, executionType);
       return result;
     } catch (error) {
       console.error(`❌ Failed to execute proposal ${proposalId}:`, error);
@@ -98,7 +100,7 @@ task("governor:execute", "Execute a proposal")
 // Task to check proposal status
 task("governor:status", "Check proposal status")
   .addParam("proposalId", "The proposal ID to check")
-  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
     await createDeploymentManager(hre, taskArgs.deployment);
@@ -119,7 +121,7 @@ task("governor:status", "Check proposal status")
 // Task to propose Comet upgrade
 task("governor:propose-upgrade", "Propose a Comet implementation upgrade")
   .addParam("implementation", "The new implementation address")
-  .addOptionalParam("deployment", "The deployment to use", "dai")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
     await createDeploymentManager(hre, taskArgs.deployment);

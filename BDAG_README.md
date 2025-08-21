@@ -336,6 +336,31 @@ yarn hardhat governor:queue --network local --proposal-id 1
 # Execute proposal
 yarn hardhat governor:execute --network local --proposal-id 1
 
+# Execute proposal with specific execution type for log parsing
+yarn hardhat governor:execute --network local --proposal-id 1 --execution-type comet-impl-in-configuration
+
+
+**You will see output like this:**
+```
+✅ Proposal 1 executed successfully!
+   Transaction hash: 0x...
+📋 Extracted Logs:
+{
+  "txHash": "0x...",
+  "blockNumber": 123,
+  "logsCount": 5,
+  "executionType": "comet-impl-in-configuration",
+  "parsedLogs": {
+    "cometDeployed": {
+      "cometProxy": "0x67d269191c92Caf3cD7723F116c85e6E9bf55933",
+      "newComet": "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
+      "eventName": "CometDeployed"
+    }
+  }
+}
+```
+**Important**: The `newComet` value is the implementation address that will be used in the next step.
+
 # Propose upgrade to new implementation (after previous proposal is executed)
 yarn hardhat governor:propose-upgrade --network local --deployment dai --implementation 0x...
 
@@ -343,7 +368,15 @@ yarn hardhat governor:propose-upgrade --network local --deployment dai --impleme
 # 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2
 # 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2  
 # 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2
-# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2
+# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2 --execution-type comet-upgrade
+
+
+## Available Execution Types
+
+The `--execution-type` parameter determines which logs to extract and analyze during proposal execution:
+
+- **`comet-impl-in-configuration`**
+- **`comet-upgrade`**
 
 **4. Update Root Configuration:**
 ```bash
