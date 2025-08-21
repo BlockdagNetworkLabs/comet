@@ -223,165 +223,6 @@ yarn hardhat deploy --bdag --network local --deployment dai
 
 When you run `yarn hardhat deploy --deployment dai`, the system automatically finds and executes the correct deployment script. Here's how this works:
 
-### Deployment Script Resolution
-
-The deployment system uses a **path-based resolution** to find the right deployment script:
-
-1. **Command Line Parameters**: `--deployment dai` specifies which market to deploy
-2. **Network Context**: `--network hardhat` determines the blockchain network
-3. **Path Construction**: System builds path: `deployments/{network}/{deployment}/deploy.ts`
-4. **Script Execution**: The found script is imported and executed
-
-### Example Path Resolution
-
-```bash
-# Command
-yarn hardhat deploy --network hardhat --deployment dai
-
-# Resolves to script path
-deployments/hardhat/dai/deploy.ts
-```
-
-### How the System Finds Your Script
-
-The DeploymentManager creates a Cache object with the network and deployment parameters, which handles all path resolution:
-
-```typescript
-// 1. DeploymentManager constructor creates Cache
-const dm = new DeploymentManager(
-  network,        // 'hardhat'
-  deployment,     // 'dai'
-  env,
-  config
-);
-
-// 2. Cache constructor stores network and deployment
-this.cache = new Cache(
-  this.network,    // 'hardhat'
-  this.deployment, // 'dai'
-  config.writeCacheToDisk ?? false,
-  config.baseDir
-);
-
-// 3. Cache.getFilePath() uses stored network/deployment to build path
-const deployScript = this.cache.getFilePath({ rel: 'deploy.ts' });
-// Returns: deployments/hardhat/dai/deploy.ts
-
-// 4. Import and execute the deployment script
-const { default: deployFn } = await import(deployScript);
-// Imports the default export from your deploy.ts file
-
-const deployed = await deployFn(this, deploySpec);
-// Executes your deployment function
-```
-
-### Deployment Script Structure
-
-Each deployment script follows this standard pattern:
-
-```typescript
-// deployments/hardhat/dai/deploy.ts
-import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
-import { DeploySpec, deployComet } from '../../../src/deploy';
-
-export default async function deploy(
-  deploymentManager: DeploymentManager, 
-  deploySpec: DeploySpec
-): Promise<Deployed> {
-  // Your deployment logic here
-  const DAI = await makeToken(/* params */);
-  const deployed = await deployComet(deploymentManager, deploySpec, {
-    baseTokenPriceFeed: daiPriceFeed.address,
-    assetConfigs: [/* configs */],
-  });
-  
-  return deployed;
-}
-```
-
-### Key Benefits
-
-- **Automatic Discovery**: No need to specify script paths manually
-- **Network Isolation**: Each network has its own deployment scripts
-- **Market Separation**: Different markets (DAI, USDC, WETH) have separate scripts
-- **Consistent Interface**: All deployment scripts follow the same pattern
-- **Easy Testing**: Can test different markets by changing the `--deployment` parameter
-
-## Understanding execution flow
-
-When you run the deployment commands, here's exactly what happens:
-
-**1. Deploy Infrastructure:**
-```bash
-DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
-```
-*Note: If you're deploying DAI, you need to configure DAI configuration accordingly (price feeds, etc.)*
-
-**2. Deploy Deployment:**
-```bash
-DEBUG=* yarn hardhat deploy --network local --deployment dai --bdag
-```
-
-**3. Governance Flow:**
-```bash
-# Check proposal status
-yarn hardhat governor:status --network local --proposal-id 1 --deployment dai
-
-# Approve proposal
-yarn hardhat governor:approve --network local --proposal-id 1 --deployment dai
-
-# Queue proposal
-yarn hardhat governor:queue --network local --proposal-id 1 --deployment dai
-
-# Execute proposal with specific execution type for log parsing
-yarn hardhat governor:execute --network local --proposal-id 1 --deployment dai --execution-type comet-impl-in-configuration
-
-
-**You will see output like this:**
-```
-✅ Proposal 1 executed successfully!
-   Transaction hash: 0x...
-📋 Extracted Logs:
-{
-  "txHash": "0x...",
-  "blockNumber": 123,
-  "logsCount": 5,
-  "executionType": "comet-impl-in-configuration",
-  "parsedLogs": {
-    "cometDeployed": {
-      "cometProxy": "0x67d269191c92Caf3cD7723F116c85e6E9bf55933",
-      "newComet": "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
-      "eventName": "CometDeployed"
-    }
-  }
-}
-```
-**Important**: The `newComet` value is the implementation address that will be used in the next step.
-
-# Propose upgrade to new implementation (after previous proposal is executed)
-yarn hardhat governor:propose-upgrade --network local --deployment dai --implementation 0x...
-
-# The upgrade proposal will need to go through the same governance flow:
-# 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2 --deployment dai
-# 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2 --deployment dai
-# 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2 --deployment dai
-# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2 --deployment dai --execution-type comet-upgrade
-
-
-## Available Execution Types
-
-The `--execution-type` parameter determines which logs to extract and analyze during proposal execution:
-
-- **`comet-impl-in-configuration`**
-- **`comet-upgrade`**
-
-**4. Update Root Configuration:**
-```bash
-# After the upgrade is completed, run the spider tool to populate root.json
-yarn hardhat spider --network local --deployment dai
-```
-```
-
 ### 1. Command Line Execution
 ```bash
 yarn hardhat deploy --network hardhat --deployment dai
@@ -508,6 +349,163 @@ This execution flow ensures that:
 - **Dependencies are resolved** automatically
 - **Deployment is idempotent** (can be run multiple times safely)
 
+### Deployment Script Resolution
+
+The deployment system uses a **path-based resolution** to find the right deployment script:
+
+1. **Command Line Parameters**: `--deployment dai` specifies which market to deploy
+2. **Network Context**: `--network hardhat` determines the blockchain network
+3. **Path Construction**: System builds path: `deployments/{network}/{deployment}/deploy.ts`
+4. **Script Execution**: The found script is imported and executed
+
+### Example Path Resolution
+
+```bash
+# Command
+yarn hardhat deploy --network hardhat --deployment dai
+
+# Resolves to script path
+deployments/hardhat/dai/deploy.ts
+```
+
+### How the System Finds Your Script
+
+The DeploymentManager creates a Cache object with the network and deployment parameters, which handles all path resolution:
+
+```typescript
+// 1. DeploymentManager constructor creates Cache
+const dm = new DeploymentManager(
+  network,        // 'hardhat'
+  deployment,     // 'dai'
+  env,
+  config
+);
+
+// 2. Cache constructor stores network and deployment
+this.cache = new Cache(
+  this.network,    // 'hardhat'
+  this.deployment, // 'dai'
+  config.writeCacheToDisk ?? false,
+  config.baseDir
+);
+
+// 3. Cache.getFilePath() uses stored network/deployment to build path
+const deployScript = this.cache.getFilePath({ rel: 'deploy.ts' });
+// Returns: deployments/hardhat/dai/deploy.ts
+
+// 4. Import and execute the deployment script
+const { default: deployFn } = await import(deployScript);
+// Imports the default export from your deploy.ts file
+
+const deployed = await deployFn(this, deploySpec);
+// Executes your deployment function
+```
+
+### Deployment Script Structure
+
+Each deployment script follows this standard pattern:
+
+```typescript
+// deployments/hardhat/dai/deploy.ts
+import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
+import { DeploySpec, deployComet } from '../../../src/deploy';
+
+export default async function deploy(
+  deploymentManager: DeploymentManager, 
+  deploySpec: DeploySpec
+): Promise<Deployed> {
+  // Your deployment logic here
+  const DAI = await makeToken(/* params */);
+  const deployed = await deployComet(deploymentManager, deploySpec, {
+    baseTokenPriceFeed: daiPriceFeed.address,
+    assetConfigs: [/* configs */],
+  });
+  
+  return deployed;
+}
+```
+
+### Key Benefits
+
+- **Automatic Discovery**: No need to specify script paths manually
+- **Network Isolation**: Each network has its own deployment scripts
+- **Market Separation**: Different markets (DAI, USDC, WETH) have separate scripts
+- **Consistent Interface**: All deployment scripts follow the same pattern
+- **Easy Testing**: Can test different markets by changing the `--deployment` parameter
+
+## Understanding execution flow
+
+When you run the deployment commands, here's exactly what happens:
+
+**1. Deploy Infrastructure:**
+```bash
+DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
+```
+*Note: If you're deploying DAI, you need to configure DAI configuration accordingly (price feeds, etc.)*
+
+**2. Deploy Market:**
+```bash
+DEBUG=* yarn hardhat deploy --network local --deployment dai --bdag
+```
+
+**3. Governance Flow:**
+```bash
+# Check proposal status
+yarn hardhat governor:status --network local --proposal-id 1 --deployment dai
+
+# Approve proposal
+yarn hardhat governor:approve --network local --proposal-id 1 --deployment dai
+
+# Queue proposal
+yarn hardhat governor:queue --network local --proposal-id 1 --deployment dai
+
+# Execute proposal with specific execution type for log parsing
+yarn hardhat governor:execute --network local --proposal-id 1 --deployment dai --execution-type comet-impl-in-configuration
+```
+
+**You will see output like this:**
+
+✅ Proposal 1 executed successfully!
+   Transaction hash: 0x...
+📋 Extracted Logs:
+{
+  "txHash": "0x...",
+  "blockNumber": 123,
+  "logsCount": 5,
+  "executionType": "comet-impl-in-configuration",
+  "parsedLogs": {
+    "cometDeployed": {
+      "cometProxy": "0x67d269191c92Caf3cD7723F116c85e6E9bf55933",
+      "newComet": "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
+      "eventName": "CometDeployed"
+    }
+  }
+}
+
+```bash
+**Important**: The `newComet` value is the implementation address that will be used in the next step.
+
+# Propose upgrade to new implementation (after previous proposal is executed)
+
+yarn hardhat governor:propose-upgrade --network local --deployment dai --implementation 0x...
+
+# The upgrade proposal will need to go through the same governance flow:
+# 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 2 --deployment dai
+# 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 2 --deployment dai
+# 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 2 --deployment dai
+# 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 2 --deployment dai --execution-type comet-upgrade
+# 5. Refresh roots: yarn hardhat spider --network local --deployment dai
+
+
+**Note**: If you do things correct, you will get an error when running spider indicating that the implementation does not match. Update aliases.json comet:implementation address and run spider again.
+
+```
+
+## Available Execution Types
+
+The `--execution-type` parameter determines which logs to extract and analyze during proposal execution.
+
+Possible values `comet-impl-in-configuration` |`comet-upgrade`
 
 
 ## Custom Governor Implementation
