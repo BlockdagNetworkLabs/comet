@@ -27,6 +27,11 @@ export default async function executeProposal(hre: HardhatRuntimeEnvironment, pr
       // Log the extracted logs
       console.log('\n📋 Extracted Logs:');
       console.log(JSON.stringify(extractedLogs, null, 2));
+      
+      // Run spider to update roots.json
+      console.log('\n🕷️  Running spider to update roots.json...');
+      await deploymentManager.spider();
+      console.log('✅ Spider completed - roots.json updated!');
     }
     
     return result;
