@@ -439,7 +439,7 @@ When you run the deployment commands, here's exactly what happens:
 
 **1. Deploy Infrastructure:**
 ```bash
-DEBUG=* yarn hardhat deploy_infrastructure --network local --deployment dai --bdag
+DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
 ```
 *Note: If you're deploying DAI, you need to configure DAI configuration accordingly (price feeds, etc.)*
 
