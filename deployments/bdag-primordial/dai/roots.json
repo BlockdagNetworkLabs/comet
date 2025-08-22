@@ -22,6 +22,6 @@
     "linkPriceFeed": "0x04ff304A4240eEe8D156dB1665B8b16C69607aF5",
     "uniPriceFeed": "0x0921052687813D05E10f0027c059e7Dd01Dd7e47",
     "comet:implementation:implementation": "0x82c4Fc83426F4559A9BDA365dD6A3C435925Dd84",
-    "comet:implementation": "0x210AbeD277BD9ACA9be57668Dea6f1687D469142",
+    "comet:implementation": "0xA28AC86159037E624D001ce14E131145Cf2cb45a",
     "comet": "0x3629Aa1D9F360430a44db7BCB9478Be751E1Fc17"
 }
