@@ -550,7 +550,7 @@ When you run the deployment commands, here's exactly what happens:
 ```bash
 DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
 ```
-*Note: If you're deploying DAI, you need to configure DAI configuration accordingly (price feeds, etc.)*
+*Note: Dont forget to configure the [market]/configuration.json accordingly (price feeds, etc.)*
 
 **2. Deploy Market:**
 ```bash
@@ -564,6 +564,8 @@ yarn hardhat governor:status --network local --proposal-id 1 --deployment dai
 
 # Approve proposal
 yarn hardhat governor:approve --network local --proposal-id 1 --deployment dai
+
+# Note: The amount of approvements will depend on the threshold the governor has
 
 # Queue proposal
 yarn hardhat governor:queue --network local --proposal-id 1 --deployment dai
@@ -716,6 +718,9 @@ yarn hardhat deploy --deployment dai
 - **Clear Logging**: Shows which governor is being used
 - **Backward Compatible**: Maintains existing functionality
 
+### Why Custom Governor uses UUPS
+
+**Security Argument**: UUPS was chosen over Transparent Proxy because in Transparent Proxy we would need to choose a proxyAdmin owner, and there is no other admin that can govern the governor. If an EOA controls the proxy admin, all future security would be compromised. UUPS ensures the governor contract itself manages upgrades, maintaining security regardless of who controls the proxy admin.
 
 
 ## SimpleTimelock with Governor Integration
