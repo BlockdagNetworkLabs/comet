@@ -39,8 +39,7 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
   const cometAdmin = await deploymentManager.deploy(
     'cometAdmin',
     'CometProxyAdmin.sol',
-    [],
-    deploySpec.all
+    []
   );
 
   // Deploy Configurator implementation
@@ -48,7 +47,6 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
     'configurator:implementation',
     'Configurator.sol',
     [],
-    deploySpec.all
   );
 
   // Deploy Configurator proxy
@@ -59,8 +57,7 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
       configuratorImpl.address, 
       cometAdmin.address, 
       (await configuratorImpl.populateTransaction.initialize(timelock.address)).data
-    ],
-    deploySpec.all
+    ]
   );
 
 
@@ -69,7 +66,6 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
     'cometFactory',
     'CometFactory.sol',
     [],
-    deploySpec.all
   );
 
   // Deploy CometRewards (shared across all Comet instances)
@@ -77,7 +73,6 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
     'rewards',
     'CometRewards.sol',
     [timelock.address],
-    deploySpec.all
   );
 
   // Transfer cometAdmin ownership to timelock
