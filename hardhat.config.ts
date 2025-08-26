@@ -625,13 +625,11 @@ const config: HardhatUserConfig = {
         name: 'bdag-primordial-dai',
         network: 'bdag-primordial',
         deployment: 'dai',
-        auxiliaryBase: 'mainnet'
       },
       {
         name: 'local-dai',
         network: 'local',
         deployment: 'dai',
-        auxiliaryBase: 'mainnet'
       },
     ],
   },

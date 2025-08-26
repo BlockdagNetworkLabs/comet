@@ -173,27 +173,9 @@ Each deployment requires a `RelationConfigMap` that defines:
 - `deployments/relations.market.ts` - Market-specific relations
 - `deployments/relations.infra.ts` - Infrastructure-specific relations
 
-### Auxiliary Base Networks
-
-The `auxiliaryBase` parameter specifies which network to use as a **source for contract cloning**. This is crucial for governance contracts and tokens that need to be cloned from existing deployments.
-
-#### What is Auxiliary Base?
-
-```typescript
-// In hardhat.config.ts scenario configuration
-{
-  name: 'bdag-primordial-dai',
-  network: 'bdag-primordial',
-  deployment: 'dai',
-  auxiliaryBase: 'mainnet'  // ← This network provides source contracts
-}
-```
-
-**Purpose**: When deploying to a new network, you often need to clone existing contracts (like governance tokens, price feeds, or other verified contracts) from a trusted source network.
-
 #### Cloning Mechanism
 
-The cloning process uses the `auxiliaryBase` network to fetch contract bytecode and data:
+The cloning process to fetch contract bytecode and data:
 
 ```typescript
 // From src/deploy/Network.ts
@@ -213,7 +195,7 @@ const COMP = await deploymentManager.clone('COMP', clone.comp, [admin.address]);
 - **Constructor Arguments**: Initial parameters (if any)
 - **Verification Data**: For block explorer verification
 
-#### Benefits of Auxiliary Base
+#### Benefits
 
 1. **Security**: Use audited, verified contracts from trusted networks
 2. **Consistency**: Ensure governance tokens and contracts behave identically
@@ -227,7 +209,6 @@ When setting up a new network, you must configure:
 1. **Network Entry**: Add network to `networkConfigs` array
 2. **Deployment Manager**: Add network to `deploymentManager.networks`
 3. **Relation Configs**: Create network-specific relation configuration files
-4. **Scenario Configuration**: Add scenario with appropriate `auxiliaryBase`
 
 ## Testing Market on Specific Blockchain
 
