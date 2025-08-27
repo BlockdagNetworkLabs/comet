@@ -525,7 +525,74 @@ export default async function deploy(
 
 ## Understanding execution flow
 
-When you run the deployment commands, here's exactly what happens:
+**🎯 Automated Solution**: We have created an automated script that handles the entire deployment and upgrade process. You can skip the manual steps below and use our script instead.
+
+### **Automated Deployment Script**
+
+We've created a comprehensive deployment script that automates the entire process:
+
+#### **Script Location:**
+```
+scripts/deploy-market/
+├── index.ts    # TypeScript deployment script
+└── index.sh    # Shell wrapper script
+```
+
+#### **Usage Examples:**
+
+**TypeScript Script:**
+```bash
+# Deploy DAI market on local network with BDAG governor
+yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --bdag
+
+# Deploy USDC market on polygon network
+yarn ts-node scripts/deploy-market/index.ts --network polygon --deployment usdc
+
+# Deploy with clean cache (fresh deployment)
+yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --clean
+```
+
+**Shell Script (Simpler):**
+```bash
+# Deploy DAI market on local network with BDAG governor
+./scripts/deploy-market/index.sh -n local -d dai -b
+
+# Deploy USDC market on polygon network
+./scripts/deploy-market/index.sh -n polygon -d usdc
+
+# Deploy with clean cache
+./scripts/deploy-market/index.sh -n local -d dai -c
+```
+
+#### **What the Script Automates:**
+
+✅ **Infrastructure Deployment** - Deploys governance contracts  
+✅ **Configuration Updates** - Prompts for market configuration  
+✅ **Market Deployment** - Deploys the Comet market  
+✅ **Governance Flow** - Handles proposal approval, queueing, and execution  
+✅ **Upgrade Process** - Manages implementation upgrades  
+✅ **Verification Testing** - Runs deployment verification tests  
+✅ **Spider Integration** - Handles root refreshing with retry logic  
+
+#### **Market Upgrades:**
+
+**For market upgrades, simply run the same script again:**
+```bash
+# The script will detect existing deployment and handle upgrades
+yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --bdag
+```
+
+The script automatically:
+- Detects if infrastructure already exists
+- Prompts for new implementation addresses
+- Handles upgrade proposal governance
+- Manages spider retries for implementation mismatches
+
+---
+
+### **Manual Execution (Step-by-Step)**
+
+If you prefer to run the process manually, here's exactly what happens:
 
 **1. Deploy Infrastructure:**
 ```bash
