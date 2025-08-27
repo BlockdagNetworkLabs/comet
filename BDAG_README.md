@@ -527,6 +527,8 @@ export default async function deploy(
 
 **🎯 Automated Solution**: We have created an automated script that handles the entire deployment and upgrade process. You can skip the manual steps below and use our script instead.
 
+**⚠️ Important Note**: These scripts are designed to work when the deployer is the only admin in the governor and the timelock delay is set to 0. This script is ideal for initial deployments and development phases before the governance system is configured for production use with multiple admins and security delays.
+
 ### **Automated Deployment Script**
 
 We've created a comprehensive deployment script that automates the entire process:
