@@ -24,7 +24,7 @@
     "linkPriceFeed": "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44",
     "uniPriceFeed": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
     "comet:implementation:implementation": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
-    "comet:implementation": "0xe082b26cEf079a095147F35c9647eC97c2401B83",
+    "comet:implementation": "0x788F1E4a99fa704Edb43fAE71946cFFDDcC16ccB",
     "comet": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
     "cometExt": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
     "DAI:priceFeed": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
