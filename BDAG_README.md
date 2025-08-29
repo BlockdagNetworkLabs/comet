@@ -549,7 +549,7 @@ yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --c
 **Shell Script (Simpler):**
 ```bash
 # Deploy DAI market on local network with BDAG governor
-./scripts/deploy-market/index.sh -n local -d dai -b
+./scripts/deploy-market/index.sh -n local -d dai
 
 # Deploy USDC market on polygon network
 ./scripts/deploy-market/index.sh -n polygon -d usdc
@@ -573,7 +573,7 @@ yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --c
 **For market upgrades, simply run the same script again:**
 ```bash
 # The script will detect existing deployment and handle upgrades
-yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai --bdag
+yarn ts-node scripts/deploy-market/index.ts --network local --deployment dai
 ```
 
 The script automatically:
@@ -715,8 +715,20 @@ yarn hardhat governor:propose-upgrade --network local --deployment dai --impleme
 ```bash
 export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
 ```
-**5. Mint tokens to CometReward**
-   **Note**: This step is only required if you need to distribute reward tokens to users. The CometReward contract manages the distribution of COMP tokens to users based on their supply/borrow activity. A `mint-rewards` task WILL be created in governor: `governor:fund-comet-rewards`. 
+**5. Fund CometRewards with COMP tokens**
+   **Note**: This step is only required if you need to distribute reward tokens to users. The CometRewards contract manages the distribution of COMP tokens to users based on their supply/borrow activity. Use the `governor:fund-comet-rewards` task to create a governance proposal that transfers COMP tokens from the timelock to the CometRewards contract.
+
+   **Usage:**
+   ```bash
+   # Propose to fund CometRewards with 1000 COMP tokens (amount in wei)
+   yarn hardhat governor:fund-comet-rewards --network local --amount 1000000000000000000000
+
+   # The proposal will need to go through the same governance flow:
+   # 1. Check proposal status: yarn hardhat governor:status --network local --proposal-id 3
+   # 2. Approve proposal: yarn hardhat governor:approve --network local --proposal-id 3
+   # 3. Queue proposal: yarn hardhat governor:queue --network local --proposal-id 3
+   # 4. Execute proposal: yarn hardhat governor:execute --network local --proposal-id 3 --execution-type comet-reward-funding
+   ``` 
 
 ## Deployment Caching and BlockDAG Networks
 
@@ -726,7 +738,7 @@ The deployment system uses caching to avoid re-deploying existing contracts. For
 
 The `--execution-type` parameter determines which logs to extract and analyze during proposal execution.
 
-Possible values `comet-impl-in-configuration` |`comet-upgrade`
+Possible values `comet-impl-in-configuration` | `comet-upgrade` | `comet-funding`
 
 
 ## Custom Governor Implementation
