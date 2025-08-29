@@ -190,7 +190,7 @@ describe('Deployment Verification', function () {
     expect(implementation).to.not.equal(comet.address);
   });
 
-  it('should have governor holding total COMP supply', async function () {
+  it('should have timelock holding total COMP supply', async function () {
     const { timelock, COMP } = deployedContracts;
     
     // Get total supply of COMP tokens
