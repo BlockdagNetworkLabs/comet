@@ -10,10 +10,9 @@ import fundCometRewardsTask from "../../src/governor/FundCometRewards";
 // Helper function to create deployment manager
 async function createDeploymentManager(hre: any, deployment?: string) {
   const network = hre.network.name;
-  const deploymentName = deployment || '_infrastructure';
   const dm = new DeploymentManager(
     network,
-    deploymentName,
+    deployment ?? '_infrastructure',
     hre,
     {
       writeCacheToDisk: true,
@@ -30,10 +29,9 @@ async function createDeploymentManager(hre: any, deployment?: string) {
 // Task to approve a proposal
 task("governor:approve", "Approve a proposal")
   .addParam("proposalId", "The proposal ID to approve")
-  .addOptionalParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
-    await createDeploymentManager(hre, taskArgs.deployment);
+    await createDeploymentManager(hre);
     
     const proposalId = parseInt(taskArgs.proposalId);
     
@@ -51,10 +49,9 @@ task("governor:approve", "Approve a proposal")
 // Task to queue a proposal
 task("governor:queue", "Queue a proposal")
   .addParam("proposalId", "The proposal ID to queue")
-  .addOptionalParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
-    await createDeploymentManager(hre, taskArgs.deployment);
+    await createDeploymentManager(hre);
     
     const proposalId = parseInt(taskArgs.proposalId);
     
@@ -73,10 +70,9 @@ task("governor:queue", "Queue a proposal")
 task("governor:execute", "Execute a proposal")
   .addParam("proposalId", "The proposal ID to execute")
   .addParam("executionType", "The execution type (comet-impl-in-configuration, comet-upgrade)")
-  .addOptionalParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
 
-    await createDeploymentManager(hre, taskArgs.deployment);
+    await createDeploymentManager(hre);
     
     const proposalId = parseInt(taskArgs.proposalId);
     const executionType = taskArgs.executionType;
@@ -95,10 +91,9 @@ task("governor:execute", "Execute a proposal")
 // Task to check proposal status
 task("governor:status", "Check proposal status")
   .addParam("proposalId", "The proposal ID to check")
-  .addOptionalParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
-    await createDeploymentManager(hre, taskArgs.deployment);
+    await createDeploymentManager(hre);
     
     const proposalId = parseInt(taskArgs.proposalId);
     
@@ -116,12 +111,12 @@ task("governor:status", "Check proposal status")
 // Task to propose Comet upgrade
 task("governor:propose-upgrade", "Propose a Comet implementation upgrade")
   .addParam("implementation", "The new implementation address")
-  .addOptionalParam("deployment", "The deployment to use")
+  .addParam("deployment", "The deployment to use")
   .setAction(async (taskArgs, hre) => {
     // Create deployment manager
-    const deployment = taskArgs.deployment;
     const newImplementationAddress = taskArgs.implementation;
-
+    const deployment = taskArgs.deployment;
+    
     await createDeploymentManager(hre, deployment);
     
     console.log(`Proposing Comet upgrade to ${newImplementationAddress}...`);
@@ -139,7 +134,6 @@ task("governor:propose-upgrade", "Propose a Comet implementation upgrade")
 task("governor:fund-comet-rewards", "Propose to fund CometRewards contract with COMP tokens")
   .addParam("amount", "The amount of COMP tokens to transfer (in wei, e.g., '1000000000000000000000' for 1000 COMP)")
   .setAction(async (taskArgs, hre) => {
-    // Create deployment manager for infrastructure
     const amount = taskArgs.amount;
 
     await createDeploymentManager(hre);
