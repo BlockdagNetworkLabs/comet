@@ -33,7 +33,7 @@ print_error() {
 show_help() {
     echo -e "${BLUE}🧪 Test Market Script Wrapper${NC}"
     echo ""
-    echo "Usage: ./scripts/governor/test-market/index.sh [options]"
+    echo "Usage: ./scripts/governor/test-market-setup/index.sh [options]"
     echo ""
     echo "Options:"
     echo "  -n, --network <network>                    Network to use (required)"
@@ -43,13 +43,13 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  # Test DAI market implementation on local network (will prompt for address)"
-    echo "  ./scripts/governor/test-market/index.sh -n local -d dai"
+    echo "  ./scripts/governor/test-market-setup/index.sh -n local -d dai"
     echo ""
     echo "  # Test USDC market implementation with specific address"
-    echo "  ./scripts/governor/test-market/index.sh -n polygon -d usdc -i 0x1234567890123456789012345678901234567890"
+    echo "  ./scripts/governor/test-market-setup/index.sh -n polygon -d usdc -i 0x1234567890123456789012345678901234567890"
     echo ""
     echo "  # Test WETH market implementation on mainnet (skip implementation update)"
-    echo "  ./scripts/governor/test-market/index.sh -n mainnet -d weth"
+    echo "  ./scripts/governor/test-market-setup/index.sh -n mainnet -d weth"
     echo ""
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
@@ -143,12 +143,12 @@ main() {
     print_info "Executing market test script..."
     
     if [[ -n "$IMPLEMENTATION" ]]; then
-        yarn ts-node scripts/governor/test-market/index.ts \
+        yarn ts-node scripts/governor/test-market-setup/index.ts \
             --network "$NETWORK" \
             --deployment "$DEPLOYMENT" \
             --implementation "$IMPLEMENTATION"
     else
-        yarn ts-node scripts/governor/test-market/index.ts \
+        yarn ts-node scripts/governor/test-market-setup/index.ts \
             --network "$NETWORK" \
             --deployment "$DEPLOYMENT"
     fi

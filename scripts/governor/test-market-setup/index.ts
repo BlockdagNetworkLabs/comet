@@ -140,7 +140,7 @@ function showHelp(): void {
   console.log(`
 🧪 Test Market Script
 
-Usage: yarn ts-node scripts/governor/test-market/index.ts [options]
+Usage: yarn ts-node scripts/governor/test-market-setup/index.ts [options]
 
 Options:
   --network <network>                    Network to use (required)
@@ -151,13 +151,13 @@ Options:
 
 Examples:
   # Test DAI market implementation on local network (will prompt for address)
-  yarn ts-node scripts/governor/test-market/index.ts --network local --deployment dai
+  yarn ts-node scripts/governor/test-market-setup/index.ts --network local --deployment dai
 
   # Test USDC market implementation with specific address
-  yarn ts-node scripts/governor/test-market/index.ts --network polygon --deployment usdc --implementation 0x1234567890123456789012345678901234567890
+  yarn ts-node scripts/governor/test-market-setup/index.ts --network polygon --deployment usdc --implementation 0x1234567890123456789012345678901234567890
 
   # Test WETH market implementation on mainnet (skip implementation update)
-  yarn ts-node scripts/governor/test-market/index.ts --network mainnet --deployment weth
+  yarn ts-node scripts/governor/test-market-setup/index.ts --network mainnet --deployment weth
 
 Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc.
 Available markets: dai, usdc, usdt, weth, wbtc, etc.
