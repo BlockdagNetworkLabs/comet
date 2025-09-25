@@ -3,7 +3,16 @@ import { DeploymentManager } from '../../plugins/deployment_manager';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'ethers';
 
-export default async function executeProposal(hre: HardhatRuntimeEnvironment, proposalId: number, executionType: string) {
+// Define execution types as a union type for better type safety
+export type ExecutionType = 
+  | 'comet-impl-in-configuration'
+  | 'comet-upgrade'
+  | 'governance-config'
+  | 'combined-governance-update'
+  | 'timelock-delay-change'
+  | 'comet-reward-funding';
+
+export default async function executeProposal(hre: HardhatRuntimeEnvironment, proposalId: number, executionType: ExecutionType) {
   if (proposalId === undefined || proposalId === null) {
     throw new Error('Proposal ID is required');
   }
@@ -11,7 +20,7 @@ export default async function executeProposal(hre: HardhatRuntimeEnvironment, pr
   const deploymentManager = (hre as any).deploymentManager;
   const trace = deploymentManager.tracer();
   
-  trace(`Executing proposal ${proposalId} with execution type: ${executionType || 'default'}...`);
+  trace(`Executing proposal ${proposalId} with execution type: ${executionType}...`);
   
   try {
     const result = await executeCometProposal(deploymentManager, proposalId);
@@ -65,7 +74,7 @@ async function executeCometProposal(
 async function extractLogsFromTransaction(
   deploymentManager: DeploymentManager,
   txHash: string,
-  executionType?: string
+  executionType?: ExecutionType
 ): Promise<any> {
   const provider = deploymentManager.hre.ethers.provider;
   const trace = deploymentManager.tracer();
@@ -123,6 +132,20 @@ async function extractLogsFromTransaction(
       case 'timelock-delay-change': {
         trace('Parsing logs for timelock delay change execution...');
         const newDelayData = extractNewDelayEvent(receipt, trace);
+        if (newDelayData) {
+          extractedLogs.parsedLogs.newDelay = newDelayData;
+        }
+        break;
+      }
+      case 'combined-governance-update': {
+        trace('Parsing logs for combined governance update execution...');
+        // Extract both governance configuration and timelock delay change events
+        const governanceConfigData = extractGovernanceConfigEvent(receipt, trace);
+        const newDelayData = extractNewDelayEvent(receipt, trace);
+        
+        if (governanceConfigData) {
+          extractedLogs.parsedLogs.governanceConfig = governanceConfigData;
+        }
         if (newDelayData) {
           extractedLogs.parsedLogs.newDelay = newDelayData;
         }

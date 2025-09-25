@@ -75,7 +75,7 @@ task('governor:queue', 'Queue a proposal')
 // Task to execute a proposal
 task('governor:execute', 'Execute a proposal')
   .addParam('proposalId', 'The proposal ID to execute')
-  .addParam('executionType', 'The execution type (comet-impl-in-configuration, comet-upgrade, governance-config)')
+  .addParam('executionType', 'The execution type')
   .setAction(async (taskArgs, hre) => {
     const proposalId = parseInt(taskArgs.proposalId);
     const executionType = taskArgs.executionType;
@@ -340,6 +340,7 @@ task('governor:execute-batch-proposal', 'Execute a batch proposal from the propo
     try {
       // Execute the proposal
       const result = await proposalManager.executeProposal();
+      await proposalManager.clearProposalStack();
       
       console.log(`✅ Batch proposal executed successfully!`);
       console.log(`📋 Proposal ID: ${result.proposalId}`);
