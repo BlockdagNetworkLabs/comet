@@ -340,7 +340,6 @@ task('governor:execute-batch-proposal', 'Execute a batch proposal from the propo
     try {
       // Execute the proposal
       const result = await proposalManager.executeProposal();
-      await proposalManager.clearProposalStack();
       
       console.log(`✅ Batch proposal executed successfully!`);
       console.log(`📋 Proposal ID: ${result.proposalId}`);

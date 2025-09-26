@@ -206,6 +206,8 @@ export class ProposalManager {
     
     // Extract proposal ID from logs
     const proposalId = extractProposalIdFromLogs(governor, receipt);
+
+    await this.clearProposalStack();
     
     return {
       proposalId: proposalId?.toString() || 'unknown',
