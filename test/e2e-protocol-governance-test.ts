@@ -8,79 +8,97 @@ import { Deployed } from '../plugins/deployment_manager';
 import relationConfigMap from '../deployments/relations';
 
 // Configuration
-const TEMPLATE_NAME = '_template-1';
 const NETWORK_NAME = 'e2e-network';
+const TEMPLATES = ['_template-1'];
 
-describe('E2E Protocol Governance Test', function () {
-  let deploymentManager: DeploymentManager;
-  let deployedContracts: Deployed;
-  let templatePath: string;
-  let e2ePath: string;
+describe('E2E Protocol Governance Test Suite', function () {
+  // Run tests for each template
+  TEMPLATES.forEach(templateName => {
+    describe(`Template: ${templateName}`, function () {
+      let deploymentManager: DeploymentManager;
+      let deployedContracts: Deployed;
+      let templatePath: string;
+      let e2ePath: string;
 
-  before(async function () {
-    // Set up paths using NETWORK_NAME variable
-    templatePath = path.join(__dirname, '../deployments', NETWORK_NAME, TEMPLATE_NAME);
-    e2ePath = path.join(__dirname, '../deployments', NETWORK_NAME);
+      before(async function () {
+        // Set up paths using NETWORK_NAME variable
+        templatePath = path.join(__dirname, '../deployments', NETWORK_NAME, templateName);
+        e2ePath = path.join(__dirname, '../deployments', NETWORK_NAME);
 
-    console.log('📁 Copying template files to e2e root...');
-    console.log(`Template path: ${templatePath}`);
-    console.log(`E2E path: ${e2ePath}`);
+        console.log(`📁 Copying ${templateName} files to e2e root...`);
+        console.log(`Template path: ${templatePath}`);
+        console.log(`E2E path: ${e2ePath}`);
 
-    // Copy template files to e2e root
-    await copyDirectory(templatePath, e2ePath, [TEMPLATE_NAME]);
+        // Copy template files to e2e root
+        await copyDirectory(templatePath, e2ePath, [templateName]);
 
-    // Setup relation configs for e2e-network
-    await setupRelationConfigs(e2ePath);
+        // Setup relation configs for e2e-network
+        await setupRelationConfigs(e2ePath, templateName);
 
-    // Initialize deployment manager
-    deploymentManager = new DeploymentManager(NETWORK_NAME, NETWORK_NAME, hre, {
-      writeCacheToDisk: false,
-      importRetries: 0,
+        // Initialize deployment manager
+        deploymentManager = new DeploymentManager(NETWORK_NAME, NETWORK_NAME, hre, {
+          writeCacheToDisk: false,
+          importRetries: 0,
+        });
+
+        console.log(`✅ ${templateName} files copied and relation configs loaded successfully`);
+      });
+
+      after(async function () {
+        // Clean up copied files for this template
+        console.log(`🧹 Cleaning up ${templateName} files...`);
+        await cleanupCopiedFiles(templateName);
+        console.log(`✅ ${templateName} cleanup completed`);
+      });
+
+      it('should have copied template files', async function () {
+        // Verify that the template files were copied
+        const infrastructurePath = path.join(e2ePath, '_infrastructure');
+        const daiPath = path.join(e2ePath, 'dai');
+        const usdcPath = path.join(e2ePath, 'usdc');
+
+        expect(fs.existsSync(infrastructurePath)).to.be.true;
+        expect(fs.existsSync(daiPath)).to.be.true;
+        expect(fs.existsSync(usdcPath)).to.be.true;
+
+        // Verify specific files exist
+        expect(fs.existsSync(path.join(infrastructurePath, 'deploy.ts'))).to.be.true;
+        expect(fs.existsSync(path.join(infrastructurePath, 'relations.ts'))).to.be.true;
+        expect(fs.existsSync(path.join(daiPath, 'deploy.ts'))).to.be.true;
+        expect(fs.existsSync(path.join(usdcPath, 'deploy.ts'))).to.be.true;
+
+        console.log(`✅ ${templateName} files verification passed`);
+      });
+
+      it('should have relation config available', async function () {
+        // Verify that relation config is available for e2e-network
+        expect(hre.config.deploymentManager).to.not.be.undefined;
+        expect(hre.config.deploymentManager.networks[NETWORK_NAME]).to.not.be.undefined;
+        expect(hre.config.deploymentManager.networks[NETWORK_NAME]._infrastructure).to.not.be.undefined;
+        expect(hre.config.deploymentManager.networks[NETWORK_NAME].dai).to.not.be.undefined;
+        expect(hre.config.deploymentManager.networks[NETWORK_NAME].usdc).to.not.be.undefined;
+
+        console.log(`✅ ${templateName} relation config verification passed`);
+      });
+
+      // Add template-specific tests here
+      it('should deploy infrastructure successfully', async function () {
+        // This test will be specific to each template
+        console.log(`🚀 Testing infrastructure deployment for ${templateName}`);
+        // Add your deployment logic here
+      });
+
+      it('should deploy markets successfully', async function () {
+        // This test will be specific to each template
+        console.log(`🚀 Testing market deployment for ${templateName}`);
+        // Add your market deployment logic here
+      });
     });
-
-    console.log('✅ Template files copied and relation configs loaded successfully');
-  });
-
-  after(async function () {
-    // Clean up copied files
-    console.log('🧹 Cleaning up copied files...');
-    await cleanupCopiedFiles();
-    console.log('✅ Cleanup completed');
-  });
-
-  it('should have copied template files', async function () {
-    // Verify that the template files were copied
-    const infrastructurePath = path.join(e2ePath, '_infrastructure');
-    const daiPath = path.join(e2ePath, 'dai');
-    const usdcPath = path.join(e2ePath, 'usdc');
-
-    expect(fs.existsSync(infrastructurePath)).to.be.true;
-    expect(fs.existsSync(daiPath)).to.be.true;
-    expect(fs.existsSync(usdcPath)).to.be.true;
-
-    // Verify specific files exist
-    expect(fs.existsSync(path.join(infrastructurePath, 'deploy.ts'))).to.be.true;
-    expect(fs.existsSync(path.join(infrastructurePath, 'relations.ts'))).to.be.true;
-    expect(fs.existsSync(path.join(daiPath, 'deploy.ts'))).to.be.true;
-    expect(fs.existsSync(path.join(usdcPath, 'deploy.ts'))).to.be.true;
-
-    console.log('✅ Template files verification passed');
-  });
-
-  it('should have relation config available', async function () {
-    // Verify that relation config is available for e2e-network
-    expect(hre.config.deploymentManager).to.not.be.undefined;
-    expect(hre.config.deploymentManager.networks[NETWORK_NAME]).to.not.be.undefined;
-    expect(hre.config.deploymentManager.networks[NETWORK_NAME]._infrastructure).to.not.be.undefined;
-    expect(hre.config.deploymentManager.networks[NETWORK_NAME].dai).to.not.be.undefined;
-    expect(hre.config.deploymentManager.networks[NETWORK_NAME].usdc).to.not.be.undefined;
-
-    console.log('✅ Relation config verification passed');
   });
 });
 
 // Helper function to setup relation configs for e2e-network
-async function setupRelationConfigs(e2ePath: string): Promise<void> {
+async function setupRelationConfigs(e2ePath: string, templateName: string): Promise<void> {
   // Ensure deploymentManager config exists
   if (!hre.config.deploymentManager) {
     hre.config.deploymentManager = { relationConfigMap, networks: {} };
@@ -99,10 +117,10 @@ async function setupRelationConfigs(e2ePath: string): Promise<void> {
       delete require.cache[require.resolve(infrastructureRelationPath)];
       const infrastructureRelationConfig = require(infrastructureRelationPath).default;
       hre.config.deploymentManager.networks[NETWORK_NAME]._infrastructure = infrastructureRelationConfig;
-      console.log('✅ Loaded infrastructure relation config');
+      console.log(`✅ Loaded infrastructure relation config for ${templateName}`);
     }
   } catch (error) {
-    console.warn('Warning: Could not load infrastructure relation config:', error);
+    console.warn(`Warning: Could not load infrastructure relation config for ${templateName}:`, error);
     hre.config.deploymentManager.networks[NETWORK_NAME]._infrastructure = relationConfigMap;
   }
 
@@ -111,8 +129,8 @@ async function setupRelationConfigs(e2ePath: string): Promise<void> {
     const items = await fs.promises.readdir(e2ePath, { withFileTypes: true });
     
     for (const item of items) {
-      // Skip _infrastructure (already loaded) and non-directories
-      if (item.name === '_infrastructure' || !item.isDirectory()) {
+      // Skip _infrastructure (already loaded), template folders, and non-directories
+      if (item.name === '_infrastructure' || item.name.startsWith('_template-') || !item.isDirectory()) {
         continue;
       }
 
@@ -124,19 +142,19 @@ async function setupRelationConfigs(e2ePath: string): Promise<void> {
           delete require.cache[require.resolve(relationPath)];
           const deploymentRelationConfig = require(relationPath).default;
           hre.config.deploymentManager.networks[NETWORK_NAME][deploymentName] = deploymentRelationConfig;
-          console.log(`✅ Loaded ${deploymentName} relation config`);
+          console.log(`✅ Loaded ${deploymentName} relation config for ${templateName}`);
         } catch (error) {
-          console.warn(`Warning: Could not load ${deploymentName} relation config:`, error);
+          console.warn(`Warning: Could not load ${deploymentName} relation config for ${templateName}:`, error);
           // Fallback to base relation config
           hre.config.deploymentManager.networks[NETWORK_NAME][deploymentName] = relationConfigMap;
         }
       } else {
-        console.log(`ℹ️  No relations.ts found for ${deploymentName}, using base relation config`);
+        console.log(`ℹ️  No relations.ts found for ${deploymentName} in ${templateName}, using base relation config`);
         hre.config.deploymentManager.networks[NETWORK_NAME][deploymentName] = relationConfigMap;
       }
     }
   } catch (error) {
-    console.warn('Warning: Could not discover deployment folders:', error);
+    console.warn(`Warning: Could not discover deployment folders for ${templateName}:`, error);
   }
 }
 
@@ -167,15 +185,16 @@ async function copyDirectory(src: string, dest: string, exclude: string[] = []):
 }
 
 // Helper function to clean up copied files
-async function cleanupCopiedFiles(): Promise<void> {
+async function cleanupCopiedFiles(templateName: string): Promise<void> {
   const e2ePath = path.join(__dirname, '../deployments', NETWORK_NAME);
   
   try {
     const items = await fs.promises.readdir(e2ePath, { withFileTypes: true });
     
     for (const item of items) {
-      if (item.name === TEMPLATE_NAME) {
-        continue; // Don't delete the template
+      // Don't delete template folders
+      if (item.name.startsWith('_template-')) {
+        continue;
       }
 
       const itemPath = path.join(e2ePath, item.name);
@@ -187,6 +206,6 @@ async function cleanupCopiedFiles(): Promise<void> {
       }
     }
   } catch (error) {
-    console.warn('Warning: Could not clean up copied files:', error);
+    console.warn(`Warning: Could not clean up copied files for ${templateName}:`, error);
   }
 }
