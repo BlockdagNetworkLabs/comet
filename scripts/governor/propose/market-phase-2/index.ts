@@ -95,7 +95,7 @@ function showHelp(): void {
   console.log(`
 🚀 New Market Upgrade Script
 
-Usage: yarn ts-node scripts/governor/propose/new-market-upgrade/index.ts [options]
+Usage: yarn ts-node scripts/governor/propose/market-phase-2/index.ts [options]
 
 Options:
   --network <network>                    Network to use (required)
@@ -106,13 +106,13 @@ Options:
 
 Examples:
   # Propose upgrade for DAI market on local network
-  yarn ts-node scripts/governor/propose/new-market-upgrade/index.ts --network local --deployment dai --implementation 0x1234567890123456789012345678901234567890
+  yarn ts-node scripts/governor/propose/market-phase-2/index.ts --network local --deployment dai --implementation 0x1234567890123456789012345678901234567890
 
   # Propose upgrade for USDC market on polygon network
-  yarn ts-node scripts/governor/propose/new-market-upgrade/index.ts --network polygon --deployment usdc --implementation 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd
+  yarn ts-node scripts/governor/propose/market-phase-2/index.ts --network polygon --deployment usdc --implementation 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd
 
   # Propose upgrade for WETH market on mainnet
-  yarn ts-node scripts/governor/propose/new-market-upgrade/index.ts --network mainnet --deployment weth --implementation 0x9876543210987654321098765432109876543210
+  yarn ts-node scripts/governor/propose/market-phase-2/index.ts --network mainnet --deployment weth --implementation 0x9876543210987654321098765432109876543210
 
 Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc.
 Available markets: dai, usdc, usdt, weth, wbtc, etc.

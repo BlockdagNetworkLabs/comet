@@ -71,7 +71,7 @@ function showHelp(): void {
   console.log(`
 🚀 New Market Implementation Script
 
-Usage: yarn ts-node scripts/governor/propose/new-market-impl/index.ts [options]
+Usage: yarn ts-node scripts/governor/propose/market-phase-1/index.ts [options]
 
 Options:
   --network <network>           Network to deploy to (required)
@@ -81,13 +81,13 @@ Options:
 
 Examples:
   # Add new DAI market implementation on local network
-  yarn ts-node scripts/governor/propose/new-market-impl/index.ts --network local --deployment dai
+  yarn ts-node scripts/governor/propose/market-phase-1/index.ts --network local --deployment dai
 
   # Add new USDC market implementation on polygon network
-  yarn ts-node scripts/governor/propose/new-market-impl/index.ts --network polygon --deployment usdc
+  yarn ts-node scripts/governor/propose/market-phase-1/index.ts --network polygon --deployment usdc
 
   # Add new WETH market implementation on mainnet
-  yarn ts-node scripts/governor/propose/new-market-impl/index.ts --network mainnet --deployment weth
+  yarn ts-node scripts/governor/propose/market-phase-1/index.ts --network mainnet --deployment weth
 
 Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc.
 Available markets: dai, usdc, usdt, weth, wbtc, etc.

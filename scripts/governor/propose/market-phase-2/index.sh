@@ -33,7 +33,7 @@ print_error() {
 show_help() {
     echo -e "${BLUE}🚀 New Market Upgrade Script Wrapper${NC}"
     echo ""
-    echo "Usage: ./scripts/governor/propose/new-market-upgrade/index.sh [options]"
+    echo "Usage: ./scripts/governor/propose/market-phase-2/index.sh [options]"
     echo ""
     echo "Options:"
     echo "  -n, --network <network>                    Network to use (required)"
@@ -43,13 +43,13 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  # Propose upgrade for DAI market on local network"
-    echo "  ./scripts/governor/propose/new-market-upgrade/index.sh -n local -d dai -i 0x1234567890123456789012345678901234567890"
+    echo "  ./scripts/governor/propose/market-phase-2/index.sh -n local -d dai -i 0x1234567890123456789012345678901234567890"
     echo ""
     echo "  # Propose upgrade for USDC market on polygon network"
-    echo "  ./scripts/governor/propose/new-market-upgrade/index.sh -n polygon -d usdc -i 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    echo "  ./scripts/governor/propose/market-phase-2/index.sh -n polygon -d usdc -i 0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
     echo ""
     echo "  # Propose upgrade for WETH market on mainnet"
-    echo "  ./scripts/governor/propose/new-market-upgrade/index.sh -n mainnet -d weth -i 0x9876543210987654321098765432109876543210"
+    echo "  ./scripts/governor/propose/market-phase-2/index.sh -n mainnet -d weth -i 0x9876543210987654321098765432109876543210"
     echo ""
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
@@ -138,7 +138,7 @@ main() {
     # Run the upgrade proposal script
     print_info "Executing new market upgrade proposal script..."
     
-    yarn ts-node scripts/governor/propose/new-market-upgrade/index.ts \
+    yarn ts-node scripts/governor/propose/market-phase-2/index.ts \
         --network "$NETWORK" \
         --deployment "$DEPLOYMENT" \
         --implementation "$IMPLEMENTATION"

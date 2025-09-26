@@ -33,7 +33,7 @@ print_error() {
 show_help() {
     echo -e "${BLUE}🚀 New Market Implementation Script Wrapper${NC}"
     echo ""
-    echo "Usage: ./scripts/governor/propose/new-market-impl/index.sh [options]"
+    echo "Usage: ./scripts/governor/propose/market-phase-1/index.sh [options]"
     echo ""
     echo "Options:"
     echo "  -n, --network <network>     Network to deploy to (required)"
@@ -42,13 +42,13 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  # Add new DAI market implementation on local network"
-    echo "  ./scripts/governor/propose/new-market-impl/index.sh -n local -d dai"
+    echo "  ./scripts/governor/propose/market-phase-1/index.sh -n local -d dai"
     echo ""
     echo "  # Add new USDC market implementation on polygon network"
-    echo "  ./scripts/governor/propose/new-market-impl/index.sh -n polygon -d usdc"
+    echo "  ./scripts/governor/propose/market-phase-1/index.sh -n polygon -d usdc"
     echo ""
     echo "  # Add new WETH market implementation on mainnet"
-    echo "  ./scripts/governor/propose/new-market-impl/index.sh -n mainnet -d weth"
+    echo "  ./scripts/governor/propose/market-phase-1/index.sh -n mainnet -d weth"
     echo ""
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
@@ -123,7 +123,7 @@ main() {
     # Run the deployment script
     print_info "Executing new market implementation script..."
     
-    yarn ts-node scripts/governor/propose/new-market-impl/index.ts \
+    yarn ts-node scripts/governor/propose/market-phase-1/index.ts \
         --network "$NETWORK" \
         --deployment "$DEPLOYMENT"
     

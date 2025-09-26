@@ -109,9 +109,14 @@ async function extractLogsFromTransaction(
         }
         break;
       }
-      case 'comet-upgrade':
+      case 'comet-upgrade': {
         trace('Parsing logs for comet upgrade execution...');
+        const upgradedData = extractUpgradedEvent(receipt, trace);
+        if (upgradedData) {
+          extractedLogs.parsedLogs.upgraded = upgradedData;
+        }
         break;
+      }
 
       case 'comet-reward-funding': {
         trace('Parsing logs for comet reward funding execution...');
@@ -375,5 +380,46 @@ function formatDelay(delaySeconds: string): string {
   } else {
     const days = Math.floor(seconds / 86400);
     return `${days} days (${seconds} seconds)`;
+  }
+}
+
+/**
+ * Extracts Upgraded event from transaction logs
+ * @param receipt Transaction receipt containing logs
+ * @param trace Tracer function for logging
+ * @returns Parsed Upgraded event data or null if not found
+ */
+function extractUpgradedEvent(receipt: any, trace: any): any {
+  trace('Parsing logs for Upgraded event...');
+  
+  // Create interface for proxy contract to parse Upgraded event
+  const proxyInterface = new ethers.utils.Interface([
+    'event Upgraded(address indexed implementation)'
+  ]);
+  
+  // Look for Upgraded events in the logs
+  const upgradedEvents = receipt.logs
+    .map((log: any) => {
+      try {
+        return proxyInterface.parseLog(log);
+      } catch (error) {
+        return null; // Not an Upgraded event
+      }
+    })
+    .filter((parsedLog: any) => parsedLog !== null && parsedLog.name === 'Upgraded');
+  
+  if (upgradedEvents.length > 0) {
+    const upgradedEvent = upgradedEvents[0];
+    const implementation = upgradedEvent.args.implementation;
+    
+    trace(`Found Upgraded event: implementation=${implementation}`);
+    
+    return {
+      implementation,
+      eventName: 'Upgraded'
+    };
+  } else {
+    trace('No Upgraded event found in transaction logs');
+    return null;
   }
 }
