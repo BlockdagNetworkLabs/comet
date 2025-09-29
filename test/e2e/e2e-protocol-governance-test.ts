@@ -3,9 +3,9 @@ import { ethers } from 'hardhat';
 import * as fs from 'fs';
 import * as path from 'path';
 import hre from 'hardhat';
-import { DeploymentManager } from '../plugins/deployment_manager';
-import { Deployed } from '../plugins/deployment_manager';
-import relationConfigMap from '../deployments/relations';
+import { DeploymentManager } from '../../plugins/deployment_manager';
+import { Deployed } from '../../plugins/deployment_manager';
+import relationConfigMap from '../../deployments/relations';
 
 // Configuration
 const NETWORK_NAME = 'e2e-network';
@@ -21,11 +21,11 @@ describe('E2E Protocol Governance Test Suite', function () {
       let e2ePath: string;
 
       before(async function () {
-        // Set up paths using NETWORK_NAME variable
-        templatePath = path.join(__dirname, '../deployments', NETWORK_NAME, templateName);
-        e2ePath = path.join(__dirname, '../deployments', NETWORK_NAME);
+        // Set up paths - template is now in the same directory as the test file
+        templatePath = path.join(__dirname, templateName);
+        e2ePath = path.join(__dirname, '../../deployments', NETWORK_NAME);
 
-        console.log(`📁 Copying ${templateName} files to e2e root...`);
+        console.log(`📁 Copying ${templateName} files to ${e2ePath}`);
         console.log(`Template path: ${templatePath}`);
         console.log(`E2E path: ${e2ePath}`);
 
@@ -95,7 +95,30 @@ describe('E2E Protocol Governance Test Suite', function () {
       });
     });
   });
+
+  // Global cleanup after all tests complete
+  after(async function () {
+    console.log('🧹 Cleaning up entire e2e-network folder...');
+    await cleanupEntireNetworkFolder();
+    console.log('✅ e2e-network folder cleanup completed');
+  });
 });
+
+// Helper function to cleanup entire e2e-network folder
+async function cleanupEntireNetworkFolder(): Promise<void> {
+  const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+  
+  try {
+    if (fs.existsSync(e2eNetworkPath)) {
+      await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+      console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+    } else {
+      console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+    }
+  } catch (error) {
+    console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+  }
+}
 
 // Helper function to setup relation configs for e2e-network
 async function setupRelationConfigs(e2ePath: string, templateName: string): Promise<void> {
@@ -186,7 +209,7 @@ async function copyDirectory(src: string, dest: string, exclude: string[] = []):
 
 // Helper function to clean up copied files
 async function cleanupCopiedFiles(templateName: string): Promise<void> {
-  const e2ePath = path.join(__dirname, '../deployments', NETWORK_NAME);
+  const e2ePath = path.join(__dirname, '../../deployments', NETWORK_NAME);
   
   try {
     const items = await fs.promises.readdir(e2ePath, { withFileTypes: true });
