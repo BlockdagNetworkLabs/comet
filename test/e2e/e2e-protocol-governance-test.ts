@@ -354,29 +354,29 @@ export default testConfig;
   }
 
   async function cleanupEntireNetworkFolder(): Promise<void> {
-    // const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+    const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
-    // try {
-    //   if (fs.existsSync(e2eNetworkPath)) {
-    //     await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
-    //     console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
-    //   } else {
-    //     console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
-    // }
+    try {
+      if (fs.existsSync(e2eNetworkPath)) {
+        await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+        console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+      } else {
+        console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+    }
   }
 
   async function cleanupTestHardhatConfig(): Promise<void> {
-    // try {
-    //   if (fs.existsSync(testHardhatConfigPath)) {
-    //     await fs.promises.unlink(testHardhatConfigPath);
-    //     console.log(`✅ Deleted test hardhat config: ${testHardhatConfigPath}`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete test hardhat config:`, error);
-    // }
+    try {
+      if (fs.existsSync(testHardhatConfigPath)) {
+        await fs.promises.unlink(testHardhatConfigPath);
+        console.log(`✅ Deleted test hardhat config: ${testHardhatConfigPath}`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete test hardhat config:`, error);
+    }
   }
 
   async function buildDeploymentManagerConfig(templateName: string, e2ePath: string): Promise<any> {
