@@ -641,21 +641,6 @@ const config: HardhatUserConfig = {
         deployment: 'wron',
         auxiliaryBase: 'mainnet'
       },
-      {
-        name: 'bdag-primordial-dai',
-        network: 'bdag-primordial',
-        deployment: 'dai',
-      },
-      {
-        name: 'local-dai',
-        network: 'local',
-        deployment: 'dai',
-      },
-      {
-        name: 'local-usdc',
-        network: 'local',
-        deployment: 'usdc',
-      },
     ],
   },
 
