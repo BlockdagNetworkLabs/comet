@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import hre from 'hardhat';
 import { DeploymentManager } from '../../plugins/deployment_manager';
 import { Deployed } from '../../plugins/deployment_manager';
@@ -44,7 +44,6 @@ describe('E2E Protocol Governance Test Suite', function () {
   let discoveredMarkets: string[] = [];
   let deploymentManager: DeploymentManager;
   let deployedContracts: Deployed;
-  let networkProcess: ChildProcess | null = null;
 
   // Run tests for each template
   TEMPLATES.forEach(templateName => {
@@ -146,56 +145,26 @@ describe('E2E Protocol Governance Test Suite', function () {
   });
 
   async function tryStartNetwork(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (E2E_NETWORK_CONFIG.chainId === 31337) {
-        console.log('🚀 Starting Anvil network...');
-        networkProcess = spawn('anvil', ['--port', '8545', '--chain-id', '31337'], {
-          stdio: 'pipe',
-          detached: true
-        });
-      } else if (E2E_NETWORK_CONFIG.chainId === 1337) {
-        console.log('🚀 Starting Hardhat network...');
-        networkProcess = spawn('npx', ['hardhat', 'node', '--port', '8545'], {
-          stdio: 'pipe',
-          detached: true
-        });
-      } else {
-        // Unsupported chain ID - no network process will be started
-        console.log(`ℹ️  Unsupported chain ID: ${E2E_NETWORK_CONFIG.chainId}, skipping network startup`);
-        resolve();
-        return;
-      }
+    if (E2E_NETWORK_CONFIG.chainId === 31337) {
+      console.log('🚀 Starting Anvil network...');
+      spawn('anvil', ['--port', '8545', '--chain-id', '31337'], {
+        stdio: 'pipe',
+        detached: true
+      });
+    } else if (E2E_NETWORK_CONFIG.chainId === 1337) {
+      console.log('🚀 Starting Hardhat network...');
+      spawn('npx', ['hardhat', 'node', '--port', '8545'], {
+        stdio: 'pipe',
+        detached: true
+      });
+    } else {
+      console.log(`ℹ️  Unsupported chain ID: ${E2E_NETWORK_CONFIG.chainId}, skipping network startup`);
+      return;
+    }
 
-      if (networkProcess) {
-        networkProcess.stdout?.on('data', (data) => {
-          const output = data.toString();
-          console.log(`Network: ${output.trim()}`);
-          
-          // Check if network is ready
-          if (output.includes('Listening on') || output.includes('Started HTTP')) {
-            console.log('✅ Network started successfully');
-            resolve();
-          }
-        });
-
-        networkProcess.stderr?.on('data', (data) => {
-          console.error(`Network Error: ${data.toString()}`);
-        });
-
-        networkProcess.on('error', (error) => {
-          console.error('Failed to start network:', error);
-          reject(error);
-        });
-
-        // Timeout after 30 seconds
-        setTimeout(() => {
-          if (networkProcess && !networkProcess.killed) {
-            console.log('⏰ Network startup timeout, assuming it\'s ready');
-            resolve();
-          }
-        }, 30000);
-      }
-    });
+    // Wait a bit for the network to start
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log('✅ Network should be ready');
   }
 
   async function copyDirectory(src: string, dest: string, exclude: string[] = []): Promise<void> {
