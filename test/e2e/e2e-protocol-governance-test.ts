@@ -3,7 +3,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { DynamicHardhatConfig } from './helpers/dynamic-hardhat-config';
 
-
+//Parameters
 let E2E_NETWORK_CONFIG = {
   chainId: process.env.E2E_CHAIN_ID ? parseInt(process.env.E2E_CHAIN_ID) : 31337, 
   url: process.env.E2E_RPC_URL || 'http://127.0.0.1:8545', 
@@ -36,13 +36,8 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      console.log('🧹 Cleaning up folder...');
       await deleteDirectory();
-      console.log('✅ folder cleanup completed');
-
-      // Clean up test hardhat config file
       await deleteHardhatConfigFile();
-
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -74,11 +69,13 @@ describe('E2E Protocol Governance Test Suite', function () {
   });
 
   async function copyDirectory(src: string, dest: string, exclude: string[] = []): Promise<void> {
+    console.log(`📁 Copying directory from ${src} to ${dest}`);
     try {
       const items = await fs.promises.readdir(src, { withFileTypes: true });
       
       for (const item of items) {
         if (exclude.includes(item.name)) {
+          console.log(`⏭️  Skipping excluded item: ${item.name}`);
           continue;
         }
 
@@ -86,19 +83,23 @@ describe('E2E Protocol Governance Test Suite', function () {
         const destPath = path.join(dest, item.name);
 
         if (item.isDirectory()) {
+          console.log(`📂 Creating directory: ${item.name}`);
           await fs.promises.mkdir(destPath, { recursive: true });
           await copyDirectory(srcPath, destPath, exclude);
         } else {
+          console.log(`📄 Copying file: ${item.name}`);
           await fs.promises.copyFile(srcPath, destPath);
         }
       }
+      console.log(`✅ Directory copy completed: ${src} -> ${dest}`);
     } catch (error) {
-      console.error('Error copying directory:', error);
+      console.error('❌ Error copying directory:', error);
       throw error;
     }
   }
 
   async function deleteDirectory(): Promise<void> {
+    console.log('🧹 Cleaning up folder...');
     const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
     try {
@@ -114,10 +115,13 @@ describe('E2E Protocol Governance Test Suite', function () {
   }
 
   async function deleteHardhatConfigFile(): Promise<void> {
+    console.log('🧹 Cleaning up test hardhat config file...');
     try {
       if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
         await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
         console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
+      } else {
+        console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
       }
     } catch (error) {
       console.warn(`Warning: Could not delete test hardhat config:`, error);
