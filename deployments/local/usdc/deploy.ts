@@ -1,9 +1,13 @@
 import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
 import { DeploySpec, deployComet} from '../../../src/deploy';
+import { DeploymentHelper } from '../helpers';
+import { exp, wait } from '../../../src/deploy';
 
 export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
   // Set verification strategy to none to skip contract verification
   deploymentManager.setVerificationStrategy('none');
+
+  const tokenInfra = await deployTokenInfra(deploymentManager);
 
   // Load infrastructure contracts from the _infrastructure deployment
   const infrastructureSpider = await deploymentManager.spiderOther('local', '_infrastructure');
@@ -17,32 +21,7 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
   // Deploy all Comet-related contracts
   const deployed = await deployComet(deploymentManager, deploySpec);
 
-  const tokenInfra = await deployTokenInfra(deploymentManager);
-
   return { ...deployed, ...tokenInfra, ...infrastructureContracts };
-}
-
-import { FaucetToken, SimplePriceFeed } from '../../../build/types';
-import { exp, wait } from '../../../src/deploy';
-
-// Helper function to create tokens (same pattern as other deployment scripts)
-async function makeToken(
-  deploymentManager: DeploymentManager,
-  symbol: string,
-  name: string,
-  decimals: number
-): Promise<FaucetToken> {
-  const mint = (BigInt(1000000) * 10n ** BigInt(decimals)).toString();
-  return deploymentManager.deploy(symbol, 'test/FaucetToken.sol', [mint, name, decimals, symbol]);
-}
-
-async function makePriceFeed(
-  deploymentManager: DeploymentManager,
-  alias: string,
-  initialPrice: number,
-  decimals: number
-): Promise<SimplePriceFeed> {
-  return deploymentManager.deploy(alias, 'test/SimplePriceFeed.sol', [initialPrice * decimals, decimals]);
 }
 
 async function deployTokenInfra(deploymentManager: DeploymentManager){
@@ -51,24 +30,28 @@ async function deployTokenInfra(deploymentManager: DeploymentManager){
   const trace = deploymentManager.tracer();
   const admin = await deploymentManager.getSigner();
 
-  const fauceteer = await deploymentManager.deploy('fauceteer', 'test/Fauceteer.sol', []);
+  // Create helper with useCache = true (load from _infrastructure if available)
+  const helper = new DeploymentHelper(deploymentManager, {useCache: true, cacheDeployment: 'dai'});
 
-  // Deploy test tokens
-  const DAI = await makeToken(deploymentManager, 'DAI', 'DAI', 18);
-  const USDC = await makeToken(deploymentManager, 'USDC', 'USDC', 6);
-  const WETH = await makeToken(deploymentManager, 'WETH', 'Wrapped Ether', 18);
-  const WBTC = await makeToken(deploymentManager, 'WBTC', 'Wrapped Bitcoin', 8);
-  const LINK = await makeToken(deploymentManager, 'LINK', 'Chainlink', 18);
-  const UNI = await makeToken(deploymentManager, 'UNI', 'Uniswap', 18);
+  // Deploy or load fauceteer from cache
+  const fauceteer = await helper.makeFauceteer();
 
-  // Deploy price feeds using makePriceFeed function
-  const daiPriceFeed = await makePriceFeed(deploymentManager, 'daiPriceFeed', 1, 8); // $1.00 price
-  const usdcPriceFeed = await makePriceFeed(deploymentManager, 'usdcPriceFeed', 1, 8); // $1.00 price
-  const wethPriceFeed = await makePriceFeed(deploymentManager, 'wethPriceFeed', 2000, 8); // $2000 price
-  const wbtcPriceFeed = await makePriceFeed(deploymentManager, 'wbtcPriceFeed', 40000, 8); // $40000 price
-  const compPriceFeed = await makePriceFeed(deploymentManager, 'compPriceFeed', 50, 8); // $50 price
-  const linkPriceFeed = await makePriceFeed(deploymentManager, 'linkPriceFeed', 15, 8); // $15 price
-  const uniPriceFeed = await makePriceFeed(deploymentManager, 'uniPriceFeed', 10, 8); // $10 price
+  // Deploy or load test tokens from cache
+  const DAI = await helper.makeToken('DAI', 'DAI', 18);
+  const USDC = await helper.makeToken('USDC', 'USDC', 6);
+  const WETH = await helper.makeToken('WETH', 'Wrapped Ether', 18);
+  const WBTC = await helper.makeToken('WBTC', 'Wrapped Bitcoin', 8);
+  const LINK = await helper.makeToken('LINK', 'Chainlink', 18);
+  const UNI = await helper.makeToken('UNI', 'Uniswap', 18);
+
+  // Deploy or load price feeds from cache
+  const daiPriceFeed = await helper.makePriceFeed('daiPriceFeed', 1, 8); // $1.00 price
+  const usdcPriceFeed = await helper.makePriceFeed('usdcPriceFeed', 1, 8); // $1.00 price
+  const wethPriceFeed = await helper.makePriceFeed('wethPriceFeed', 2000, 8); // $2000 price
+  const wbtcPriceFeed = await helper.makePriceFeed('wbtcPriceFeed', 40000, 8); // $40000 price
+  const compPriceFeed = await helper.makePriceFeed('compPriceFeed', 50, 8); // $50 price
+  const linkPriceFeed = await helper.makePriceFeed('linkPriceFeed', 15, 8); // $15 price
+  const uniPriceFeed = await helper.makePriceFeed('uniPriceFeed', 10, 8); // $10 price
 
   trace(`Attempting to mint tokens to fauceteer as ${admin.address}...`);
 
