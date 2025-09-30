@@ -76,13 +76,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         });
 
         // Start the appropriate network based on chain ID
-        await tryStartNetwork();
+        //await tryStartNetwork();
       });
 
       after(async function () {
-        console.log("🛑 Killing network...");
-        await tryKillNetwork();
-        console.log("✅ Network killed successfully");
+        // console.log("🛑 Killing network...");
+        // await tryKillNetwork();
+        // console.log("✅ Network killed successfully");
 
         console.log('🧹 Cleaning up folder...');
         await cleanupEntireNetworkFolder();
