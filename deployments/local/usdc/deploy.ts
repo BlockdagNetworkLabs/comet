@@ -17,8 +17,9 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
   // Deploy all Comet-related contracts
   const deployed = await deployComet(deploymentManager, deploySpec);
 
+  const tokenInfra = await deployTokenInfra(deploymentManager);
 
-  return { ...deployed, ...infrastructureContracts };
+  return { ...deployed, ...tokenInfra, ...infrastructureContracts };
 }
 
 import { FaucetToken, SimplePriceFeed } from '../../../build/types';
