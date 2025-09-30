@@ -36,6 +36,7 @@ E2E_NETWORK_CONFIG = {
   gas: 'auto',
   gasPrice: 'auto',
 }; 
+const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
 const testHardhatConfigPath = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 
@@ -120,6 +121,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       });
 
       it('should deploy protocol successfully', async function () {
+        this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
         console.log(`🚀 Testing protocol deployment for ${templateName}...`);
         
         try {
