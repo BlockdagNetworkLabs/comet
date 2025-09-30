@@ -131,7 +131,7 @@ describe('E2E Protocol Governance Test Suite', function () {
           
           const result = execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           console.log('Deployment output:', result);
