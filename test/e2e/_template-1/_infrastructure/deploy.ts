@@ -1,9 +1,9 @@
-// @ts-ignore - Template file: import path will be correct when copied to e2e-test root
-import { Deployed, DeploymentManager } from '../../../../deployments/plugins/deployment_manager';
-// @ts-ignore - Template file: import path will be correct when copied to e2e-test root
-import { FaucetToken, SimplePriceFeed } from '../../../../deployments/build/types';
-// @ts-ignore - Template file: import path will be correct when copied to e2e-test root
-import { cloneGov, exp, wait } from '../../../../deployments/src/deploy';
+// @ts-ignore - Template file: import path will be correct when copied to deployments
+import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
+// @ts-ignore - Template file: import path will be correct when copied to deployments
+import { FaucetToken, SimplePriceFeed } from '../../../build/types';
+// @ts-ignore - Template file: import path will be correct when copied to deployments
+import { cloneGov, exp, wait } from '../../../src/deploy';
 
 // Helper function to create tokens (same pattern as other deployment scripts)
 async function makeToken(

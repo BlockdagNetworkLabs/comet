@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import { log } from './ioUtil';
+import path from 'path';
+import fs from 'fs';
 
 /**
  * Runs a command and returns the output
@@ -13,8 +15,19 @@ export async function runCommand(
   printOutput: boolean = false
 ): Promise<string> {
   log(`\n🔄 ${description}...`, 'info');
+  
+  // Check if we're in test mode and need to use a different hardhat config
+  let finalCommand = command;
+  if (process.env.TEST === 'true' && process.env.TEST_HARDHAT_CONFIG) {
+    // Prepend the HARDHAT_CONFIG export to hardhat commands
+    if (command.includes('yarn hardhat') || command.includes('npx hardhat')) {
+      finalCommand = `export HARDHAT_CONFIG="${process.env.TEST_HARDHAT_CONFIG}" && ${command}`;
+      log(`📝 Test mode: Using hardhat config ${process.env.TEST_HARDHAT_CONFIG}`, 'info');
+    }
+  }
+  
   try {
-    const output = execSync(command, { 
+    const output = execSync(finalCommand, { 
       stdio: 'pipe',
       encoding: 'utf8'
     });

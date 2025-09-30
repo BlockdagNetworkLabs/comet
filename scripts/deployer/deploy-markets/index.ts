@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { runGovernanceFlow } from '../../helpers/governanceFlow';
-import { log, confirm } from '../../helpers/ioUtil';
+import { log, confirm as defaultConfirm } from '../../helpers/ioUtil';
 import { 
   extractProposalId, 
   extractImplementationAddresses, 
@@ -28,9 +28,20 @@ interface DeployOptions {
 
 class MarketsDeployer {
   private options: DeployOptions;
+  private confirmFunction: (prompt: string) => Promise<boolean>;
 
   constructor(options: DeployOptions) {
     this.options = options;
+    // Use global confirm function if available, otherwise use the default
+    this.confirmFunction = (global as any).testConfirmFunction || defaultConfirm;
+  }
+
+  /**
+   * Set a custom confirm function for testing or automation
+   * @param confirmFn - Function that takes a prompt and returns a boolean
+   */
+  public setConfirm(confirmFn: (prompt: string) => Promise<boolean>): void {
+    this.confirmFunction = confirmFn;
   }
 
   public async deploy(): Promise<void> {
@@ -174,7 +185,7 @@ class MarketsDeployer {
    * - Return the proposal ID for governance flow
    */
   private async governanceUpdate(admins: string[], threshold: number, timelockDelay?: number): Promise<string> {
-    const shouldProposeGovernanceUpdate = await confirm(`\nDo you want to propose a governance update?`);
+    const shouldProposeGovernanceUpdate = await this.confirmFunction(`\nDo you want to propose a governance update?`);
 
     if (!shouldProposeGovernanceUpdate) {
       log(`\n⏸️  Governance update cancelled.`, 'warning');
@@ -209,7 +220,7 @@ class MarketsDeployer {
    * - Run tests for all deployed markets
    */
   private async runVerificationTests(): Promise<void> {
-    const runVerification = await confirm(`\nDo you want to run deployment verification tests for all markets?`);
+    const runVerification = await this.confirmFunction(`\nDo you want to run deployment verification tests for all markets?`);
     
     if (runVerification) {
       for (const deployment of this.options.deployments) {
@@ -287,7 +298,7 @@ class MarketsDeployer {
     log(`   - Supply caps and collateral factors`, 'info');
     log(`   - Any other market-specific settings`, 'info');
     
-    const shouldContinue = await confirm(
+    const shouldContinue = await this.confirmFunction(
       `\nHave you updated all configuration.json files for the ${this.options.deployments.length} markets and are ready to continue with deployment?`
     );
     
@@ -351,7 +362,7 @@ class MarketsDeployer {
   private async proposeUpgrade(implementationAddresses: string[]): Promise<void> {
     // Propose upgrade (if needed)
     try {
-      const shouldProposeUpgrade = await confirm(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
+      const shouldProposeUpgrade = await this.confirmFunction(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
 
       log(`\n🔧 Proposing upgrade to a new implementation for all markets...`, 'info');
       if (shouldProposeUpgrade) {
@@ -369,33 +380,6 @@ class MarketsDeployer {
       }
     } catch (error) {
       log(`\n⚠️  Failed to propose upgrade for all markets: ${error}`, 'error');
-    }
-  }
-
-  /**
-   * Refresh roots for a specific market using spider
-   * @param deployment - The deployment name to refresh
-   */
-  private async runSpiderForMarket(deployment: string): Promise<void> {
-    try {
-      await runSpiderForMarketCommand(this.options.network, deployment);
-    } catch (error) {
-      log(`\n⚠️  Spider failed for ${deployment}, but this is expected behavior after upgrades.`, 'warning');
-      log(`📝 This happens because the implementation address doesn't match the expected one.`, 'info');
-      log(`\n🔧 To fix this:`, 'info');
-      log(`   1. Update the 'comet:implementation' entry in aliases.json`, 'info');
-      log(`   2. Update roots.json if needed`, 'info');
-      log(`\n📁 Files to update:`, 'info');
-      log(`   - deployments/${this.options.network}/${deployment}/aliases.json`, 'info');
-      log(`   - deployments/${this.options.network}/${deployment}/roots.json`, 'info');
-      
-      const filesUpdated = await confirm(`\nHave you updated the aliases.json and roots.json files for ${deployment}?`);
-      if (filesUpdated) {
-        log(`\n🔄 Retrying spider for ${deployment}...`, 'info');
-        await this.runSpiderForMarket(deployment); // Recursive call to retry
-      } else {
-        log(`\n⏸️  Spider refresh skipped for ${deployment}. You can run it manually later.`, 'warning');
-      }
     }
   }
 
@@ -419,12 +403,53 @@ class MarketsDeployer {
   }
 }
 
+/**
+ * Scan all deployment folders for a given network and return their names
+ * @param network - The network name to scan
+ * @returns Array of deployment folder names (excluding _infrastructure only)
+ */
+function getAllDeploymentFolders(network: string): string[] {
+  const deploymentsPath = path.join(process.cwd(), 'deployments', network);
+  
+  try {
+    if (!fs.existsSync(deploymentsPath)) {
+      log(`❌ Deployments directory not found: ${deploymentsPath}`, 'error');
+      return [];
+    }
+
+    const items = fs.readdirSync(deploymentsPath, { withFileTypes: true });
+    const deploymentFolders: string[] = [];
+
+    for (const item of items) {
+      // Skip only _infrastructure and non-directories
+      if (item.name === '_infrastructure' || !item.isDirectory()) {
+        continue;
+      }
+
+      // Check if the folder has a configuration.json file
+      const configPath = path.join(deploymentsPath, item.name, 'configuration.json');
+      if (fs.existsSync(configPath)) {
+        deploymentFolders.push(item.name);
+      } else {
+        log(`⚠️  Skipping ${item.name} - no configuration.json found`, 'warning');
+      }
+    }
+
+    log(`📁 Found ${deploymentFolders.length} deployment folders: ${deploymentFolders.join(', ')}`, 'info');
+    return deploymentFolders;
+
+  } catch (error) {
+    log(`❌ Error scanning deployment folders: ${error}`, 'error');
+    return [];
+  }
+}
+
 // Parse command line arguments
 function parseArguments(): DeployOptions {
   const args = process.argv.slice(2);
   const options: DeployOptions = {
     network: 'local',
-    deployments: ['dai']
+    deployments: []
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -435,8 +460,14 @@ function parseArguments(): DeployOptions {
       case '--deployment':
       case '--deployments': {
         const deploymentArg = args[++i];
-        // Support both single deployment and comma-separated list
-        options.deployments = deploymentArg.split(',').map(d => d.trim()).filter(d => d.length > 0);
+        
+        // Check if user wants to deploy all markets
+        if (deploymentArg.toLowerCase() === 'all') {
+          options.deployments = getAllDeploymentFolders(options.network);
+        } else {
+          // Support both single deployment and comma-separated list
+          options.deployments = deploymentArg.split(',').map(d => d.trim()).filter(d => d.length > 0);
+        }
         break;
       }
 
@@ -464,7 +495,7 @@ Usage: yarn ts-node scripts/deployer/deploy-markets/index.ts [options]
 Options:
   --network <network>           Network to deploy to (default: local)
   --deployment <market(s)>      Market(s) to deploy (default: dai)
-                               Supports single market or comma-separated list
+                               Supports single market, comma-separated list, or 'all'
   --deployments <market(s)>     Alias for --deployment
 
   --clean                       Clean deployment cache before deploying
@@ -478,15 +509,18 @@ Examples:
   # Deploy multiple markets on polygon network
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network polygon --deployment dai,usdc,usdt
 
-  # Deploy multiple markets with clean cache
-  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment dai,usdc --clean
+  # Deploy ALL markets found in the network's deployment folder
+  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all
+
+  # Deploy all markets with clean cache
+  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all --clean
 
   # Deploy all major markets on mainnet
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network mainnet --deployment dai,usdc,usdt,weth,wbtc
 
-
 Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc.
 Available markets: dai, usdc, usdt, weth, wbtc, etc.
+Use 'all' to deploy all markets found in the network's deployment folder.
   `);
 }
 

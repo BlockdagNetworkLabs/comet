@@ -1,14 +1,16 @@
-// @ts-ignore - Template file: import path will be correct when copied to e2e-test root
+// @ts-ignore - Template file: import path will be correct when copied to deployments
 import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
-// @ts-ignore - Template file: import path will be correct when copied to e2e-test root
+// @ts-ignore - Template file: import path will be correct when copied to deployments
 import { DeploySpec, deployComet } from '../../../src/deploy';
+// @ts-ignore - Template file: import path will be correct when copied to deployments
+import { hre } from '../../../test/helpers';
 
 export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
   // Set verification strategy to none to skip contract verification
   deploymentManager.setVerificationStrategy('none');
 
   // Load infrastructure contracts from the _infrastructure deployment
-  const infrastructureSpider = await deploymentManager.spiderOther('local', '_infrastructure');
+  const infrastructureSpider = await deploymentManager.spiderOther(hre.network.name, '_infrastructure');
   const infrastructureContracts = {};
   // Add infrastructure contracts to the current deployment's contract map
   for (const [alias, contract] of infrastructureSpider.contracts) {

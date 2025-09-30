@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
 import { DeploymentManager } from '../../plugins/deployment_manager';
 import { ProposalManager, createProposalManager } from '../../src/governor/helpers/proposalManager';
 import { ProposalAction, ProposalStack } from '../../src/governor/helpers';
