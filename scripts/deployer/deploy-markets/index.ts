@@ -3,7 +3,6 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as readline from 'readline';
 import { runGovernanceFlow } from '../../helpers/governanceFlow';
 import { log, confirm as defaultConfirm } from '../../helpers/ioUtil';
 import { 
@@ -190,10 +189,12 @@ class MarketsDeployer {
    * - Run governance flow to execute the funding proposal
    */
   private async fundRewardContract(): Promise<void> {
-    // Use environment variable or prompt user for amount
-    const amount = process.env.DEFAULT_REWARDS_FUNDING_AMOUNT || await this.promptForFundingAmount();
+    // Use environment variable or default constant
+    const amount = process.env.DEFAULT_REWARDS_FUNDING_AMOUNT || DEFAULT_REWARDS_FUNDING_AMOUNT;
+    const amountFormatted = this.formatAmountForDisplay(amount);
     
-    log(`\n💰 Proposing to fund CometRewards with ${amount} COMP tokens...`, 'info');
+    log(`\n💰 Proposing to fund CometRewards with ${amountFormatted}...`, 'info');
+    log(`💡 To change this amount, set the DEFAULT_REWARDS_FUNDING_AMOUNT environment variable`, 'info');
     
     try {
       // Propose funding CometRewards
@@ -218,32 +219,6 @@ class MarketsDeployer {
     }
   }
 
-  /**
-   * Prompt user for funding amount
-   * @returns Promise<string> - The funding amount in wei
-   */
-  private async promptForFundingAmount(): Promise<string> {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    // Get default amount from environment variable or fallback to constant
-    const defaultAmount = process.env.DEFAULT_REWARDS_FUNDING_AMOUNT || DEFAULT_REWARDS_FUNDING_AMOUNT;
-    const defaultAmountFormatted = this.formatAmountForDisplay(defaultAmount);
-
-    return new Promise((resolve) => {
-      rl.question(`\n💰 Enter the amount of COMP tokens to fund CometRewards (in wei, e.g., "1000000000000000000000" for 1000 COMP) [default: ${defaultAmountFormatted}]: `, (answer: string) => {
-        rl.close();
-        if (!answer || answer.trim() === '') {
-          log(`\n⚠️  No amount provided, using default: ${defaultAmountFormatted}`, 'warning');
-          resolve(defaultAmount);
-        } else {
-          resolve(answer.trim());
-        }
-      });
-    });
-  }
 
   /**
    * Format amount for display purposes (convert wei to COMP tokens)
