@@ -10,7 +10,7 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
   const tokenInfra = await deployTokenInfra(deploymentManager);
 
   // Load infrastructure contracts from the _infrastructure deployment
-  const infrastructureSpider = await deploymentManager.spiderOther('local', '_infrastructure');
+  const infrastructureSpider = await deploymentManager.spiderOther(deploymentManager.network, '_infrastructure');
   const infrastructureContracts = {};
   // Add infrastructure contracts to the current deployment's contract map
   for (const [alias, contract] of infrastructureSpider.contracts) {
