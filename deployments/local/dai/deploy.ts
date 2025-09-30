@@ -1,6 +1,7 @@
 import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
 import { DeploySpec, deployComet } from '../../../src/deploy';
-import { DeploymentHelper } from '../helpers';
+import { DeploymentTokenInfraHelper } from '../deployment-token-infra-helper';
+import { ConfiguratorModifierHelper } from '../configurator-modificator-helper';
 import { exp, wait } from '../../../src/deploy';
 
 export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
@@ -31,7 +32,7 @@ async function deployTokenInfra(deploymentManager: DeploymentManager){
   const admin = await deploymentManager.getSigner();
 
   // Create helper with useCache = false (deploy fresh contracts)
-  const helper = new DeploymentHelper(deploymentManager);
+  const helper = new DeploymentTokenInfraHelper(deploymentManager);
 
   // Deploy fauceteer with idempotency check
   const fauceteer = await helper.makeFauceteer();
@@ -52,6 +53,10 @@ async function deployTokenInfra(deploymentManager: DeploymentManager){
   const compPriceFeed = await helper.makePriceFeed('compPriceFeed', 50, 8); // $50 price
   const linkPriceFeed = await helper.makePriceFeed('linkPriceFeed', 15, 8); // $15 price
   const uniPriceFeed = await helper.makePriceFeed('uniPriceFeed', 10, 8); // $10 price
+
+  // Update configuration.json with the deployed price feed addresses
+  const configHelper = new ConfiguratorModifierHelper(deploymentManager);
+  await configHelper.updateAllPriceFeeds();
 
   trace(`Attempting to mint tokens to fauceteer as ${admin.address}...`);
 

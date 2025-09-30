@@ -1,7 +1,7 @@
 import { FaucetToken, SimplePriceFeed, Fauceteer } from "../../build/types";
 import { DeploymentManager } from '../../plugins/deployment_manager';
 
-export class DeploymentHelper {
+export class DeploymentTokenInfraHelper {
   private deploymentManager: DeploymentManager;
   private useCache: boolean;
   private cacheNetwork: string;
