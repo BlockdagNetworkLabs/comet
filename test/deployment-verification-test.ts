@@ -271,28 +271,31 @@ describe('Deployment Verification', function () {
     console.log(`✅ Timelock delay constraints validation passed: delay=${deployedDelay}, min=${deployedMinimumDelay}, max=${deployedMaximumDelay}`);
   });
 
-  it('should validate BDAG governor admin addresses are not zero or contract address', async function () {
+  it('should validate BDAG governor admin addresses are ok', async function () {
     const { governor } = deployedContracts;
     
-    const customGovernor = governor as any;
-    await customGovernor.multisigThreshold;
-    
+    // Get environment variables
     const envSigners = process.env.GOV_SIGNERS;
-    if (!envSigners) {
-      throw new Error('GOV_SIGNERS environment variable not set');
-    }
+    const envThreshold = process.env.MULTISIG_THRESHOLD;
     
     const envSignersArray = envSigners.split(',').map(s => s.trim());
+    const envThresholdNum = parseInt(envThreshold);
+
+    // Get deployed contract values
+    const deployedThreshold = await governor.multisigThreshold();
     
+    // Validate threshold matches
+    expect(deployedThreshold).to.equal(envThresholdNum);
+    
+    // Validate each environment admin using the contract's isAdmin function
     for (let i = 0; i < envSignersArray.length; i++) {
-      const adminAddress = envSignersArray[i];
-      
-      expect(adminAddress).to.not.equal(ethers.constants.AddressZero);
-      
-      expect(adminAddress).to.not.equal(governor.address);
-      
-      expect(ethers.utils.isAddress(adminAddress)).to.be.true;
+      const envAddress = envSignersArray[i];
+      // Check if this address is actually an admin in the deployed contract
+      const isAdmin = await governor.isAdmin(envAddress);
+      expect(isAdmin).to.be.true;
     }
+    
+    console.log(`✅ BDAG governor admin validation passed: ${envSignersArray.length} admins, threshold ${envThresholdNum}`);
   });
 
   it('should have timelock holding expected COMP supply after rewards funding', async function () {

@@ -31,13 +31,14 @@ export async function runCommand(
     if(process.env.TEST_PK){
       ethPkExport = `export ETH_PK=${process.env.TEST_PK}`;
     }
+
+      // Build final command with exports if they exist
+    if (hardhatConfigExport || ethPkExport) {
+      const exports = [hardhatConfigExport, ethPkExport].filter(Boolean).join(" && ");
+      finalCommand = `${exports} && ${command}`;
+    }
   }
-  
-  // Build final command with exports if they exist
-  if (hardhatConfigExport || ethPkExport) {
-    const exports = [hardhatConfigExport, ethPkExport].filter(Boolean).join(" && ");
-    finalCommand = `${exports} && ${command}`;
-  }
+
   
   try {
     const output = execSync(finalCommand, { 

@@ -154,7 +154,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       process.env.TEST_PK = getAdminPrivateKey(0);
       
       // Create a proposal to deploy the excluded market
-      const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployments ${excludedDeployment}`;
+      const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
       
       console.log(`📝 Running proposal command: ${command}`);
       console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
