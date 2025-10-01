@@ -29,7 +29,7 @@ export async function runCommand(
     }
 
     if(process.env.TEST_PK){
-      ethPkExport = `export ETH_PK=${process.env.TEST_DEPLOYER_PK}`;
+      ethPkExport = `export ETH_PK=${process.env.TEST_PK}`;
     }
   }
   
