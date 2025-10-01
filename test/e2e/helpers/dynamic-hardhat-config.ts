@@ -1,4 +1,5 @@
 import { hre } from "../../helpers";
+import { ProtocolDiscover } from './protocol-discover';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,37 +25,6 @@ export class DynamicHardhatConfig {
     this.testDeploymentPath = testDeploymentPath;
   }
 
-  private async discoverMarkets(): Promise<string[]> {
-    const discoveredMarkets: string[] = [];
-
-    try {
-      const items = await fs.promises.readdir(this.testDeploymentPath, { withFileTypes: true });
-      
-      for (const item of items) {
-        // Skip _infrastructure, template folders, and non-directories
-        if (item.name === '_infrastructure' || item.name.startsWith('_template-') || !item.isDirectory()) {
-          continue;
-        }
-
-        const deploymentName = item.name;
-        const deployPath = path.join(this.testDeploymentPath, deploymentName, 'deploy.ts');
-        
-        // Check if the folder has a deploy.ts file (indicating it's a market)
-        if (fs.existsSync(deployPath)) {
-          discoveredMarkets.push(deploymentName);
-          console.log(`✅ Discovered market: ${deploymentName}`);
-        } else {
-          console.log(`⚠️  Skipping ${deploymentName} - no deploy.ts found`);
-        }
-      }
-    } catch (error) {
-      console.warn(`Warning: Could not discover markets:`, error);
-    }
-
-    console.log(`📋 Discovered markets: ${discoveredMarkets.join(', ')}`);
-
-    return discoveredMarkets;
-  }
 
   private async updateHardhatEnvironment(discoveredMarkets: string[]): Promise<void> {
     const { imports, configEntries } = await this.getRelationConfigs(discoveredMarkets);
@@ -156,7 +126,7 @@ export default testConfig;
   }
 
   async generateTestHardhatConfig(): Promise<void> {
-    const discoveredMarkets = await this.discoverMarkets();
+    const discoveredMarkets = await ProtocolDiscover.discoverMarkets(this.testDeploymentPath);
     await this.updateHardhatEnvironment(discoveredMarkets);
   }
 

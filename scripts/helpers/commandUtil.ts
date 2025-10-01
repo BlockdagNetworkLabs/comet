@@ -18,12 +18,25 @@ export async function runCommand(
   
   // Check if we're in test mode and need to use a different hardhat config
   let finalCommand = command;
-  if (process.env.TEST === 'true' && process.env.TEST_HARDHAT_CONFIG) {
+  let hardhatConfigExport = "";
+  let ethPkExport = "";
+  
+  if (process.env.TEST === 'true') {
     // Prepend the HARDHAT_CONFIG export to hardhat commands
-    if (command.includes('yarn hardhat') || command.includes('npx hardhat')) {
-      finalCommand = `export HARDHAT_CONFIG="${process.env.TEST_HARDHAT_CONFIG}" && ${command}`;
+    if (command.includes('yarn hardhat') || command.includes('npx hardhat') && process.env.TEST_HARDHAT_CONFIG) {
+      hardhatConfigExport = `export HARDHAT_CONFIG="${process.env.TEST_HARDHAT_CONFIG}"`;
       log(`📝 Test mode: Using hardhat config ${process.env.TEST_HARDHAT_CONFIG}`, 'info');
     }
+
+    if(process.env.TEST_PK){
+      ethPkExport = `export ETH_PK=${process.env.TEST_DEPLOYER_PK}`;
+    }
+  }
+  
+  // Build final command with exports if they exist
+  if (hardhatConfigExport || ethPkExport) {
+    const exports = [hardhatConfigExport, ethPkExport].filter(Boolean).join(" && ");
+    finalCommand = `${exports} && ${command}`;
   }
   
   try {
