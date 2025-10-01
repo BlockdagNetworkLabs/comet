@@ -27,3 +27,5 @@ scenario-results.json
 deployments/local/*/roots.json
 deployments/hardhat/*/roots.json
 deployments/**/proposalStack.json
+deployments/e2e-network
+deployments/test-network
