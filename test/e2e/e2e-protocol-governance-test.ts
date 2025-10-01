@@ -154,7 +154,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       process.env.TEST_PK = getAdminPrivateKey(0);
       
       // Create a proposal to deploy the excluded market
-      const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments ${excludedDeployment}`;
+      const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployments ${excludedDeployment}`;
       
       console.log(`📝 Running proposal command: ${command}`);
       console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
@@ -227,33 +227,33 @@ describe('E2E Protocol Governance Test Suite', function () {
   }
 
   async function deleteDirectory(): Promise<void> {
-    console.log('🧹 Cleaning up folder...');
-    const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+    // console.log('🧹 Cleaning up folder...');
+    // const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
-    try {
-      if (fs.existsSync(e2eNetworkPath)) {
-        await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
-        console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
-      } else {
-        console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
-      }
-    } catch (error) {
-      console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
-    }
+    // try {
+    //   if (fs.existsSync(e2eNetworkPath)) {
+    //     await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+    //     console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+    //   } else {
+    //     console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+    //   }
+    // } catch (error) {
+    //   console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+    // }
   }
 
   async function deleteHardhatConfigFile(): Promise<void> {
-    console.log('🧹 Cleaning up test hardhat config file...');
-    try {
-      if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
-        await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
-        console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
-      } else {
-        console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
-      }
-    } catch (error) {
-      console.warn(`Warning: Could not delete test hardhat config:`, error);
-    }
+    // console.log('🧹 Cleaning up test hardhat config file...');
+    // try {
+    //   if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
+    //     await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
+    //     console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
+    //   } else {
+    //     console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
+    //   }
+    // } catch (error) {
+    //   console.warn(`Warning: Could not delete test hardhat config:`, error);
+    // }
   }
 
 });
