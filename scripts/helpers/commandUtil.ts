@@ -19,7 +19,6 @@ export async function runCommand(
   // Check if we're in test mode and need to use a different hardhat config
   let finalCommand = command;
   let hardhatConfigExport = "";
-  let ethPkExport = "";
   
   if (process.env.TEST === 'true') {
     // Prepend the HARDHAT_CONFIG export to hardhat commands
@@ -27,14 +26,9 @@ export async function runCommand(
       hardhatConfigExport = `export HARDHAT_CONFIG="${process.env.TEST_HARDHAT_CONFIG}"`;
       log(`📝 Test mode: Using hardhat config ${process.env.TEST_HARDHAT_CONFIG}`, 'info');
     }
-
-    if(process.env.TEST_PK){
-      ethPkExport = `export ETH_PK=${process.env.TEST_PK}`;
-    }
-
       // Build final command with exports if they exist
-    if (hardhatConfigExport || ethPkExport) {
-      const exports = [hardhatConfigExport, ethPkExport].filter(Boolean).join(" && ");
+    if (hardhatConfigExport) {
+      const exports = [hardhatConfigExport].filter(Boolean).join(" && ");
       finalCommand = `${exports} && ${command}`;
     }
   }
@@ -138,14 +132,14 @@ export async function deployInfrastructure(network: string, bdag: boolean = true
  * @returns Promise<string> - The command output
  */
 export async function deployMarket(network: string, deployment: string, bdag: boolean = true, batchDeploy: boolean = false): Promise<string> {
-  let command = `yarn hardhat deploy --network ${network} --deployment ${deployment}`;
+  let command = `DEBUG=* yarn hardhat deploy --network ${network} --deployment ${deployment}`;
   if (bdag) {
     command += ' --bdag';
   }
   if (batchDeploy) {
     command += ' --batchdeploy';
   }
-  return await runCommand(command, `Deploying market: ${deployment}`);
+  return await runCommand(command, `Deploying market: ${deployment}`, true);
 }
 
 /**

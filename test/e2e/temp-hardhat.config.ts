@@ -84,7 +84,7 @@ const testConfig: HardhatUserConfig = {
     "overrides": {}
   },
   "networks": {
-    "e2e-network": {"chainId":31337,"url":"http://127.0.0.1:8545","gas":"auto","gasPrice":"auto"}
+    "e2e-network": {"chainId":31337,"url":"http://127.0.0.1:8545","accounts":["5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"],"gas":"auto","gasPrice":"auto"}
   },
   "etherscan": {
     "apiKey": {
@@ -453,7 +453,7 @@ const testConfig: HardhatUserConfig = {
   "paths": {
     "tests": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/test",
     "root": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet",
-    "configFile": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/hardhat.config.ts",
+    "configFile": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/test/e2e/temp-hardhat.config.ts",
     "sources": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/contracts",
     "cache": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/cache",
     "artifacts": "/Users/trabajo/Documents/SpaceDev/BlockDAG/comet/artifacts"

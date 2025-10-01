@@ -21,6 +21,31 @@ const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
 
+async function reloadHardhatConfigToIncorporateSigner(signer: string) {
+  const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, { ...E2E_NETWORK_CONFIG, accounts:[signer] }, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
+  await dynamicHardhatConfig.generateTestHardhatConfig();
+}
+
+async function runWithSigner<T>(
+  signer: string, 
+  operation: () => Promise<T>
+): Promise<T> {
+  const originalTestPk = process.env.TEST_PK;
+  try {
+    // Set the new signer
+    await reloadHardhatConfigToIncorporateSigner(signer);
+    console.log(`📝 Running operation with signer: ${signer}`);
+    // Execute the operation
+    return await operation();
+  } catch (error) {
+    console.error(`❌ Operation failed with signer ${signer}:`, error);
+    throw error;
+  } finally {
+    await reloadHardhatConfigToIncorporateSigner(originalTestPk);
+    console.log(`📝 Reverted back to original signer: ${originalTestPk}`);
+  }
+}
+
 describe('E2E Protocol Governance Test Suite', function () {
   
   describe.skip('E2E Complete Market Deployment', function () {
@@ -29,15 +54,14 @@ describe('E2E Protocol Governance Test Suite', function () {
     const templatePath = path.join(__dirname, TEMPLATE_NAME);
 
     before(async function () {
-      // Copy template files to e2e root
-      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
-
-      const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, E2E_NETWORK_CONFIG, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
-      await dynamicHardhatConfig.generateTestHardhatConfig();
-
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
+       
+      // Copy template files to e2e root
+      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await this.reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
 
     after(async function () {
@@ -75,25 +99,19 @@ describe('E2E Protocol Governance Test Suite', function () {
 
   describe('E2E Incremental Market Deployment', function () {
     // Tests deploying subset of markets + governance proposals
-    let availableDeployments: string[] = [];
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
 
     before(async function () {
-      // Copy template files to e2e root
-      const templatePath = path.join(__dirname, TEMPLATE_NAME);
-      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
-
-      const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, E2E_NETWORK_CONFIG, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
-      await dynamicHardhatConfig.generateTestHardhatConfig();
-
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
 
-      // Fetch all available deployment names
-      availableDeployments = await ProtocolDiscover.discoverMarkets(TEST_DEPLOYMENT_PATH);
-      console.log(`📋 Found ${availableDeployments.length} available deployments:`, availableDeployments);
+      // Copy template files to e2e root
+      const templatePath = path.join(__dirname, TEMPLATE_NAME);
+      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
 
     after(async function () {
@@ -106,6 +124,10 @@ describe('E2E Protocol Governance Test Suite', function () {
 
     it('should deploy all deployments except one', async function () {
       this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+
+      // Fetch all available deployment names
+      const availableDeployments = await ProtocolDiscover.discoverMarkets(TEST_DEPLOYMENT_PATH);
+      console.log(`📋 Found ${availableDeployments.length} available deployments:`, availableDeployments);
       
       if (availableDeployments.length < 2) {
         console.log('⚠️  Not enough deployments to test selective deployment (need at least 2)');
@@ -143,36 +165,37 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     it('should propose deployment for excluded market', async function () {
-      this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
-      
-      if (!excludedDeployment) {
-        throw new Error('⚠️  No excluded deployment to propose');
-      }
-      
-      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`)
-      // Set the deployer private key for governance operations
-      process.env.TEST_PK = getAdminPrivateKey(0);
-      
-      // Create a proposal to deploy the excluded market
-      const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
-      
-      console.log(`📝 Running proposal command: ${command}`);
-      console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
-      console.log(`📝 Using test PK: ${process.env.TEST_PK ? 'Set' : 'Not set'}`);
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+        
+        if (!excludedDeployment) {
+          throw new Error('⚠️  No excluded deployment to propose');
+        }
+        
+        console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
+        
+        // Create a proposal to deploy the excluded market
+        const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
+        
+        console.log(`📝 Running proposal command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        console.log(`📝 Using admin private key for governance operations`);
 
-      const result = execSync(command, { 
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: process.cwd(),
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        try {
+          marketPhase1ProposalId = extractProposalId(result);
+          console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
+          console.log(`✅ Governance proposal test passed for ${excludedDeployment}`);
+        } catch (extractError) {
+          console.error(`❌ Failed to extract proposal ID: ${extractError.message}`);
+          throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
+        }
       });
-      try {
-        marketPhase1ProposalId = extractProposalId(result);
-        console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
-        console.log(`✅ Governance proposal test passed for ${excludedDeployment}`);
-      } catch (extractError) {
-        console.error(`❌ Failed to extract proposal ID: ${extractError.message}`);
-        throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
-      }
     });
   });
 
@@ -227,33 +250,34 @@ describe('E2E Protocol Governance Test Suite', function () {
   }
 
   async function deleteDirectory(): Promise<void> {
-    // console.log('🧹 Cleaning up folder...');
-    // const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+    console.log('🧹 Cleaning up folder...');
+    const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
-    // try {
-    //   if (fs.existsSync(e2eNetworkPath)) {
-    //     await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
-    //     console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
-    //   } else {
-    //     console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
-    // }
+    try {
+      if (fs.existsSync(e2eNetworkPath)) {
+        await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+        console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+      } else {
+        console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+    }
   }
 
   async function deleteHardhatConfigFile(): Promise<void> {
-    // console.log('🧹 Cleaning up test hardhat config file...');
-    // try {
-    //   if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
-    //     await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
-    //     console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
-    //   } else {
-    //     console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete test hardhat config:`, error);
-    // }
+    console.log('🧹 Cleaning up test hardhat config file...');
+    try {
+      if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
+        await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
+        console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
+      } else {
+        console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete test hardhat config:`, error);
+    }
   }
+
 
 });
