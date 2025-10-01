@@ -18,6 +18,7 @@ const TEMP_HARDHAT_CONFIG_FILE_NAME = 'temp-hardhat.config.ts';
 const NETWORK_NAME = 'e2e-network';
 
 const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+const PROPOSE_MARKET_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
 
@@ -101,6 +102,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
+    let executionTimestamp: number | null = null; // Add this global variable
 
     before(async function () {
       // Set test environment variables
@@ -165,15 +167,15 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     it('should propose deployment for excluded market', async function () {
+      this.timeout(PROPOSE_MARKET_TIMEOUT);
+
+      if (!excludedDeployment) {
+        throw new Error('⚠️  No excluded deployment to propose');
+      }
+
       await runWithSigner(getAdminPrivateKey(0), async () => {
-        this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
-        
-        if (!excludedDeployment) {
-          throw new Error('⚠️  No excluded deployment to propose');
-        }
-        
+       
         console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
-        
         // Create a proposal to deploy the excluded market
         const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
         
@@ -196,6 +198,130 @@ describe('E2E Protocol Governance Test Suite', function () {
           throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
         }
       });
+    });
+
+    it('should accept proposal with required admin signatures', async function () {      
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId}`;
+          
+          console.log(`📝 Running accept proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue proposal with first admin', async function () {
+      this.timeout(PROPOSE_MARKET_TIMEOUT);
+      
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing proposal: ${marketPhase1ProposalId}`);
+      
+      // Use only the first admin to queue the proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId}`;
+        
+        console.log(`📝 Running queue proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          // Store the execution timestamp in the global variable
+          executionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Execution timestamp captured: ${executionTimestamp}`);
+          console.log(`📅 Execution time: ${new Date(executionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from queue output');
+        }
+      });
+      
+      // Remove this line:
+      // (this as any).executionTimestamp = executionTimestamp;
+      
+      console.log(`✅ Proposal queueing completed with first admin`);
+    });
+
+    it('should execute proposal with first admin', async function () {
+      this.timeout(PROPOSE_MARKET_TIMEOUT);
+      
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to execute');
+      }
+      
+      // Use the global variable instead
+      if (!executionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from queue test');
+      }
+      
+      console.log(`🚀 Executing proposal: ${marketPhase1ProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(executionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = executionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId} --execution-type comet-impl-in-configuration`;
+        
+        console.log(`📝 Running execute proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute proposal result:`, result);
+      });
+      
+      console.log(`✅ Proposal execution completed with first admin`);
     });
   });
 
@@ -278,6 +404,5 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.warn(`Warning: Could not delete test hardhat config:`, error);
     }
   }
-
 
 });
