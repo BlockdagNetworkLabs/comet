@@ -43,7 +43,7 @@ async function runWithSigner<T>(
     throw error;
   } finally {
     await reloadHardhatConfigToIncorporateSigner(originalTestPk);
-    console.log(`📝 Reverted back to original signer: ${originalTestPk}`);
+    console.log(`📝 Reverted back to original signer`);
   }
 }
 
