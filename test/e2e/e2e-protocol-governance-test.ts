@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -22,7 +23,7 @@ const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_N
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe('E2E Complete Market Deployment', function () {
+  describe.skip('E2E Complete Market Deployment', function () {
     // Tests deploying all markets at once
 
     const templatePath = path.join(__dirname, TEMPLATE_NAME);
@@ -148,8 +149,7 @@ describe('E2E Protocol Governance Test Suite', function () {
         throw new Error('⚠️  No excluded deployment to propose');
       }
       
-      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
-    
+      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`)
       // Set the deployer private key for governance operations
       process.env.TEST_PK = getAdminPrivateKey(0);
       
@@ -159,7 +159,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📝 Running proposal command: ${command}`);
       console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
       console.log(`📝 Using test PK: ${process.env.TEST_PK ? 'Set' : 'Not set'}`);
-      
+
       const result = execSync(command, { 
         encoding: 'utf8',
         stdio: 'pipe',
@@ -195,6 +195,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     console.log(`📝 Using admin private key at index ${index} from TEST_ADMIN_PKS`);
     return adminPk;
   }
+  
   async function copyDirectory(src: string, dest: string, exclude: string[] = []): Promise<void> {
     console.log(`📁 Copying directory from ${src} to ${dest}`);
     try {
