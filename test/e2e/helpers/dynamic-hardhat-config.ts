@@ -1,5 +1,5 @@
 import { hre } from "../../helpers";
-import { ProtocolDiscover } from './protocol-discover';
+import { discoverMarkets } from './deployment-manager';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -126,7 +126,7 @@ export default testConfig;
   }
 
   async generateTestHardhatConfig(): Promise<void> {
-    const discoveredMarkets = await ProtocolDiscover.discoverMarkets(this.testDeploymentPath);
+    const discoveredMarkets = await discoverMarkets(this.testDeploymentPath);
     await this.updateHardhatEnvironment(discoveredMarkets);
   }
 

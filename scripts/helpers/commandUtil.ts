@@ -132,14 +132,14 @@ export async function deployInfrastructure(network: string, bdag: boolean = true
  * @returns Promise<string> - The command output
  */
 export async function deployMarket(network: string, deployment: string, bdag: boolean = true, batchDeploy: boolean = false): Promise<string> {
-  let command = `DEBUG=* yarn hardhat deploy --network ${network} --deployment ${deployment}`;
+  let command = `yarn hardhat deploy --network ${network} --deployment ${deployment}`;
   if (bdag) {
     command += ' --bdag';
   }
   if (batchDeploy) {
     command += ' --batchdeploy';
   }
-  return await runCommand(command, `Deploying market: ${deployment}`, true);
+  return await runCommand(command, `Deploying market: ${deployment}`);
 }
 
 /**

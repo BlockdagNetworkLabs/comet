@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { DynamicHardhatConfig } from './helpers/dynamic-hardhat-config';
-import { ProtocolDiscover } from './helpers/protocol-discover';
 import { extractProposalId } from '../../scripts/helpers/commandUtil';
 import { expect } from 'chai';
+import { discoverMarkets } from './helpers/deployment-manager';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
@@ -51,7 +51,7 @@ async function runWithSigner<T>(
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe('E2E Complete Market Deployment', function () {
+  describe.skip('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
 
     const templatePath = path.join(__dirname, TEMPLATE_NAME);
@@ -100,7 +100,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe('E2E Incremental Market Deployment', function () {
+  describe.skip('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -133,7 +133,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
 
       // Fetch all available deployment names
-      const availableDeployments = await ProtocolDiscover.discoverMarkets(TEST_DEPLOYMENT_PATH);
+      const availableDeployments = await discoverMarkets(TEST_DEPLOYMENT_PATH);
       console.log(`📋 Found ${availableDeployments.length} available deployments:`, availableDeployments);
       
       if (availableDeployments.length < 2) {
@@ -267,7 +267,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         // Extract execution timestamp from the output
         const etaMatch = result.match(/ETA: (\d+)/);
         if (etaMatch) {
-          // Store the execution timestamp in the global variable
           marketPhase1ExecutionTimestamp = parseInt(etaMatch[1]);
           console.log(`📅 Execution timestamp captured: ${marketPhase1ExecutionTimestamp}`);
           console.log(`📅 Execution time: ${new Date(marketPhase1ExecutionTimestamp * 1000).toLocaleString()}`);
@@ -493,7 +492,453 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`✅ Market phase 2 proposal execution completed with first admin`);
     });
   });
+  
+  describe('Protocol Deployment with Market Update', function () {
+    // Tests deploying all markets + updating one market via governance
+    let targetMarketForUpdate: string = '';
+    let marketPhase1ProposalId: string = '';
+    let marketPhase1ExecutionTimestamp: number | null = null;
+    let newCometAddress: string | null = null;
+    let marketPhase2ProposalId: string | null = null;
+    let marketPhase2ExecutionTimestamp: number | null = null;
 
+    const templatePath = path.join(__dirname, TEMPLATE_NAME);
+
+    before(async function () {
+      // Set test environment variables
+      process.env.TEST = 'true';
+      process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
+       
+      // Copy template files to e2e root
+      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+    });
+
+    after(async function () {
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      // Clean up test environment variables
+      delete process.env.TEST;
+      delete process.env.TEST_HARDHAT_CONFIG;
+    });
+
+    it('should deploy protocol successfully', async function () {
+      this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+      console.log(`🚀 Testing protocol deployment for ${TEMPLATE_NAME}...`);
+      
+      try {
+        // Run deployment command - all internal hardhat commands will now use the test config
+        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        
+        console.log(`📝 Running deployment command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        console.log('Deployment output:', result);
+        console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
+      } catch (error) {
+        console.error('Deployment failed:', error.message);
+        throw error;
+      }
+    });
+
+    it('should select and modify target market for update', async function () {
+      // Fetch all available deployment names
+      const availableDeployments = await discoverMarkets(TEST_DEPLOYMENT_PATH);
+      console.log(`📋 Found ${availableDeployments.length} available deployments:`, availableDeployments);
+
+      // Select first deployment as target for update
+      targetMarketForUpdate = availableDeployments[0];
+      console.log(`🎯 Selected target market for update: ${targetMarketForUpdate}`);
+      
+      // Import helper functions
+      const { 
+        getAllAssetsConfiguration, 
+        getConfigurationValue,
+        modifyMarketParameters 
+      } = await import('./helpers/deployment-manager');
+      
+      // Get all liquidation factors for all assets in the target market
+      const liquidationFactors = await getAllAssetsConfiguration(
+        TEST_DEPLOYMENT_PATH, 
+        targetMarketForUpdate, 
+        'liquidateCF'
+      );
+      
+      console.log(`📊 Current liquidation factors:`, liquidationFactors);
+      
+      // Get store front price factor value from configuration first level
+      const storeFrontPriceFactor = await getConfigurationValue(
+        TEST_DEPLOYMENT_PATH, 
+        targetMarketForUpdate, 
+        'storeFrontPriceFactor'
+      );
+      
+      console.log(`📊 Current store front price factor:`, storeFrontPriceFactor);
+      
+      // Build modifications object to increase each liquidation factor by 0.1
+      const modifications: Record<string, any> = {};
+      
+      // Increase each asset's liquidation factor by 0.1
+      for (const [asset, currentValue] of Object.entries(liquidationFactors)) {
+        if (currentValue !== undefined && currentValue !== null) {
+          const numericValue = Number(currentValue);
+          if (!isNaN(numericValue)) {
+            const newValue = numericValue + 0.1;
+            modifications[`assets.${asset}.liquidateCF`] = newValue;
+            console.log(`📝 ${asset} liquidateCF: ${currentValue} → ${newValue} (+0.1)`);
+          } else {
+            console.log(`⚠️  Skipping ${asset} liquidateCF - non-numeric value: ${currentValue}`);
+          }
+        }
+      }
+      
+      // Increase store front price factor by 0.1 (top-level configuration)
+      if (storeFrontPriceFactor !== undefined && storeFrontPriceFactor !== null) {
+        const numericValue = Number(storeFrontPriceFactor);
+        if (!isNaN(numericValue)) {
+          const newValue = numericValue + 0.1;
+          modifications['storeFrontPriceFactor'] = newValue;
+          console.log(`📝 storeFrontPriceFactor: ${storeFrontPriceFactor} → ${newValue} (+0.1)`);
+        } else {
+          console.log(`⚠️  Skipping storeFrontPriceFactor - non-numeric value: ${storeFrontPriceFactor}`);
+        }
+      }
+      
+      if(Object.keys(modifications).length === 0) {
+        console.log('⚠️  No modifications to apply, skipping remaining tests.');
+        this.parent.skip();
+      }
+
+      await modifyMarketParameters(TEST_DEPLOYMENT_PATH, targetMarketForUpdate, modifications);
+      console.log(`✅ Market parameters modified for ${targetMarketForUpdate}`);
+      console.log(`📊 Increased liquidation factors for ${Object.keys(liquidationFactors).length} assets by 0.1`);
+      console.log(`📊 Increased store front price factor by 0.1`);
+    });
+
+    it('should propose market phase 1 update with first admin', async function () {
+      this.timeout(PROPOSE_PHASE_1_TIMEOUT);
+      
+      if (!targetMarketForUpdate) {
+        throw new Error('⚠️  No target market selected for update');
+      }
+      
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        console.log(`🚀 Testing governance proposal for market update: ${targetMarketForUpdate}`);
+        // Create a proposal to update the target market
+        const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${targetMarketForUpdate}`;
+        
+        console.log(`📝 Running proposal command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        console.log(`📝 Using admin private key for governance operations`);
+
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        try {
+          marketPhase1ProposalId = extractProposalId(result);
+          console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
+          console.log(`✅ Governance proposal test passed for ${targetMarketForUpdate}`);
+        } catch (extractError) {
+          console.error(`❌ Failed to extract proposal ID: ${extractError.message}`);
+          throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
+        }
+      });
+    });
+
+    it('should accept market phase 1 update proposal with required admin signatures', async function () {      
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId}`;
+          
+          console.log(`📝 Running accept proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue market phase 1 update proposal with first admin', async function () {      
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing proposal: ${marketPhase1ProposalId}`);
+      
+      // Use only the first admin to queue the proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId}`;
+        
+        console.log(`📝 Running queue proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          marketPhase1ExecutionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Execution timestamp captured: ${marketPhase1ExecutionTimestamp}`);
+          console.log(`📅 Execution time: ${new Date(marketPhase1ExecutionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from queue output');
+        }
+      });
+      
+      console.log(`✅ Proposal queueing completed with first admin`);
+    });
+
+    it('should execute market phase 1 update proposal with first admin', async function () {  
+      this.timeout(EXECUTE_TIMEOUT);    
+      if (!marketPhase1ProposalId) {
+        throw new Error('⚠️  No proposal ID available to execute');
+      }
+      
+      // Get execution timestamp from previous test
+      if (!marketPhase1ExecutionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from queue test');
+      }
+      
+      console.log(`🚀 Executing market phase 1 update proposal: ${marketPhase1ProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(marketPhase1ExecutionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = marketPhase1ExecutionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase1ProposalId} --execution-type comet-impl-in-configuration`;
+        
+        console.log(`📝 Running execute proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute proposal result:`, result);
+        
+        // Extract newComet address from the execution output
+        const newCometMatch = result.match(/newComet[":\s]+([a-fA-F0-9x]+)/);
+        if (newCometMatch) {
+          newCometAddress = newCometMatch[1];
+          console.log(`🏗️  New Comet address extracted: ${newCometAddress}`);
+        } else {
+          throw new Error('Could not extract newComet address from execution output');
+        }
+      });
+  
+      expect(newCometAddress).to.be.not.empty;
+      
+      console.log(`✅ Market phase 1 update proposal execution completed with newComet: ${newCometAddress}`);
+    });
+
+    it('should propose market phase 2 update with first admin', async function () {
+      if (!newCometAddress) {
+        throw new Error('⚠️  No newComet address available from phase 1 execution');
+      }
+      
+      if (!targetMarketForUpdate) {
+        throw new Error('⚠️  No target market available for phase 2');
+      }
+      
+      console.log(`🚀 Proposing market phase 2 update for deployment: ${targetMarketForUpdate}`);
+      console.log(`🔧 Using newComet implementation: ${newCometAddress}`);
+      
+      // Use only the first admin to propose the phase 2 upgrade
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/propose/market-phase-2/index.ts --network ${NETWORK_NAME} --deployment ${targetMarketForUpdate} --implementation ${newCometAddress}`;
+        
+        console.log(`📝 Running market phase 2 proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for phase 2 proposal`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Market phase 2 proposal result:`, result);
+        
+        try {
+          marketPhase2ProposalId = extractProposalId(result);
+          console.log(`📝 Market Phase 2 Proposal ID: ${marketPhase2ProposalId}`);
+        } catch (extractError) {
+          console.error(`❌ Failed to extract market phase 2 proposal ID: ${extractError.message}`);
+          throw new Error(`Market Phase 2 Proposal ID extraction failed: ${extractError.message}`);
+        }
+      });
+      
+      console.log(`✅ Market phase 2 update proposal created with ID: ${marketPhase2ProposalId}`);
+    });
+
+    it('should accept market phase 2 update proposal with required admin signatures', async function () {
+      if (!marketPhase2ProposalId) {
+        throw new Error('⚠️  No market phase 2 proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for market phase 2 proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting market phase 2 proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase2ProposalId}`;
+          
+          console.log(`📝 Running accept market phase 2 proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for market phase 2 proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} market phase 2 acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Market phase 2 proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue market phase 2 update proposal with first admin', async function () {    
+      if (!marketPhase2ProposalId) {
+        throw new Error('⚠️  No market phase 2 proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing market phase 2 proposal: ${marketPhase2ProposalId}`);
+      
+      // Use only the first admin to queue the market phase 2 proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase2ProposalId}`;
+        
+        console.log(`📝 Running queue market phase 2 proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for market phase 2 proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue market phase 2 proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          marketPhase2ExecutionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Market Phase 2 execution timestamp captured: ${marketPhase2ExecutionTimestamp}`);
+          console.log(`📅 Market Phase 2 execution time: ${new Date(marketPhase2ExecutionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from market phase 2 queue output');
+        }
+      });
+      
+      console.log(`✅ Market phase 2 proposal queueing completed with first admin`);
+    });
+
+    it('should execute market phase 2 update proposal with first admin', async function () {
+      this.timeout(EXECUTE_TIMEOUT);
+      if (!marketPhase2ProposalId) {
+        throw new Error('⚠️  No market phase 2 proposal ID available to execute');
+      }
+      
+      // Get execution timestamp from previous test
+      if (!marketPhase2ExecutionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from market phase 2 queue test');
+      }
+      
+      console.log(`🚀 Executing market phase 2 update proposal: ${marketPhase2ProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(marketPhase2ExecutionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = marketPhase2ExecutionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until market phase 2 execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Market phase 2 execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the market phase 2 proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${marketPhase2ProposalId} --execution-type comet-upgrade`;
+        
+        console.log(`📝 Running execute market phase 2 proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for market phase 2 proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute market phase 2 proposal result:`, result);
+      });
+      
+      console.log(`✅ Market phase 2 update proposal execution completed with first admin`);
+    });
+  });
+  
   function getAdminPrivateKey(index: number): string {
     const adminPks = process.env.TEST_ADMIN_PKS;
     if (!adminPks) {

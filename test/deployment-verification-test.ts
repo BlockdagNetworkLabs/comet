@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { Contract } from 'ethers';
 import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../src/constants';
+import { runSpiderForMarket } from '../scripts/helpers/commandUtil';
 
 describe('Deployment Verification', function () {
   // This test verifies the deployment configuration for any network/market
@@ -64,9 +65,7 @@ describe('Deployment Verification', function () {
     // Run spider to refresh roots.json before testing
     console.log(`🕷️  Running spider to refresh roots.json...`);
     try {
-      const { execSync } = require('child_process');
-      const spiderCommand = `yarn hardhat spider --network ${networkName} --deployment ${market}`;
-      execSync(spiderCommand, { stdio: 'inherit' });
+      await runSpiderForMarket(networkName, market);
       console.log(`✅ Spider completed successfully`);
     } catch (error) {
       throw new Error('❌ SPIDER is not running correctly. Please verify aliases and roots files');
