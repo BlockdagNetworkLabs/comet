@@ -1,13 +1,14 @@
 #!/usr/bin/env ts-node
+
+import { runGovernanceFlow, GovernanceFlowOptions } from '../../../helpers/governanceFlow';
 import { log, question, confirm as defaultConfirm } from '../../../helpers/ioUtil';
 import { proposeGovernanceUpdate as proposeGovernanceUpdateCommand, extractProposalId } from '../../../helpers/commandUtil';
 
 interface GovernanceUpdateOptions {
   network: string;
-  deployment: string;
 }
 
-class GovernanceUpdater {
+export class GovernanceUpdater {
   private options: GovernanceUpdateOptions;
   private confirmFunction: (prompt: string) => Promise<boolean>;
   private questionFunction: (prompt: string) => Promise<string>;
@@ -39,14 +40,27 @@ class GovernanceUpdater {
 
   private async proposeGovernanceUpdate(admins?: string[], threshold?: number, timelockDelay?: number): Promise<string> {
     const output = await proposeGovernanceUpdateCommand(
-      this.options.network, 
-      this.options.deployment, 
+      this.options.network,
       admins, 
       threshold, 
       timelockDelay
     );
     
     return extractProposalId(output);
+  }
+
+  private async runGovernanceFlow(proposalId: string): Promise<void> {
+    log(`\n🎉 Governance update proposal created successfully!`, 'success');
+    
+    const options: GovernanceFlowOptions = {
+      network: this.options.network,
+      proposalId: proposalId,
+      executionType: 'governance-update'
+    };
+    
+    const successMessage = `\n🎉 Governance update completed successfully!\n🔧 New governance configuration and timelock settings are now active`;
+    
+    await runGovernanceFlow(options, successMessage);
   }
 
   private formatDelay(delaySeconds: number): string {
@@ -66,9 +80,8 @@ class GovernanceUpdater {
 
   public async run(): Promise<string> {
     try {
-      log(`\n🚀 Starting Governance Update Process`, 'info');
+      log(`\n🚀 Starting Governance Update Proposal Process`, 'info');
       log(`Network: ${this.options.network}`, 'info');
-      log(`Deployment: ${this.options.deployment}`, 'info');
       
       // Ask what to update
       const updateGovernance = await this.confirmFunction(`\nDo you want to update governance configuration (admins and threshold)?`);
@@ -149,20 +162,22 @@ class GovernanceUpdater {
       }
       
       // Confirm before proceeding
-      const shouldProceed = await this.confirmFunction(`\nDo you want to proceed with this governance update?`);
+      const shouldProceed = await this.confirmFunction(`\nDo you want to proceed with creating this governance update proposal?`);
       
       if (!shouldProceed) {
-        log(`\n⏸️  Governance update cancelled.`, 'warning');
+        log(`\n⏸️  Proposal creation cancelled.`, 'warning');
         return;
       }
       
+      // Step 1: Propose governance update
       const proposalId = await this.proposeGovernanceUpdate(admins, threshold, timelockDelay);
       
       console.log(`Successfully created proposal! 📋 Proposal ID: ${proposalId}`,'success')
       
       return proposalId;
+      
     } catch (error) {
-      log(`\n❌ Governance update process failed: ${error}`, 'error');
+      log(`\n❌ Governance update proposal process failed: ${error}`, 'error');
       throw error;
     }
   }
@@ -172,34 +187,29 @@ class GovernanceUpdater {
 function parseArgs(): GovernanceUpdateOptions {
   const args = process.argv.slice(2);
   let network = 'local';
-  let deployment = 'dai';
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '--network':
         network = args[++i];
         break;
-      case '--deployment':
-        deployment = args[++i];
-        break;
       case '--help':
       case '-h':
         console.log(`
-🔧 Governance Update Script
+🔧 Governance Update Proposal Script
 
 Usage: yarn ts-node scripts/governor/propose/governance-update/index.ts [options]
 
 Options:
   --network <network>      Network to use (default: local)
-  --deployment <market>    Deployment to use (default: dai)
   --help, -h              Show this help message
 
 Examples:
-  # Update governance configuration on local network (interactive)
-  yarn ts-node scripts/governor/propose/governance-update/index.ts --network local --deployment dai
+  # Create a governance update proposal on local network (interactive)
+  yarn ts-node scripts/governor/propose/governance-update/index.ts --network local
 
-  # Update governance configuration on polygon network (interactive)
-  yarn ts-node scripts/governor/propose/governance-update/index.ts --network polygon --deployment usdc
+  # Create a governance update proposal on polygon network (interactive)
+  yarn ts-node scripts/governor/propose/governance-update/index.ts --network polygon
 
 Interactive prompts:
   - Choose what to update: governance config, timelock delay, or both
@@ -208,17 +218,14 @@ Interactive prompts:
   - Timelock delay: Enter new delay in seconds (if updating timelock)
   - Confirmation: Confirm the configuration before proceeding
 
-Note: This script will guide you through the complete governance process:
-1. Create proposal
-2. Approve proposal (if you choose to)
-3. Queue proposal (if you choose to)
-4. Execute proposal (if you choose to)
+Note: This script creates a governance proposal to update governance configuration.
+The actual update will occur after the proposal goes through the governance process.
         `);
         process.exit(0);
     }
   }
 
-  return { network, deployment };
+  return { network };
 }
 
 // Main execution

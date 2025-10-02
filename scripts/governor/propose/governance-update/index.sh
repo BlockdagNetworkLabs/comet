@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Governance Update Script Wrapper
-# This script provides a simple interface to update both governance configuration and timelock delay using the TypeScript script
+# Governance Update Proposal Script Wrapper
+# This script provides a simple interface to create a governance proposal to update both governance configuration and timelock delay
 
 set -e
 
@@ -31,21 +31,20 @@ print_error() {
 
 # Function to show help
 show_help() {
-    echo -e "${BLUE}🔧 Governance Update Script Wrapper${NC}"
+    echo -e "${BLUE}🔧 Governance Update Proposal Script Wrapper${NC}"
     echo ""
     echo "Usage: ./scripts/governor/propose/governance-update/index.sh [options]"
     echo ""
     echo "Options:"
     echo "  -n, --network <network>     Network to use (default: local)"
-    echo "  -d, --deployment <market>   Deployment to use (default: dai)"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Examples:"
-    echo "  # Update governance configuration on local network (interactive)"
-    echo "  ./scripts/governor/propose/governance-update/index.sh -n local -d dai"
+    echo "  # Create a governance update proposal on local network (interactive)"
+    echo "  ./scripts/governor/propose/governance-update/index.sh -n local"
     echo ""
-    echo "  # Update governance configuration on polygon network (interactive)"
-    echo "  ./scripts/governor/propose/governance-update/index.sh -n polygon -d usdc"
+    echo "  # Create a governance update proposal on polygon network (interactive)"
+    echo "  ./scripts/governor/propose/governance-update/index.sh -n polygon"
     echo ""
     echo "Interactive prompts:"
     echo "  - Choose what to update: governance config, timelock delay, or both"
@@ -54,14 +53,14 @@ show_help() {
     echo "  - Timelock delay: Enter new delay in seconds (if updating timelock)"
     echo "  - Confirmation: Confirm the configuration before proceeding"
     echo ""
-    echo "Note: This script will guide you through the complete governance process:"
+    echo "Note: This script creates a governance proposal to update governance configuration."
+    echo "The actual update will occur after the proposal goes through the governance process:"
     echo "  1. Create proposal"
     echo "  2. Approve proposal (if you choose to)"
     echo "  3. Queue proposal (if you choose to)"
     echo "  4. Execute proposal (if you choose to)"
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
-    echo "Available deployments: dai, usdc, usdt, weth, wbtc, etc."
 }
 
 # Function to check if required tools are installed
@@ -85,16 +84,11 @@ check_requirements() {
 
 # Parse command line arguments
 NETWORK="local"
-DEPLOYMENT="dai"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -n|--network)
             NETWORK="$2"
-            shift 2
-            ;;
-        -d|--deployment)
-            DEPLOYMENT="$2"
             shift 2
             ;;
         -h|--help)
@@ -111,22 +105,20 @@ done
 
 # Main execution
 main() {
-    print_info "Starting Governance Update process..."
+    print_info "Starting Governance Update Proposal process..."
     print_info "Network: $NETWORK"
-    print_info "Deployment: $DEPLOYMENT"
     print_info "Configuration will be asked interactively"
     
     # Check requirements
     check_requirements
     
-    # Run the governance update script
-    print_info "Executing governance update script..."
+    # Run the governance update proposal script
+    print_info "Executing governance update proposal script..."
     
     yarn ts-node scripts/governor/propose/governance-update/index.ts \
-        --network "$NETWORK" \
-        --deployment "$DEPLOYMENT"
+        --network "$NETWORK"
     
-    print_success "Governance update script completed"
+    print_success "Governance update proposal script completed"
 }
 
 # Run main function

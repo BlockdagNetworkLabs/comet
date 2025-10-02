@@ -213,12 +213,11 @@ export async function proposeFundRewards(network: string, amount: string): Promi
  */
 export async function proposeGovernanceUpdate(
   network: string, 
-  deployment: string, 
   admins?: string[], 
   threshold?: number, 
   timelockDelay?: number
 ): Promise<string> {
-  let command = `yarn hardhat governor:propose-governance-update --network ${network} --deployment ${deployment}`;
+  let command = `yarn hardhat governor:propose-governance-update --network ${network}`;
   
   if (admins && threshold) {
     const adminsParam = admins.join(',');

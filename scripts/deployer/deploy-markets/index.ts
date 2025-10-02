@@ -239,7 +239,6 @@ class MarketsDeployer {
 
     const output = await proposeGovernanceUpdateCommand(
       this.options.network, 
-      this.options.deployments[0], // Use first deployment for governance update
       admins, 
       threshold, 
       timelockDelay

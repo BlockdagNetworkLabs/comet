@@ -147,17 +147,15 @@ task('governor:propose-fund-comet-rewards', 'Propose to fund CometRewards contra
 
 // Task to propose governance update (improved version)
 task('governor:propose-governance-update', 'Propose governance configuration and/or timelock delay updates')
-  .addParam('deployment', 'The deployment to use')
   .addOptionalParam('admins', 'Comma-separated list of new admin addresses (optional)')
   .addOptionalParam('threshold', 'New multisig threshold (optional)')
   .addOptionalParam('timelockDelay', 'New timelock delay in seconds (optional)')
   .setAction(async (taskArgs, hre) => {
     const adminsParam = taskArgs.admins;
     const threshold = taskArgs.threshold ? parseInt(taskArgs.threshold) : undefined;
-    const deployment = taskArgs.deployment;
     const timelockDelay = taskArgs.timelockDelay ? parseInt(taskArgs.timelockDelay) : undefined;
     
-    await createDeploymentManager(hre, deployment);
+    await createDeploymentManager(hre);
     
     // Parse admin addresses if provided
     let admins: string[] | undefined;
