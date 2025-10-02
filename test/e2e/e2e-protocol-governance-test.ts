@@ -51,7 +51,7 @@ async function runWithSigner<T>(
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe.skip('Complete Protocol Deployment', function () {
+  describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
 
     const templatePath = path.join(__dirname, TEMPLATE_NAME);
@@ -100,7 +100,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe.skip('Incremental Protocol Deployment', function () {
+  describe('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -617,8 +617,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           const numericValue = Number(currentValue);
           if (!isNaN(numericValue)) {
             const newValue = parseFloat((numericValue + 0.1).toFixed(1));
-            modifications[`assets.${asset}.liquidateCF`] = newValue;
-            console.log(`📝 ${asset} liquidateCF: ${currentValue} → ${newValue} (+0.1)`);
+            // Skip if new value would exceed 1.0
+            if (newValue > 1.0) {
+              console.log(`⚠️  Skipping ${asset} liquidateCF - new value ${newValue} would exceed 1.0 (current: ${currentValue})`);
+            } else {
+              modifications[`assets.${asset}.liquidateCF`] = newValue;
+              console.log(`📝 ${asset} liquidateCF: ${currentValue} → ${newValue} (+0.1)`);
+            }
           } else {
             console.log(`⚠️  Skipping ${asset} liquidateCF - non-numeric value: ${currentValue}`);
           }
@@ -630,8 +635,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         const numericValue = Number(storeFrontPriceFactor);
         if (!isNaN(numericValue)) {
           const newValue = parseFloat((numericValue + 0.1).toFixed(1));
-          modifications['storeFrontPriceFactor'] = newValue;
-          console.log(`📝 storeFrontPriceFactor: ${storeFrontPriceFactor} → ${newValue} (+0.1)`);
+          // Skip if new value would exceed 1.0
+          if (newValue > 1.0) {
+            console.log(`⚠️  Skipping storeFrontPriceFactor - new value ${newValue} would exceed 1.0 (current: ${storeFrontPriceFactor})`);
+          } else {
+            modifications['storeFrontPriceFactor'] = newValue;
+            console.log(`📝 storeFrontPriceFactor: ${storeFrontPriceFactor} → ${newValue} (+0.1)`);
+          }
         } else {
           console.log(`⚠️  Skipping storeFrontPriceFactor - non-numeric value: ${storeFrontPriceFactor}`);
         }
