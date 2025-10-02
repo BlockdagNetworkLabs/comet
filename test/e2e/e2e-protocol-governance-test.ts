@@ -1194,7 +1194,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe('Governance Update', function () {
+  describe('Governance Update (Admins and Timelock Delay)', function () {
     // Tests governance update proposal flow
     let governanceUpdateProposalId: string = '';
     let governanceUpdateExecutionTimestamp: number | null = null;    // Declare GovernanceUpdater globally
