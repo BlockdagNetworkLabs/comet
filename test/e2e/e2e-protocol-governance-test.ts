@@ -1195,9 +1195,10 @@ describe('E2E Protocol Governance Test Suite', function () {
   });
   
   describe('Governance Update (Admins and Timelock Delay)', function () {
-    // Tests governance update proposal flow
+    // Tests governance update proposal flow for both admins and timelock delay
     let governanceUpdateProposalId: string = '';
-    let governanceUpdateExecutionTimestamp: number | null = null;    // Declare GovernanceUpdater globally
+    let governanceUpdateExecutionTimestamp: number | null = null;
+    
     let governanceUpdater = new GovernanceUpdater({ 
       network: NETWORK_NAME
     });
@@ -1245,22 +1246,27 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
     });
 
-    it('should propose governance update with first admin', async function () {
+    it('should propose governance update (admins and timelock delay) with first admin', async function () {
       this.timeout(PROPOSE_PHASE_1_TIMEOUT);
-
+      
       // Test configuration
       const TEST_ADMIN_ADDRESSES = '0x1234567890123456789012345678901234567890,0x0987654321098765432109876543210987654321';
       const TEST_THRESHOLD = '2';
       const TEST_TIMELOCK_DELAY = '3600'; // 1 hour in seconds
-    
-      // Set up mock answers for the governance update flow
+      
+      console.log(`🚀 Testing governance update proposal (admins and timelock delay)`);
+      console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES}`);
+      console.log(`🔢 Threshold: ${TEST_THRESHOLD}`);
+      console.log(`⏰ Timelock delay: ${TEST_TIMELOCK_DELAY} seconds`);
+      
+      // Set up mock answers for the governance update flow (both admins and timelock)
       // The script will ask:
       // 1. "Do you want to update governance configuration (admins and threshold)?" -> true
       // 2. "Do you want to update timelock delay?" -> true  
       // 3. "Enter admin addresses..." -> TEST_ADMIN_ADDRESSES
       // 4. "Enter multisig threshold..." -> TEST_THRESHOLD
       // 5. "Enter new timelock delay..." -> TEST_TIMELOCK_DELAY
-      // 6. "Do you want to proceed with this governance update?" -> true
+      // 6. "Do you want to proceed with creating this governance update proposal?" -> true
       let mockConfirmAnswers: boolean[] = [true, true, true]; // 3 confirm questions
       let mockQuestionAnswers: string[] = [TEST_ADMIN_ADDRESSES, TEST_THRESHOLD, TEST_TIMELOCK_DELAY]; // 3 question answers
       
@@ -1268,13 +1274,17 @@ describe('E2E Protocol Governance Test Suite', function () {
       setupMockFunctions(governanceUpdater, mockConfirmAnswers, mockQuestionAnswers);
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
-
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        console.log(`📝 Using admin private key for governance operations`);
+        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
+        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
+        
         try {
           governanceUpdateProposalId = await governanceUpdater.run();
-          console.log(`✅ Governance update proposal completed successfully`);
+          console.log(`✅ Governance update (admins and timelock delay) proposal completed successfully`);
           console.log(`📋 Proposal ID: ${governanceUpdateProposalId}`);
         } catch (error) {
-          console.error(`❌ Governance update failed:`, error);
+          console.error(`❌ Governance update (admins and timelock delay) failed:`, error);
           throw error;
         }
       });
@@ -1396,6 +1406,418 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
       console.log(`🔧 New governance configuration and timelock settings are now active`);
+    });
+  });
+
+  describe('Governance Update (Admins Only)', function () {
+    // Tests governance update proposal flow for admins only
+    let governanceUpdateAdminsProposalId: string = '';
+    let governanceUpdateAdminsExecutionTimestamp: number | null = null;
+  
+    let governanceUpdaterAdmins = new GovernanceUpdater({ 
+      network: NETWORK_NAME
+    });
+    
+    before(async function () {
+      // Set test environment variables
+      process.env.TEST = 'true';
+      process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
+       
+      // Copy template files to e2e root
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+    });
+
+    after(async function () {
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      // Clean up test environment variables
+      delete process.env.TEST;
+      delete process.env.TEST_HARDHAT_CONFIG;
+    });
+
+    it('should deploy protocol successfully', async function () {
+      this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+      console.log(`🚀 Testing protocol deployment for ${TEMPLATE_NAME}...`);
+      
+      try {
+        // Run deployment command - all internal hardhat commands will now use the test config
+        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        
+        console.log(`📝 Running deployment command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        console.log('Deployment output:', result);
+        console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
+      } catch (error) {
+        console.error('Deployment failed:', error.message);
+        throw error;
+      }
+    });
+
+    it('should propose governance update (admins only) with first admin', async function () {
+      this.timeout(PROPOSE_PHASE_1_TIMEOUT);
+      
+      // Test configuration
+      const TEST_ADMIN_ADDRESSES = '0x1234567890123456789012345678901234567890,0x0987654321098765432109876543210987654321';
+      const TEST_THRESHOLD = '2';
+      
+      // Set up mock answers for the governance update flow (admins only)
+      // The script will ask:
+      // 1. "Do you want to update governance configuration (admins and threshold)?" -> true
+      // 2. "Do you want to update timelock delay?" -> false
+      // 3. "Enter admin addresses..." -> TEST_ADMIN_ADDRESSES
+      // 4. "Enter multisig threshold..." -> TEST_THRESHOLD
+      // 5. "Do you want to proceed with creating this governance update proposal?" -> true
+      let mockConfirmAnswers: boolean[] = [true, false, true]; // 3 confirm questions
+      let mockQuestionAnswers: string[] = [TEST_ADMIN_ADDRESSES, TEST_THRESHOLD]; // 2 question answers (no timelock delay)
+      
+      // Use the reusable function to set up mocks
+      setupMockFunctions(governanceUpdaterAdmins, mockConfirmAnswers, mockQuestionAnswers);
+
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        console.log(`📝 Using admin private key for governance operations`);
+        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
+        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
+        
+        try {
+          governanceUpdateAdminsProposalId = await governanceUpdaterAdmins.run();
+          console.log(`✅ Governance update (admins only) proposal completed successfully`);
+          console.log(`📋 Proposal ID: ${governanceUpdateAdminsProposalId}`);
+        } catch (error) {
+          console.error(`❌ Governance update (admins only) failed:`, error);
+          throw error;
+        }
+      });
+    });
+
+    it('should accept governance update proposal with required admin signatures', async function () {      
+      if (!governanceUpdateAdminsProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting governance update proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateAdminsProposalId}`;
+          
+          console.log(`📝 Running accept governance update proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for governance update proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} governance update acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Governance update proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue governance update proposal with first admin', async function () {      
+      if (!governanceUpdateAdminsProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing governance update proposal: ${governanceUpdateAdminsProposalId}`);
+      
+      // Use only the first admin to queue the governance update proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateAdminsProposalId}`;
+        
+        console.log(`📝 Running queue governance update proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for governance update proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue governance update proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          governanceUpdateAdminsExecutionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Governance update execution timestamp captured: ${governanceUpdateAdminsExecutionTimestamp}`);
+          console.log(`📅 Governance update execution time: ${new Date(governanceUpdateAdminsExecutionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from governance update queue output');
+        }
+      });
+      
+      console.log(`✅ Governance update proposal queueing completed with first admin`);
+    });
+
+    it('should execute governance update proposal with first admin', async function () {
+      this.timeout(EXECUTE_TIMEOUT);
+      if (!governanceUpdateAdminsProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to execute');
+      }
+      
+      // Get execution timestamp from previous test
+      if (!governanceUpdateAdminsExecutionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from governance update queue test');
+      }
+      
+      console.log(`🚀 Executing governance update proposal: ${governanceUpdateAdminsProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(governanceUpdateAdminsExecutionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = governanceUpdateAdminsExecutionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until governance update execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Governance update execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the governance update proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateAdminsProposalId} --execution-type governance-update`;
+        
+        console.log(`📝 Running execute governance update proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for governance update proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute governance update proposal result:`, result);
+      });
+      
+      console.log(`✅ Governance update proposal execution completed with first admin`);
+    });
+  });
+
+  describe('Governance Update (Timelock Only)', function () {
+    // Tests governance update proposal flow for timelock delay only
+    let governanceUpdateTimelockProposalId: string = '';
+    let governanceUpdateTimelockExecutionTimestamp: number | null = null;
+    
+    let governanceUpdaterTimelock = new GovernanceUpdater({ 
+      network: NETWORK_NAME
+    });
+    
+    before(async function () {
+      // Set test environment variables
+      process.env.TEST = 'true';
+      process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
+       
+      // Copy template files to e2e root
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+    });
+
+    after(async function () {
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      // Clean up test environment variables
+      delete process.env.TEST;
+      delete process.env.TEST_HARDHAT_CONFIG;
+    });
+
+    it('should deploy protocol successfully', async function () {
+      this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+      console.log(`🚀 Testing protocol deployment for ${TEMPLATE_NAME}...`);
+      
+      try {
+        // Run deployment command - all internal hardhat commands will now use the test config
+        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        
+        console.log(`📝 Running deployment command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        console.log('Deployment output:', result);
+        console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
+      } catch (error) {
+        console.error('Deployment failed:', error.message);
+        throw error;
+      }
+    });
+
+    it('should propose governance update (timelock only) with first admin', async function () {
+      this.timeout(PROPOSE_PHASE_1_TIMEOUT);
+      
+      // Test configuration
+      const TEST_TIMELOCK_DELAY = '7200'; // 2 hours in seconds
+      
+      // Set up mock answers for the governance update flow (timelock only)
+      // The script will ask:
+      // 1. "Do you want to update governance configuration (admins and threshold)?" -> false
+      // 2. "Do you want to update timelock delay?" -> true
+      // 3. "Enter new timelock delay in seconds: " -> TEST_TIMELOCK_DELAY
+      // 4. "Do you want to proceed with creating this governance update proposal?" -> true
+      let mockConfirmAnswers: boolean[] = [false, true, true]; // 3 confirm questions
+      let mockQuestionAnswers: string[] = [TEST_TIMELOCK_DELAY]; // 1 question answer (no admin addresses or threshold)
+      
+      // Use the reusable function to set up mocks
+      setupMockFunctions(governanceUpdaterTimelock, mockConfirmAnswers, mockQuestionAnswers);
+
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        console.log(`📝 Using admin private key for governance operations`);
+        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
+        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
+        
+        try {
+          governanceUpdateTimelockProposalId = await governanceUpdaterTimelock.run();
+          console.log(`✅ Governance update (timelock only) proposal completed successfully`);
+          console.log(`📋 Proposal ID: ${governanceUpdateTimelockProposalId}`);
+        } catch (error) {
+          console.error(`❌ Governance update (timelock only) failed:`, error);
+          throw error;
+        }
+      });
+    });
+
+    it('should accept governance update proposal with required admin signatures', async function () {      
+      if (!governanceUpdateTimelockProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting governance update proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateTimelockProposalId}`;
+          
+          console.log(`📝 Running accept governance update proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for governance update proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} governance update acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Governance update proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue governance update proposal with first admin', async function () {    
+      if (!governanceUpdateTimelockProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing governance update proposal: ${governanceUpdateTimelockProposalId}`);
+      
+      // Use only the first admin to queue the governance update proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateTimelockProposalId}`;
+        
+        console.log(`📝 Running queue governance update proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for governance update proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue governance update proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          governanceUpdateTimelockExecutionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Governance update execution timestamp captured: ${governanceUpdateTimelockExecutionTimestamp}`);
+          console.log(`📅 Governance update execution time: ${new Date(governanceUpdateTimelockExecutionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from governance update queue output');
+        }
+      });
+      
+      console.log(`✅ Governance update proposal queueing completed with first admin`);
+    });
+
+    it('should execute governance update proposal with first admin', async function () {
+      this.timeout(EXECUTE_TIMEOUT);
+      if (!governanceUpdateTimelockProposalId) {
+        throw new Error('⚠️  No governance update proposal ID available to execute');
+      }
+      
+      // Get execution timestamp from previous test
+      if (!governanceUpdateTimelockExecutionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from governance update queue test');
+      }
+      
+      console.log(`🚀 Executing governance update proposal: ${governanceUpdateTimelockProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(governanceUpdateTimelockExecutionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = governanceUpdateTimelockExecutionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until governance update execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Governance update execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the governance update proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${governanceUpdateTimelockProposalId} --execution-type governance-update`;
+        
+        console.log(`📝 Running execute governance update proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for governance update proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute governance update proposal result:`, result);
+      });
+      
+      console.log(`✅ Governance update proposal execution completed with first admin`);
     });
   });
   
