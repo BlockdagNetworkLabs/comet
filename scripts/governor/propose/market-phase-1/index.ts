@@ -25,7 +25,7 @@ class NewMarketImpl {
       const result = await deployMarketCommand(this.options.network, this.options.deployment);
       const proposalId = extractProposalId(result);
       
-      log(`\n🎉 New market implementation proposed successfully! Proposal ID: ${proposalId}`, 'success');
+      console.log(`Successfully created proposal! 📋 Proposal ID: ${proposalId}`,'success')
       
     } catch (error) {
       log(`\n❌ New market implementation deployment failed: ${error}`, 'error');

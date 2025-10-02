@@ -1,7 +1,5 @@
 #!/usr/bin/env ts-node
-
-import { runGovernanceFlow, GovernanceFlowOptions } from '../../../helpers/governanceFlow';
-import { log, question, confirm } from '../../../helpers/ioUtil';
+import { log, question, confirm as defaultConfirm } from '../../../helpers/ioUtil';
 import { proposeGovernanceUpdate as proposeGovernanceUpdateCommand, extractProposalId } from '../../../helpers/commandUtil';
 
 interface GovernanceUpdateOptions {
@@ -11,9 +9,24 @@ interface GovernanceUpdateOptions {
 
 class GovernanceUpdater {
   private options: GovernanceUpdateOptions;
+  private confirmFunction: (prompt: string) => Promise<boolean>;
+  private questionFunction: (prompt: string) => Promise<string>;
 
   constructor(options: GovernanceUpdateOptions) {
     this.options = options;
+    // Use default functions, no global loading
+    this.confirmFunction = defaultConfirm;
+    this.questionFunction = question;
+  }
+
+  /**
+   * Set custom confirm and question functions for testing or automation
+   * @param confirmFn - Function that takes a prompt and returns a boolean
+   * @param questionFn - Function that takes a prompt and returns a string
+   */
+  public setMockFunctions(confirmFn: (prompt: string) => Promise<boolean>, questionFn: (prompt: string) => Promise<string>): void {
+    this.confirmFunction = confirmFn;
+    this.questionFunction = questionFn;
   }
 
   private validateAdminAddresses(admins: string[]): void {
@@ -36,20 +49,6 @@ class GovernanceUpdater {
     return extractProposalId(output);
   }
 
-  private async runGovernanceFlow(proposalId: string): Promise<void> {
-    log(`\n🎉 Governance update proposal created successfully!`, 'success');
-    
-    const options: GovernanceFlowOptions = {
-      network: this.options.network,
-      proposalId: proposalId,
-      executionType: 'governance-update'
-    };
-    
-    const successMessage = `\n🎉 Governance update completed successfully!\n🔧 New governance configuration and timelock settings are now active`;
-    
-    await runGovernanceFlow(options, successMessage);
-  }
-
   private formatDelay(delaySeconds: number): string {
     if (delaySeconds < 60) {
       return `${delaySeconds} seconds`;
@@ -65,15 +64,15 @@ class GovernanceUpdater {
     }
   }
 
-  public async run(): Promise<void> {
+  public async run(): Promise<string> {
     try {
       log(`\n🚀 Starting Governance Update Process`, 'info');
       log(`Network: ${this.options.network}`, 'info');
       log(`Deployment: ${this.options.deployment}`, 'info');
       
       // Ask what to update
-      const updateGovernance = await confirm(`\nDo you want to update governance configuration (admins and threshold)?`);
-      const updateTimelock = await confirm(`\nDo you want to update timelock delay?`);
+      const updateGovernance = await this.confirmFunction(`\nDo you want to update governance configuration (admins and threshold)?`);
+      const updateTimelock = await this.confirmFunction(`\nDo you want to update timelock delay?`);
       
       if (!updateGovernance && !updateTimelock) {
         log(`\n❌ You must select at least one update option`, 'error');
@@ -87,7 +86,7 @@ class GovernanceUpdater {
       // Handle governance configuration update
       if (updateGovernance) {
         // Ask for admin addresses
-        const adminsInput = await question(`\nEnter admin addresses (comma-separated, e.g., 0x123...,0x456...,0x789...): `);
+        const adminsInput = await this.questionFunction(`\nEnter admin addresses (comma-separated, e.g., 0x123...,0x456...,0x789...): `);
         
         if (!adminsInput) {
           log(`\n❌ Admin addresses are required`, 'error');
@@ -100,7 +99,7 @@ class GovernanceUpdater {
         this.validateAdminAddresses(admins);
         
         // Ask for threshold
-        const thresholdInput = await question(`\nEnter multisig threshold (number of required approvals): `);
+        const thresholdInput = await this.questionFunction(`\nEnter multisig threshold (number of required approvals): `);
         
         if (!thresholdInput) {
           log(`\n❌ Threshold is required`, 'error');
@@ -123,7 +122,7 @@ class GovernanceUpdater {
       
       // Handle timelock delay update
       if (updateTimelock) {
-        const timelockDelayInput = await question(`\nEnter new timelock delay in seconds: `);
+        const timelockDelayInput = await this.questionFunction(`\nEnter new timelock delay in seconds: `);
         
         if (!timelockDelayInput) {
           log(`\n❌ Timelock delay is required`, 'error');
@@ -150,19 +149,18 @@ class GovernanceUpdater {
       }
       
       // Confirm before proceeding
-      const shouldProceed = await confirm(`\nDo you want to proceed with this governance update?`);
+      const shouldProceed = await this.confirmFunction(`\nDo you want to proceed with this governance update?`);
       
       if (!shouldProceed) {
         log(`\n⏸️  Governance update cancelled.`, 'warning');
         return;
       }
       
-      // Step 1: Propose governance update
       const proposalId = await this.proposeGovernanceUpdate(admins, threshold, timelockDelay);
       
-      // Step 2: Run governance flow
-      await this.runGovernanceFlow(proposalId);
+      console.log(`Successfully created proposal! 📋 Proposal ID: ${proposalId}`,'success')
       
+      return proposalId;
     } catch (error) {
       log(`\n❌ Governance update process failed: ${error}`, 'error');
       throw error;

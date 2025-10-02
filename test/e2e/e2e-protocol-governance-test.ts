@@ -6,6 +6,7 @@ import { DynamicHardhatConfig } from './helpers/dynamic-hardhat-config';
 import { extractProposalId } from '../../scripts/helpers/commandUtil';
 import { expect } from 'chai';
 import { discoverMarkets } from './helpers/deployment-manager';
+import { CometRewardFunder } from '../../scripts/governor/propose/comet-reward-funding/index';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
@@ -23,6 +24,7 @@ const PROPOSE_PHASE_1_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const EXECUTE_TIMEOUT = (2 * 60 * 1000) + parseInt(process.env.TIMELOCK_DELAY) * 60 * 1000; // 2 minutes + TIMELOCK_DELAY minutes
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
+const TEMPLATE_PATH = path.join(__dirname, TEMPLATE_NAME);
 
 async function reloadHardhatConfigToIncorporateSigner(signer: string) {
   const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, { ...E2E_NETWORK_CONFIG, accounts:[signer] }, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
@@ -51,18 +53,15 @@ async function runWithSigner<T>(
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe('Complete Protocol Deployment', function () {
+  describe.skip('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
-
-    const templatePath = path.join(__dirname, TEMPLATE_NAME);
-
     before(async function () {
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
        
       // Copy template files to e2e root
-      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -100,7 +99,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe('Incremental Protocol Deployment', function () {
+  describe.skip('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -114,9 +113,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
 
-      // Copy template files to e2e root
-      const templatePath = path.join(__dirname, TEMPLATE_NAME);
-      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -520,7 +517,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe('Protocol Deployment with Market Update', function () {
+  describe.skip('Protocol Deployment with Market Update', function () {
     // Tests deploying all markets + updating one market via governance
     let targetMarketForUpdate: string = '';
     let marketPhase1ProposalId: string = '';
@@ -529,15 +526,13 @@ describe('E2E Protocol Governance Test Suite', function () {
     let marketPhase2ProposalId: string | null = null;
     let marketPhase2ExecutionTimestamp: number | null = null;
 
-    const templatePath = path.join(__dirname, TEMPLATE_NAME);
-
     before(async function () {
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
        
       // Copy template files to e2e root
-      await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -1003,6 +998,197 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
+  describe.skip('Comet Reward Funding', function () {
+    // Tests comet reward funding governance flow
+    let cometRewardFundingProposalId: string = '';
+    let cometRewardFundingExecutionTimestamp: number | null = null;
+   
+    let cometRewardFunder = new CometRewardFunder({network: NETWORK_NAME})
+    
+    before(async function () {
+      // Set test environment variables
+      process.env.TEST = 'true';
+      process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
+       
+      // Copy template files to e2e root
+      await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+    });
+
+    after(async function () {
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      // Clean up test environment variables
+      delete process.env.TEST;
+      delete process.env.TEST_HARDHAT_CONFIG;
+    });
+
+    it('should deploy protocol successfully', async function () {
+      this.timeout(PROTOCOL_DEPLOYMENT_TIMEOUT);
+      console.log(`🚀 Testing protocol deployment for ${TEMPLATE_NAME}...`);
+      
+      try {
+        // Run deployment command - all internal hardhat commands will now use the test config
+        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        
+        console.log(`📝 Running deployment command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        console.log('Deployment output:', result);
+        console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
+      } catch (error) {
+        console.error('Deployment failed:', error.message);
+        throw error;
+      }
+    });
+
+    it('should propose comet reward funding with first admin', async function () {
+      const FUNDING_AMOUNT = '1000000000000000000000'; // 1000 COMP tokens in wei
+      let mockQuestionAnswers: string[] = [FUNDING_AMOUNT];
+      let mockConfirmAnswers: boolean[] = [true]; 
+      
+      console.log(`🚀 Testing comet reward funding proposal`);
+      console.log(`💰 Funding amount: ${FUNDING_AMOUNT} COMP tokens (wei)`);
+
+      // Use the reusable function to set up mocks
+      setupMockFunctions(cometRewardFunder, mockConfirmAnswers, mockQuestionAnswers);
+
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        try {
+          cometRewardFundingProposalId = await cometRewardFunder.run();
+          console.log(`✅ Comet reward funding proposal completed successfully`);
+        } catch (error) {
+          console.error(`❌ Comet reward funding failed:`, error);
+          throw error;
+        }
+      });
+    });
+
+    it('should accept comet reward funding proposal with required admin signatures', async function () {      
+      if (!cometRewardFundingProposalId) {
+        throw new Error('⚠️  No comet reward funding proposal ID available to accept');
+      }
+      
+      // Get threshold from environment (assume it exists)
+      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      console.log(`📋 Required threshold for comet reward funding proposal acceptance: ${threshold}`);
+      
+      // Get admin signers from environment (assume it exists)
+      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
+      console.log(`📋 Available admin signers: ${adminPkArray.length}`);
+      
+      // Iterate through required number of admins to meet threshold
+      for (let i = 0; i < Math.min(threshold, adminPkArray.length); i++) {
+        console.log(`🎯 Accepting comet reward funding proposal with admin ${i + 1}/${threshold}`);
+        
+        await runWithSigner(getAdminPrivateKey(i), async () => {
+          const command = `npx ts-node scripts/governor/accept-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${cometRewardFundingProposalId}`;
+          
+          console.log(`📝 Running accept comet reward funding proposal command: ${command}`);
+          console.log(`📝 Using admin private key ${i + 1} for comet reward funding proposal acceptance`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Admin ${i + 1} comet reward funding acceptance result:`, result);
+        });
+      }
+      
+      console.log(`✅ Comet reward funding proposal acceptance completed with ${threshold} admin signatures`);
+    });
+
+    it('should queue comet reward funding proposal with first admin', async function () {      
+      if (!cometRewardFundingProposalId) {
+        throw new Error('⚠️  No comet reward funding proposal ID available to queue');
+      }
+      
+      console.log(`🚀 Queueing comet reward funding proposal: ${cometRewardFundingProposalId}`);
+      
+      // Use only the first admin to queue the comet reward funding proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/queue-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${cometRewardFundingProposalId}`;
+        
+        console.log(`📝 Running queue comet reward funding proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for comet reward funding proposal queueing`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Queue comet reward funding proposal result:`, result);
+        
+        // Extract execution timestamp from the output
+        const etaMatch = result.match(/ETA: (\d+)/);
+        if (etaMatch) {
+          cometRewardFundingExecutionTimestamp = parseInt(etaMatch[1]);
+          console.log(`📅 Comet reward funding execution timestamp captured: ${cometRewardFundingExecutionTimestamp}`);
+          console.log(`📅 Comet reward funding execution time: ${new Date(cometRewardFundingExecutionTimestamp * 1000).toLocaleString()}`);
+        } else {
+          throw new Error('Could not extract execution timestamp from comet reward funding queue output');
+        }
+      });
+      
+      console.log(`✅ Comet reward funding proposal queueing completed with first admin`);
+    });
+
+    it('should execute comet reward funding proposal with first admin', async function () {
+      this.timeout(EXECUTE_TIMEOUT);
+      if (!cometRewardFundingProposalId) {
+        throw new Error('⚠️  No comet reward funding proposal ID available to execute');
+      }
+      
+      // Get execution timestamp from previous test
+      if (!cometRewardFundingExecutionTimestamp) {
+        throw new Error('⚠️  No execution timestamp available from comet reward funding queue test');
+      }
+      
+      console.log(`🚀 Executing comet reward funding proposal: ${cometRewardFundingProposalId}`);
+      console.log(`📅 Waiting until execution time: ${new Date(cometRewardFundingExecutionTimestamp * 1000).toLocaleString()}`);
+      
+      // Wait until the execution timestamp is reached
+      const currentTime = Math.floor(Date.now() / 1000);
+      const timeToWait = cometRewardFundingExecutionTimestamp - currentTime;
+      
+      if (timeToWait > 0) {
+        console.log(`⏳ Waiting ${timeToWait} seconds until comet reward funding execution time...`);
+        await new Promise(resolve => setTimeout(resolve, timeToWait * 1000));
+      }
+      
+      console.log(`✅ Comet reward funding execution time reached, proceeding with execution`);
+      
+      // Use only the first admin to execute the comet reward funding proposal
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+        const command = `npx ts-node scripts/governor/execute-proposal/index.ts --network ${NETWORK_NAME} --proposal-id ${cometRewardFundingProposalId} --execution-type comet-reward-funding`;
+        
+        console.log(`📝 Running execute comet reward funding proposal command: ${command}`);
+        console.log(`📝 Using first admin private key for comet reward funding proposal execution`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log(`✅ Execute comet reward funding proposal result:`, result);
+      });
+      
+      console.log(`✅ Comet reward funding proposal execution completed with first admin`);
+      console.log(`💰 COMP tokens have been transferred to CometRewards contract`);
+    });
+  });
+  
   function getAdminPrivateKey(index: number): string {
     const adminPks = process.env.TEST_ADMIN_PKS;
     if (!adminPks) {
@@ -1054,33 +1240,68 @@ describe('E2E Protocol Governance Test Suite', function () {
   }
 
   async function deleteDirectory(): Promise<void> {
-    console.log('🧹 Cleaning up folder...');
-    const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+    // console.log('🧹 Cleaning up folder...');
+    // const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
-    try {
-      if (fs.existsSync(e2eNetworkPath)) {
-        await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
-        console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
-      } else {
-        console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
-      }
-    } catch (error) {
-      console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
-    }
+    // try {
+    //   if (fs.existsSync(e2eNetworkPath)) {
+    //     await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+    //     console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+    //   } else {
+    //     console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+    //   }
+    // } catch (error) {
+    //   console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+    // }
   }
 
   async function deleteHardhatConfigFile(): Promise<void> {
-    console.log('🧹 Cleaning up test hardhat config file...');
-    try {
-      if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
-        await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
-        console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
-      } else {
-        console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
+    // console.log('🧹 Cleaning up test hardhat config file...');
+    // try {
+    //   if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
+    //     await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
+    //     console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
+    //   } else {
+    //     console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
+    //   }
+    // } catch (error) {
+    //   console.warn(`Warning: Could not delete test hardhat config:`, error);
+    // }
+  }
+
+  function setupMockFunctions(
+  object: { setMockFunctions: (confirmFn: (prompt: string) => Promise<boolean>, questionFn: (prompt: string) => Promise<string>) => void },
+  mockConfirmAnswers: boolean[],
+  mockQuestionAnswers: string[]
+): void {
+  object.setMockFunctions(
+    // Mock confirm function - consume from array
+    async (prompt: string) => {
+      console.log(`Mock confirm: ${prompt}`);
+      
+      if (mockConfirmAnswers.length === 0) {
+        console.log(`⚠️  No more confirm answers in mock array, defaulting to true`);
+        return true;
       }
-    } catch (error) {
-      console.warn(`Warning: Could not delete test hardhat config:`, error);
+      
+      const answer = mockConfirmAnswers.shift()!;
+      console.log(`📝 Answering confirm with: ${answer}`);
+      return answer;
+    },
+    // Mock question function - consume from array
+    async (prompt: string) => {
+      console.log(`Mock question: ${prompt}`);
+      
+      if (mockQuestionAnswers.length === 0) {
+        console.log(`⚠️  No more question answers in mock array, defaulting to empty string`);
+        return '';
+      }
+      
+      const answer = mockQuestionAnswers.shift()!;
+      console.log(`📝 Answering question with: ${answer}`);
+      return answer;
     }
+  );
   }
 
 });

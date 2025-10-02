@@ -4,7 +4,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { runGovernanceFlow } from '../../helpers/governanceFlow';
-import { log, confirm as defaultConfirm } from '../../helpers/ioUtil';
+import { log, confirm } from '../../helpers/ioUtil';
 import { 
   extractProposalId, 
   extractImplementationAddresses, 
@@ -29,20 +29,9 @@ interface DeployOptions {
 
 class MarketsDeployer {
   private options: DeployOptions;
-  private confirmFunction: (prompt: string) => Promise<boolean>;
 
   constructor(options: DeployOptions) {
     this.options = options;
-    // Use global confirm function if available, otherwise use the default
-    this.confirmFunction = (global as any).testConfirmFunction || defaultConfirm;
-  }
-
-  /**
-   * Set a custom confirm function for testing or automation
-   * @param confirmFn - Function that takes a prompt and returns a boolean
-   */
-  public setConfirm(confirmFn: (prompt: string) => Promise<boolean>): void {
-    this.confirmFunction = confirmFn;
   }
 
   public async deploy(): Promise<void> {
@@ -241,7 +230,7 @@ class MarketsDeployer {
    * - Return the proposal ID for governance flow
    */
   private async governanceUpdate(admins: string[], threshold: number, timelockDelay?: number): Promise<string> {
-    const shouldProposeGovernanceUpdate = await this.confirmFunction(`\nDo you want to propose a governance update?`);
+    const shouldProposeGovernanceUpdate = await confirm(`\nDo you want to propose a governance update?`);
 
     if (!shouldProposeGovernanceUpdate) {
       log(`\n⏸️  Governance update cancelled.`, 'warning');
@@ -276,7 +265,7 @@ class MarketsDeployer {
    * - Run tests for all deployed markets
    */
   private async runVerificationTests(): Promise<void> {
-    const runVerification = await this.confirmFunction(`\nDo you want to run deployment verification tests for all markets?`);
+    const runVerification = await confirm(`\nDo you want to run deployment verification tests for all markets?`);
     
     if (runVerification) {
       for (const deployment of this.options.deployments) {
@@ -354,7 +343,7 @@ class MarketsDeployer {
     log(`   - Supply caps and collateral factors`, 'info');
     log(`   - Any other market-specific settings`, 'info');
     
-    const shouldContinue = await this.confirmFunction(
+    const shouldContinue = await confirm(
       `\nHave you updated all configuration.json files for the ${this.options.deployments.length} markets and are ready to continue with deployment?`
     );
     
@@ -418,7 +407,7 @@ class MarketsDeployer {
   private async proposeUpgrade(implementationAddresses: string[]): Promise<void> {
     // Propose upgrade (if needed)
     try {
-      const shouldProposeUpgrade = await this.confirmFunction(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
+      const shouldProposeUpgrade = await confirm(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
 
       log(`\n🔧 Proposing upgrade to a new implementation for all markets...`, 'info');
       if (shouldProposeUpgrade) {
