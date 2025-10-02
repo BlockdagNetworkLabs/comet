@@ -491,6 +491,33 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       console.log(`✅ Market phase 2 proposal execution completed with first admin`);
     });
+
+    it('should test market deployment after governance completion', async function () {      
+      if (!excludedDeployment) {
+        throw new Error('⚠️  No excluded deployment available for testing');
+      }
+      
+      console.log(`🧪 Testing market deployment: ${excludedDeployment}`);
+      
+      try {
+        const command = `npx ts-node scripts/governor/test-market-setup/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
+        
+        console.log(`📝 Running market test command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log('Market test output:', result);
+        console.log(`✅ Market deployment test passed for ${excludedDeployment}`);
+      } catch (error) {
+        console.error('Market test failed:', error.message);
+        throw error;
+      }
+    });
   });
   
   describe('Protocol Deployment with Market Update', function () {
@@ -589,7 +616,7 @@ describe('E2E Protocol Governance Test Suite', function () {
         if (currentValue !== undefined && currentValue !== null) {
           const numericValue = Number(currentValue);
           if (!isNaN(numericValue)) {
-            const newValue = numericValue + 0.1;
+            const newValue = parseFloat((numericValue + 0.1).toFixed(1));
             modifications[`assets.${asset}.liquidateCF`] = newValue;
             console.log(`📝 ${asset} liquidateCF: ${currentValue} → ${newValue} (+0.1)`);
           } else {
@@ -602,7 +629,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       if (storeFrontPriceFactor !== undefined && storeFrontPriceFactor !== null) {
         const numericValue = Number(storeFrontPriceFactor);
         if (!isNaN(numericValue)) {
-          const newValue = numericValue + 0.1;
+          const newValue = parseFloat((numericValue + 0.1).toFixed(1));
           modifications['storeFrontPriceFactor'] = newValue;
           console.log(`📝 storeFrontPriceFactor: ${storeFrontPriceFactor} → ${newValue} (+0.1)`);
         } else {
@@ -936,6 +963,33 @@ describe('E2E Protocol Governance Test Suite', function () {
       });
       
       console.log(`✅ Market phase 2 update proposal execution completed with first admin`);
+    });
+
+    it('should test market deployment after governance completion', async function () {
+      if (!targetMarketForUpdate) {
+        throw new Error('⚠️  No target market available for testing');
+      }
+      
+      console.log(`🧪 Testing market deployment: ${targetMarketForUpdate}`);
+      
+      try {
+        const command = `npx ts-node scripts/governor/test-market-setup/index.ts --network ${NETWORK_NAME} --deployment ${targetMarketForUpdate}`;
+        
+        console.log(`📝 Running market test command: ${command}`);
+        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log('Market test output:', result);
+        console.log(`✅ Market deployment test passed for ${targetMarketForUpdate}`);
+      } catch (error) {
+        console.error('Market test failed:', error.message);
+        throw error;
+      }
     });
   });
   
