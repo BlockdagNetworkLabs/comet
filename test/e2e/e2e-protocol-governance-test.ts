@@ -138,7 +138,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       if (availableDeployments.length < 2) {
         console.log('⚠️  Not enough deployments to test selective deployment (need at least 2)');
-        return;
+        this.parent.skip();
       }
 
       // Select one deployment to exclude (first one)
