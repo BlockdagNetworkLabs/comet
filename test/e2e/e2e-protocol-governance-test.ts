@@ -64,7 +64,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Copy template files to e2e root
       await copyDirectory(templatePath, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
-      await this.reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
 
     after(async function () {
