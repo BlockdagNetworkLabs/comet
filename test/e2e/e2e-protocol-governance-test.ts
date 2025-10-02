@@ -54,7 +54,7 @@ async function runWithSigner<T>(
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe.skip('Complete Protocol Deployment', function () {
+  describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
       // Set test environment variables
@@ -100,7 +100,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe.skip('Incremental Protocol Deployment', function () {
+  describe('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -518,7 +518,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe.skip('Protocol Deployment with Market Update', function () {
+  describe('Protocol Deployment with Market Update', function () {
     // Tests deploying all markets + updating one market via governance
     let targetMarketForUpdate: string = '';
     let marketPhase1ProposalId: string = '';
@@ -999,7 +999,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe.skip('Comet Reward Funding', function () {
+  describe('Comet Reward Funding', function () {
     // Tests comet reward funding governance flow
     let cometRewardFundingProposalId: string = '';
     let cometRewardFundingExecutionTimestamp: number | null = null;
@@ -1450,33 +1450,33 @@ describe('E2E Protocol Governance Test Suite', function () {
   }
 
   async function deleteDirectory(): Promise<void> {
-    // console.log('🧹 Cleaning up folder...');
-    // const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
+    console.log('🧹 Cleaning up folder...');
+    const e2eNetworkPath = path.join(__dirname, '../../deployments', NETWORK_NAME);
     
-    // try {
-    //   if (fs.existsSync(e2eNetworkPath)) {
-    //     await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
-    //     console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
-    //   } else {
-    //     console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
-    // }
+    try {
+      if (fs.existsSync(e2eNetworkPath)) {
+        await fs.promises.rm(e2eNetworkPath, { recursive: true, force: true });
+        console.log(`✅ Deleted entire ${NETWORK_NAME} folder: ${e2eNetworkPath}`);
+      } else {
+        console.log(`ℹ️  ${NETWORK_NAME} folder does not exist, nothing to clean up`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete ${NETWORK_NAME} folder:`, error);
+    }
   }
 
   async function deleteHardhatConfigFile(): Promise<void> {
-    // console.log('🧹 Cleaning up test hardhat config file...');
-    // try {
-    //   if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
-    //     await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
-    //     console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
-    //   } else {
-    //     console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
-    //   }
-    // } catch (error) {
-    //   console.warn(`Warning: Could not delete test hardhat config:`, error);
-    // }
+    console.log('🧹 Cleaning up test hardhat config file...');
+    try {
+      if (fs.existsSync(TEST_HARDHAT_CONFIG_PATH)) {
+        await fs.promises.unlink(TEST_HARDHAT_CONFIG_PATH);
+        console.log(`✅ Deleted test hardhat config: ${TEST_HARDHAT_CONFIG_PATH}`);
+      } else {
+        console.log(`ℹ️  Test hardhat config file does not exist, nothing to clean up`);
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not delete test hardhat config:`, error);
+    }
   }
 
   function setupMockFunctions(
