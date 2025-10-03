@@ -1,18 +1,31 @@
 #!/usr/bin/env ts-node
-
-import { runGovernanceFlow, GovernanceFlowOptions } from '../../../helpers/governanceFlow';
-import { log, question, confirm } from '../../../helpers/ioUtil';
+import { log, question, confirm as defaultConfirm } from '../../../helpers/ioUtil';
 import { runCommand, extractProposalId } from '../../../helpers/commandUtil';
 
 interface FundingOptions {
   network: string;
 }
 
-class CometRewardFunder {
+export class CometRewardFunder {
   private options: FundingOptions;
+  private confirmFunction: (prompt: string) => Promise<boolean>;
+  private questionFunction: (prompt: string) => Promise<string>;
 
   constructor(options: FundingOptions) {
     this.options = options;
+    // Use default functions, no global loading
+    this.confirmFunction = defaultConfirm;
+    this.questionFunction = question;
+  }
+
+  /**
+   * Set custom confirm and question functions for testing or automation
+   * @param confirmFn - Function that takes a prompt and returns a boolean
+   * @param questionFn - Function that takes a prompt and returns a string
+   */
+  public setMockFunctions(confirmFn: (prompt: string) => Promise<boolean>, questionFn: (prompt: string) => Promise<string>): void {
+    this.confirmFunction = confirmFn;
+    this.questionFunction = questionFn;
   }
 
   private async proposeFunding(amount: string): Promise<string> {
@@ -23,27 +36,13 @@ class CometRewardFunder {
     return extractProposalId(output);
   }
 
-  private async runGovernanceFlow(proposalId: string): Promise<void> {
-    log(`\n🎉 Comet reward funding proposal created successfully!`, 'success');
-    
-    const options: GovernanceFlowOptions = {
-      network: this.options.network,
-      proposalId: proposalId,
-      executionType: 'comet-reward-funding'
-    };
-    
-    const successMessage = `\n🎉 Comet reward funding completed successfully!\n💰 COMP tokens have been transferred to CometRewards contract`;
-    
-    await runGovernanceFlow(options, successMessage);
-  }
-
-  public async run(): Promise<void> {
+  public async run(): Promise<string> {
     try {
-      log(`\n🚀 Starting Comet Reward Funding Process`, 'info');
+      log(`\n🚀 Starting Comet Reward Funding Proposal Process`, 'info');
       log(`Network: ${this.options.network}`, 'info');
       
       // Ask for amount interactively
-      const amount = await question(`\nEnter the amount of COMP tokens to fund (in wei, e.g., 1000000000000000000000 for 1000 COMP): `);
+      const amount = await this.questionFunction(`\nEnter the amount of COMP tokens to fund (in wei, e.g., 1000000000000000000000 for 1000 COMP): `);
       
       if (!amount) {
         log(`\n❌ Amount is required`, 'error');
@@ -53,21 +52,20 @@ class CometRewardFunder {
       log(`Amount: ${amount} COMP tokens (wei)`, 'info');
       
       // Confirm before proceeding
-      const shouldProceed = await confirm(`\nDo you want to proceed with funding CometRewards with ${amount} COMP tokens?`);
+      const shouldProceed = await this.confirmFunction(`\nDo you want to proceed with creating a proposal to fund CometRewards with ${amount} COMP tokens?`);
       
       if (!shouldProceed) {
-        log(`\n⏸️  Funding process cancelled.`, 'warning');
+        log(`\n⏸️  Proposal creation cancelled.`, 'warning');
         return;
       }
       
-      // Step 1: Propose funding
       const proposalId = await this.proposeFunding(amount);
       
-      // Step 2: Run governance flow
-      await this.runGovernanceFlow(proposalId);
+      console.log(`Successfully created proposal! 📋 Proposal ID: ${proposalId}`,'success')
       
+      return proposalId;
     } catch (error) {
-      log(`\n❌ Comet reward funding process failed: ${error}`, 'error');
+      log(`\n❌ Comet reward funding proposal process failed: ${error}`, 'error');
       throw error;
     }
   }
@@ -86,7 +84,7 @@ function parseArgs(): FundingOptions {
       case '--help':
       case '-h':
         console.log(`
-🚀 Comet Reward Funding Script
+🚀 Comet Reward Funding Proposal Script
 
 Usage: yarn ts-node scripts/governor/propose/comet-reward-funding/index.ts [options]
 
@@ -95,11 +93,14 @@ Options:
   --help, -h            Show this help message
 
 Examples:
-  # Fund CometRewards on local network (amount will be asked interactively)
+  # Create a proposal to fund CometRewards on local network (amount will be asked interactively)
   yarn ts-node scripts/governor/propose/comet-reward-funding/index.ts --network local
 
-  # Fund CometRewards on polygon network (amount will be asked interactively)
+  # Create a proposal to fund CometRewards on polygon network (amount will be asked interactively)
   yarn ts-node scripts/governor/propose/comet-reward-funding/index.ts --network polygon
+
+Note: This script creates a governance proposal to fund CometRewards with COMP tokens.
+The actual funding will occur after the proposal goes through the governance process.
         `);
         process.exit(0);
     }

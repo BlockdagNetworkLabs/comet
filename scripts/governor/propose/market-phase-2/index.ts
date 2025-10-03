@@ -34,9 +34,8 @@ class NewMarketUpgrader {
       log(`📋 Proposal result:`, 'info');
       log(result, 'info');
       
-      // Extract proposal ID from the result
       const proposalId = extractProposalId(result);
-      log(`\n📋 Proposal created with ID: ${proposalId}`, 'success');
+      console.log(`Successfully created proposal! 📋 Proposal ID: ${proposalId}`,'success')
       
       log(`\n💡 Next steps for proposal ${proposalId}:`, 'info');
       log(`   1. Accept the proposal: ./scripts/governor/accept-proposal/index.sh -n ${this.options.network} -p ${proposalId}`, 'info');

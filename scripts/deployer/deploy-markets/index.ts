@@ -442,12 +442,53 @@ class MarketsDeployer {
   }
 }
 
+/**
+ * Scan all deployment folders for a given network and return their names
+ * @param network - The network name to scan
+ * @returns Array of deployment folder names (excluding _infrastructure only)
+ */
+function getAllDeploymentFolders(network: string): string[] {
+  const deploymentsPath = path.join(process.cwd(), 'deployments', network);
+  
+  try {
+    if (!fs.existsSync(deploymentsPath)) {
+      log(`❌ Deployments directory not found: ${deploymentsPath}`, 'error');
+      return [];
+    }
+
+    const items = fs.readdirSync(deploymentsPath, { withFileTypes: true });
+    const deploymentFolders: string[] = [];
+
+    for (const item of items) {
+      // Skip only _infrastructure and non-directories
+      if (item.name === '_infrastructure' || !item.isDirectory()) {
+        continue;
+      }
+
+      // Check if the folder has a configuration.json file
+      const configPath = path.join(deploymentsPath, item.name, 'configuration.json');
+      if (fs.existsSync(configPath)) {
+        deploymentFolders.push(item.name);
+      } else {
+        log(`⚠️  Skipping ${item.name} - no configuration.json found`, 'warning');
+      }
+    }
+
+    log(`📁 Found ${deploymentFolders.length} deployment folders: ${deploymentFolders.join(', ')}`, 'info');
+    return deploymentFolders;
+
+  } catch (error) {
+    log(`❌ Error scanning deployment folders: ${error}`, 'error');
+    return [];
+  }
+}
+
 // Parse command line arguments
 function parseArguments(): DeployOptions {
   const args = process.argv.slice(2);
   const options: DeployOptions = {
     network: 'local',
-    deployments: ['dai']
+    deployments: []
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -458,8 +499,14 @@ function parseArguments(): DeployOptions {
       case '--deployment':
       case '--deployments': {
         const deploymentArg = args[++i];
-        // Support both single deployment and comma-separated list
-        options.deployments = deploymentArg.split(',').map(d => d.trim()).filter(d => d.length > 0);
+        
+        // Check if user wants to deploy all markets
+        if (deploymentArg.toLowerCase() === 'all') {
+          options.deployments = getAllDeploymentFolders(options.network);
+        } else {
+          // Support both single deployment and comma-separated list
+          options.deployments = deploymentArg.split(',').map(d => d.trim()).filter(d => d.length > 0);
+        }
         break;
       }
 
@@ -487,7 +534,7 @@ Usage: yarn ts-node scripts/deployer/deploy-markets/index.ts [options]
 Options:
   --network <network>           Network to deploy to (default: local)
   --deployment <market(s)>      Market(s) to deploy (default: dai)
-                               Supports single market or comma-separated list
+                               Supports single market, comma-separated list, or 'all'
   --deployments <market(s)>     Alias for --deployment
 
   --clean                       Clean deployment cache before deploying
@@ -501,15 +548,18 @@ Examples:
   # Deploy multiple markets on polygon network
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network polygon --deployment dai,usdc,usdt
 
-  # Deploy multiple markets with clean cache
-  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment dai,usdc --clean
+  # Deploy ALL markets found in the network's deployment folder
+  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all
+
+  # Deploy all markets with clean cache
+  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all --clean
 
   # Deploy all major markets on mainnet
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network mainnet --deployment dai,usdc,usdt,weth,wbtc
 
-
 Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc.
 Available markets: dai, usdc, usdt, weth, wbtc, etc.
+Use 'all' to deploy all markets found in the network's deployment folder.
   `);
 }
 

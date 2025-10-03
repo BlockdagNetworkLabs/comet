@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
 import { DeploymentManager } from '../../plugins/deployment_manager';
 import { ProposalManager, createProposalManager } from '../../src/governor/helpers/proposalManager';
 import { ProposalAction, ProposalStack } from '../../src/governor/helpers';
@@ -20,7 +19,7 @@ describe('ProposalManager', () => {
 
   beforeEach(async () => {
     // Create a mock deployment manager
-    deploymentManager = new DeploymentManager(ethers as any, testNetwork, {} as any);
+    deploymentManager = new DeploymentManager(testNetwork, testNetwork, {} as any);
     proposalManager = createProposalManager(testNetwork);
     
     // Clean up any existing test files and ensure directory exists

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Governance Update Script Wrapper
-# This script provides a simple interface to update both governance configuration and timelock delay using the TypeScript script
+# Governance Update Proposal Script Wrapper
+# This script provides a simple interface to create a governance proposal to update both governance configuration and timelock delay
 
 set -e
 
@@ -31,14 +31,23 @@ print_error() {
 
 # Function to show help
 show_help() {
+    echo -e "${BLUE}🔧 Governance Update Proposal Script Wrapper${NC}"
+    echo ""
+    echo "Usage: ./scripts/governor/propose/governance-update/index.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  -n, --network <network>     Network to use (default: local)"
+    echo "  -h, --help                  Show this help message"
+    echo ""
     echo "Examples:"
-    echo "  # Update governance configuration on local network"
+    echo "  # Create a governance update proposal on local network"
     echo "  ./scripts/governor/propose/governance-update/index.sh -n local"
     echo ""
-    echo "  # Update governance configuration on polygon network"
+    echo "  # Create a governance update proposal on polygon network"
     echo "  ./scripts/governor/propose/governance-update/index.sh -n polygon"
     echo ""
-    echo "Note: This script will guide you through the complete governance process:"
+    echo "Note: This script creates a governance proposal to update governance configuration."
+    echo "The actual update will occur after the proposal goes through the governance process:"
     echo "  1. Create proposal"
     echo "  2. Approve proposal (if you choose to)"
     echo "  3. Queue proposal (if you choose to)"
@@ -89,20 +98,20 @@ done
 
 # Main execution
 main() {
-    print_info "Starting Governance Update process..."
+    print_info "Starting Governance Update Proposal process..."
     print_info "Network: $NETWORK"
     print_info "Configuration will be asked interactively"
     
     # Check requirements
     check_requirements
     
-    # Run the governance update script
-    print_info "Executing governance update script..."
+    # Run the governance update proposal script
+    print_info "Executing governance update proposal script..."
     
     yarn ts-node scripts/governor/propose/governance-update/index.ts \
         --network "$NETWORK"
     
-    print_success "Governance update script completed"
+    print_success "Governance update proposal script completed"
 }
 
 # Run main function

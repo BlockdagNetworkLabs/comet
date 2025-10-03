@@ -1,5 +1,6 @@
 import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
 import { DeploySpec, deployComet } from '../../../src/deploy';
+import { hre } from '../../../test/helpers';
 import { getExistingTokens, setupPriceFeeds } from '../helpers';
 
 export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
@@ -7,7 +8,7 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
   deploymentManager.setVerificationStrategy('none');
 
   // Load infrastructure contracts from the _infrastructure deployment
-  const infrastructureSpider = await deploymentManager.spiderOther('bdag-primordial', '_infrastructure');
+  const infrastructureSpider = await deploymentManager.spiderOther(hre.network.name, '_infrastructure');
   
   // Add infrastructure contracts to the current deployment's contract map
   const infrastructureContracts = {};

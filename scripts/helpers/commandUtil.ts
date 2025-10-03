@@ -13,8 +13,27 @@ export async function runCommand(
   printOutput: boolean = false
 ): Promise<string> {
   log(`\n🔄 ${description}...`, 'info');
+  
+  // Check if we're in test mode and need to use a different hardhat config
+  let finalCommand = command;
+  let hardhatConfigExport = "";
+  
+  if (process.env.TEST === 'true') {
+    // Prepend the HARDHAT_CONFIG export to hardhat commands
+    if (command.includes('yarn hardhat') || command.includes('npx hardhat') && process.env.TEST_HARDHAT_CONFIG) {
+      hardhatConfigExport = `export HARDHAT_CONFIG="${process.env.TEST_HARDHAT_CONFIG}"`;
+      log(`📝 Test mode: Using hardhat config ${process.env.TEST_HARDHAT_CONFIG}`, 'info');
+    }
+      // Build final command with exports if they exist
+    if (hardhatConfigExport) {
+      const exports = [hardhatConfigExport].filter(Boolean).join(" && ");
+      finalCommand = `${exports} && ${command}`;
+    }
+  }
+
+  
   try {
-    const output = execSync(command, { 
+    const output = execSync(finalCommand, { 
       stdio: 'pipe',
       encoding: 'utf8'
     });
@@ -191,4 +210,30 @@ export async function proposeGovernanceUpdate(
 ): Promise<string> {
   let command = `yarn hardhat governor:propose-governance-update --network ${network}`;
   return await runCommand(command, 'Proposing governance update');
+}
+
+/**
+ * Run deployment verification test for governance
+ * @param network - The network to run the test on
+ * @returns Promise<string> - The command output
+ */
+export async function runDeploymentVerificationForGovernance(
+  network: string,
+): Promise<string> {
+  const command = `yarn hardhat test test/deployment-verification-test.ts --network ${network} --grep "Governance Verification"`;
+  return await runCommand(command, `Running deployment verification for governance`);
+}
+
+/**
+ * Run deployment verification test for a specific market
+ * @param network - The network to run the test on
+ * @param deployment - The deployment/market name (e.g., 'dai', 'usdc')
+ * @returns Promise<string> - The command output
+ */
+export async function runDeploymentVerificationForMarket(
+  network: string,
+  deployment: string
+): Promise<string> {
+  const command = `MARKET=${deployment} yarn hardhat test test/deployment-verification-test.ts --network ${network}`;
+  return await runCommand(command, `Running deployment verification for market: ${deployment}`);
 }

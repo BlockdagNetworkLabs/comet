@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Comet Reward Funding Script Wrapper
-# This script provides a simple interface to fund CometRewards using the TypeScript funding script
+# Comet Reward Funding Proposal Script Wrapper
+# This script provides a simple interface to create a governance proposal to fund CometRewards
 
 set -e
 
@@ -31,7 +31,7 @@ print_error() {
 
 # Function to show help
 show_help() {
-    echo -e "${BLUE}💰 Comet Reward Funding Script Wrapper${NC}"
+    echo -e "${BLUE}💰 Comet Reward Funding Proposal Script Wrapper${NC}"
     echo ""
     echo "Usage: ./scripts/governor/propose/comet-reward-funding/index.sh [options]"
     echo ""
@@ -40,16 +40,19 @@ show_help() {
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Examples:"
-    echo "  # Fund CometRewards on local network (amount will be asked interactively)"
+    echo "  # Create a proposal to fund CometRewards on local network (amount will be asked interactively)"
     echo "  ./scripts/governor/propose/comet-reward-funding/index.sh -n local"
     echo ""
-    echo "  # Fund CometRewards on polygon network (amount will be asked interactively)"
+    echo "  # Create a proposal to fund CometRewards on polygon network (amount will be asked interactively)"
     echo "  ./scripts/governor/propose/comet-reward-funding/index.sh -n polygon"
     echo ""
     echo "Amount examples (when prompted):"
     echo "  1000000000000000000000 = 1000 COMP tokens"
     echo "  500000000000000000000  = 500 COMP tokens"
     echo "  100000000000000000000  = 100 COMP tokens"
+    echo ""
+    echo "Note: This script creates a governance proposal to fund CometRewards with COMP tokens."
+    echo "The actual funding will occur after the proposal goes through the governance process."
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
 }
@@ -96,20 +99,20 @@ done
 
 # Main execution
 main() {
-    print_info "Starting Comet Reward Funding process..."
+    print_info "Starting Comet Reward Funding Proposal process..."
     print_info "Network: $NETWORK"
     print_info "Amount will be asked interactively"
     
     # Check requirements
     check_requirements
     
-    # Run the funding script
-    print_info "Executing funding script..."
+    # Run the funding proposal script
+    print_info "Executing funding proposal script..."
     
     yarn ts-node scripts/governor/propose/comet-reward-funding/index.ts \
         --network "$NETWORK"
     
-    print_success "Funding script completed"
+    print_success "Funding proposal script completed"
 }
 
 # Run main function

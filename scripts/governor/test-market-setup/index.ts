@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { runCommand } from '../../helpers/commandUtil';
+import { runDeploymentVerificationForMarket } from '../../helpers/commandUtil';
 import { log } from '../../helpers/ioUtil';
 
 interface TestMarketOptions {
@@ -19,8 +19,9 @@ class MarketTester {
     try {
       log(`\n🧪 Testing market for ${this.options.deployment} on ${this.options.network}`, 'info');
       
-      // Run deployment verification test (includes spider)
-      await this.runDeploymentVerification();
+      log(`\n🧪 Running deployment verification test (includes spider)...`, 'info');
+      const result = await runDeploymentVerificationForMarket(this.options.network, this.options.deployment);
+      console.log(result);
       
       log(`\n🎉 Market testing completed successfully!`, 'success');
       
@@ -34,15 +35,6 @@ class MarketTester {
     }
   }
 
-  /**
-   * Run deployment verification test (includes spider)
-   */
-  private async runDeploymentVerification(): Promise<void> {
-    log(`\n🧪 Running deployment verification test (includes spider)...`, 'info');
-    const verificationCommand = `MARKET=${this.options.deployment} yarn hardhat test test/deployment-verification-test.ts --network ${this.options.network}`;
-    const result = await runCommand(verificationCommand, `Running deployment verification for ${this.options.deployment}`);
-    console.log(result);
-  }
 }
 
 // Parse command line arguments
