@@ -5,9 +5,9 @@ import { execSync } from 'child_process';
 import { DynamicHardhatConfig } from './helpers/dynamic-hardhat-config';
 import { extractProposalId } from '../../scripts/helpers/commandUtil';
 import { expect } from 'chai';
-import { discoverMarkets } from './helpers/deployment-manager';
+import { discoverMarkets, updateInfrastructureConfiguration } from './helpers/deployment-manager';
 import { CometRewardFunder } from '../../scripts/governor/propose/comet-reward-funding/index';
-import { GovernanceUpdater } from '../../scripts/governor/propose/governance-update/index';
+import { getMultisigThreshold, getTimelockDelay } from '../../src/deploy/helpers/govConfiguration';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
@@ -22,7 +22,15 @@ const NETWORK_NAME = 'e2e-network';
 
 const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const PROPOSE_PHASE_1_TIMEOUT = 5 * 60 * 1000; // 5 minutes
-const EXECUTE_TIMEOUT = (2 * 60 * 1000) + parseInt(process.env.TIMELOCK_DELAY) * 60 * 1000; // 2 minutes + TIMELOCK_DELAY minutes
+
+let EXECUTE_TIMEOUT: number;
+let MULTISIG_THRESHOLD: number;
+async function loadInitialConfigurationForMultisigGovernance() {
+  const timelockDelay = Number(await getTimelockDelay(NETWORK_NAME));
+  EXECUTE_TIMEOUT = (2 * 60 * 1000) + timelockDelay * 60 * 1000; // 2 minutes + TIMELOCK_DELAY minutes
+  MULTISIG_THRESHOLD = Number(await getMultisigThreshold(NETWORK_NAME));
+}
+
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
 const TEMPLATE_PATH = path.join(__dirname, TEMPLATE_NAME);
@@ -84,7 +92,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -115,6 +122,8 @@ describe('E2E Protocol Governance Test Suite', function () {
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
 
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await loadInitialConfigurationForMultisigGovernance();
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -153,7 +162,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments ${deploymentsList} --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -183,7 +191,6 @@ describe('E2E Protocol Governance Test Suite', function () {
       const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
       
       console.log(`📝 Running proposal command: ${command}`);
-      console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         console.log(`📝 Using admin private key for governance operations`);
 
       const result = execSync(command, { 
@@ -209,7 +216,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -379,7 +386,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for market phase 2 proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -501,7 +508,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `npx ts-node scripts/governor/test-market-setup/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
         
         console.log(`📝 Running market test command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -535,6 +541,8 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
+      await loadInitialConfigurationForMultisigGovernance();
+
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
 
@@ -555,7 +563,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -667,7 +674,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${targetMarketForUpdate}`;
         
         console.log(`📝 Running proposal command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         console.log(`📝 Using admin private key for governance operations`);
 
         const result = execSync(command, { 
@@ -693,7 +699,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -860,7 +866,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for market phase 2 proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -982,7 +988,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `npx ts-node scripts/governor/test-market-setup/index.ts --network ${NETWORK_NAME} --deployment ${targetMarketForUpdate}`;
         
         console.log(`📝 Running market test command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -1013,6 +1018,8 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
+      await loadInitialConfigurationForMultisigGovernance();
+
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
 
@@ -1033,7 +1040,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -1061,8 +1067,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`🚀 Testing comet reward funding proposal`);
       console.log(`💰 Funding amount: ${FUNDING_AMOUNT} COMP tokens (wei)`);
 
-      // Use the reusable function to set up mocks
-      setupMockFunctions(cometRewardFunder, mockConfirmAnswers, mockQuestionAnswers);
+      // Note: Mock functions are no longer needed as interactive prompts have been removed
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
         try {
@@ -1081,7 +1086,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for comet reward funding proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -1199,10 +1204,6 @@ describe('E2E Protocol Governance Test Suite', function () {
     let governanceUpdateProposalId: string = '';
     let governanceUpdateExecutionTimestamp: number | null = null;
     
-    let governanceUpdater = new GovernanceUpdater({ 
-      network: NETWORK_NAME
-    });
-    
     before(async function () {
       // Set test environment variables
       process.env.TEST = 'true';
@@ -1210,6 +1211,8 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await loadInitialConfigurationForMultisigGovernance();
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -1231,7 +1234,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -1250,39 +1252,41 @@ describe('E2E Protocol Governance Test Suite', function () {
       this.timeout(PROPOSE_PHASE_1_TIMEOUT);
       
       // Test configuration
-      const TEST_ADMIN_ADDRESSES = '0x1234567890123456789012345678901234567890,0x0987654321098765432109876543210987654321';
-      const TEST_THRESHOLD = '2';
-      const TEST_TIMELOCK_DELAY = '3600'; // 1 hour in seconds
+      const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
+      const TEST_THRESHOLD = 2;
+      const TEST_TIMELOCK_DELAY = 3600; // 1 hour in seconds
       
       console.log(`🚀 Testing governance update proposal (admins and timelock delay)`);
-      console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES}`);
+      console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES.join(', ')}`);
       console.log(`🔢 Threshold: ${TEST_THRESHOLD}`);
       console.log(`⏰ Timelock delay: ${TEST_TIMELOCK_DELAY} seconds`);
-      
-      // Set up mock answers for the governance update flow (both admins and timelock)
-      // The script will ask:
-      // 1. "Do you want to update governance configuration (admins and threshold)?" -> true
-      // 2. "Do you want to update timelock delay?" -> true  
-      // 3. "Enter admin addresses..." -> TEST_ADMIN_ADDRESSES
-      // 4. "Enter multisig threshold..." -> TEST_THRESHOLD
-      // 5. "Enter new timelock delay..." -> TEST_TIMELOCK_DELAY
-      // 6. "Do you want to proceed with creating this governance update proposal?" -> true
-      let mockConfirmAnswers: boolean[] = [true, true, true]; // 3 confirm questions
-      let mockQuestionAnswers: string[] = [TEST_ADMIN_ADDRESSES, TEST_THRESHOLD, TEST_TIMELOCK_DELAY]; // 3 question answers
-      
-      // Use the reusable function to set up mocks
-      setupMockFunctions(governanceUpdater, mockConfirmAnswers, mockQuestionAnswers);
+
+      // Update infrastructure configuration with test values
+      await updateInfrastructureConfiguration(TEST_DEPLOYMENT_PATH, {
+        governorAdmins: TEST_ADMIN_ADDRESSES,
+        multisigThreshold: TEST_THRESHOLD,
+        timelockDelay: TEST_TIMELOCK_DELAY
+      });
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         console.log(`📝 Using admin private key for governance operations`);
-        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
-        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
         
         try {
-          governanceUpdateProposalId = await governanceUpdater.run();
-          console.log(`✅ Governance update (admins and timelock delay) proposal completed successfully`);
+          const command = `npx ts-node scripts/governor/propose/governance-update/index.ts --network ${NETWORK_NAME}`;
+          
+          console.log(`📝 Running governance update proposal command: ${command}`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Governance update proposal result:`, result);
+          
+          governanceUpdateProposalId = extractProposalId(result);
           console.log(`📋 Proposal ID: ${governanceUpdateProposalId}`);
+          console.log(`✅ Governance update (admins and timelock delay) proposal completed successfully`);
         } catch (error) {
           console.error(`❌ Governance update (admins and timelock delay) failed:`, error);
           throw error;
@@ -1296,7 +1300,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -1407,16 +1411,34 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`✅ Governance update proposal execution completed with first admin`);
       console.log(`🔧 New governance configuration and timelock settings are now active`);
     });
+
+    it('should verify governance configuration after update', async function () {
+      console.log(`🧪 Verifying governance configuration after admins and timelock delay update`);
+      
+      try {
+        const command = `npx ts-node scripts/governor/test-governor-setup/index.ts --network ${NETWORK_NAME}`;
+        
+        console.log(`📝 Running governance verification command: ${command}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log('Governance verification output:', result);
+        console.log(`✅ Governance configuration verification passed after admins and timelock delay update`);
+      } catch (error) {
+        console.error('Governance verification failed:', error.message);
+        throw error;
+      }
+    });
   });
 
   describe('Governance Update (Admins Only)', function () {
     // Tests governance update proposal flow for admins only
     let governanceUpdateAdminsProposalId: string = '';
     let governanceUpdateAdminsExecutionTimestamp: number | null = null;
-  
-    let governanceUpdaterAdmins = new GovernanceUpdater({ 
-      network: NETWORK_NAME
-    });
     
     before(async function () {
       // Set test environment variables
@@ -1425,6 +1447,8 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await loadInitialConfigurationForMultisigGovernance();
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -1446,7 +1470,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -1465,32 +1488,38 @@ describe('E2E Protocol Governance Test Suite', function () {
       this.timeout(PROPOSE_PHASE_1_TIMEOUT);
       
       // Test configuration
-      const TEST_ADMIN_ADDRESSES = '0x1234567890123456789012345678901234567890,0x0987654321098765432109876543210987654321';
-      const TEST_THRESHOLD = '2';
+      const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
+      const TEST_THRESHOLD = 2;
       
-      // Set up mock answers for the governance update flow (admins only)
-      // The script will ask:
-      // 1. "Do you want to update governance configuration (admins and threshold)?" -> true
-      // 2. "Do you want to update timelock delay?" -> false
-      // 3. "Enter admin addresses..." -> TEST_ADMIN_ADDRESSES
-      // 4. "Enter multisig threshold..." -> TEST_THRESHOLD
-      // 5. "Do you want to proceed with creating this governance update proposal?" -> true
-      let mockConfirmAnswers: boolean[] = [true, false, true]; // 3 confirm questions
-      let mockQuestionAnswers: string[] = [TEST_ADMIN_ADDRESSES, TEST_THRESHOLD]; // 2 question answers (no timelock delay)
-      
-      // Use the reusable function to set up mocks
-      setupMockFunctions(governanceUpdaterAdmins, mockConfirmAnswers, mockQuestionAnswers);
+      console.log(`🚀 Testing governance update proposal (admins only)`);
+      console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES.join(', ')}`);
+      console.log(`🔢 Threshold: ${TEST_THRESHOLD}`);
+
+      // Update infrastructure configuration with test values (admins only)
+      await updateInfrastructureConfiguration(TEST_DEPLOYMENT_PATH, {
+        governorAdmins: TEST_ADMIN_ADDRESSES,
+        multisigThreshold: TEST_THRESHOLD
+      });
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         console.log(`📝 Using admin private key for governance operations`);
-        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
-        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
         
         try {
-          governanceUpdateAdminsProposalId = await governanceUpdaterAdmins.run();
-          console.log(`✅ Governance update (admins only) proposal completed successfully`);
+          const command = `npx ts-node scripts/governor/propose/governance-update/index.ts --network ${NETWORK_NAME}`;
+          
+          console.log(`📝 Running governance update proposal command: ${command}`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Governance update proposal result:`, result);
+          
+          governanceUpdateAdminsProposalId = extractProposalId(result);
           console.log(`📋 Proposal ID: ${governanceUpdateAdminsProposalId}`);
+          console.log(`✅ Governance update (admins only) proposal completed successfully`);
         } catch (error) {
           console.error(`❌ Governance update (admins only) failed:`, error);
           throw error;
@@ -1504,7 +1533,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -1614,16 +1643,34 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
     });
+
+    it('should verify governance configuration after update', async function () {
+      console.log(`🧪 Verifying governance configuration after admins only update`);
+      
+      try {
+        const command = `npx ts-node scripts/governor/test-governor-setup/index.ts --network ${NETWORK_NAME}`;
+        
+        console.log(`📝 Running governance verification command: ${command}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log('Governance verification output:', result);
+        console.log(`✅ Governance configuration verification passed after admins only update`);
+      } catch (error) {
+        console.error('Governance verification failed:', error.message);
+        throw error;
+      }
+    });
   });
 
   describe('Governance Update (Timelock Only)', function () {
     // Tests governance update proposal flow for timelock delay only
     let governanceUpdateTimelockProposalId: string = '';
     let governanceUpdateTimelockExecutionTimestamp: number | null = null;
-    
-    let governanceUpdaterTimelock = new GovernanceUpdater({ 
-      network: NETWORK_NAME
-    });
     
     before(async function () {
       // Set test environment variables
@@ -1632,6 +1679,8 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+
+      await loadInitialConfigurationForMultisigGovernance();
 
       await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
     });
@@ -1653,7 +1702,6 @@ describe('E2E Protocol Governance Test Suite', function () {
         const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
         
         console.log(`📝 Running deployment command: ${command}`);
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         
         const result = execSync(command, { 
           encoding: 'utf8',
@@ -1672,30 +1720,35 @@ describe('E2E Protocol Governance Test Suite', function () {
       this.timeout(PROPOSE_PHASE_1_TIMEOUT);
       
       // Test configuration
-      const TEST_TIMELOCK_DELAY = '7200'; // 2 hours in seconds
+      const TEST_TIMELOCK_DELAY = 7200; // 2 hours in seconds
       
-      // Set up mock answers for the governance update flow (timelock only)
-      // The script will ask:
-      // 1. "Do you want to update governance configuration (admins and threshold)?" -> false
-      // 2. "Do you want to update timelock delay?" -> true
-      // 3. "Enter new timelock delay in seconds: " -> TEST_TIMELOCK_DELAY
-      // 4. "Do you want to proceed with creating this governance update proposal?" -> true
-      let mockConfirmAnswers: boolean[] = [false, true, true]; // 3 confirm questions
-      let mockQuestionAnswers: string[] = [TEST_TIMELOCK_DELAY]; // 1 question answer (no admin addresses or threshold)
-      
-      // Use the reusable function to set up mocks
-      setupMockFunctions(governanceUpdaterTimelock, mockConfirmAnswers, mockQuestionAnswers);
+      console.log(`🚀 Testing governance update proposal (timelock only)`);
+      console.log(`⏰ Timelock delay: ${TEST_TIMELOCK_DELAY} seconds`);
+
+      // Update infrastructure configuration with test values (timelock only)
+      await updateInfrastructureConfiguration(TEST_DEPLOYMENT_PATH, {
+        timelockDelay: TEST_TIMELOCK_DELAY
+      });
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
-        console.log(`📝 Test mode enabled with hardhat config: ${process.env.TEST_HARDHAT_CONFIG}`);
         console.log(`📝 Using admin private key for governance operations`);
-        console.log(`📝 Mock question answers available: ${mockQuestionAnswers.length}`);
-        console.log(`📝 Mock confirm answers available: ${mockConfirmAnswers.length}`);
         
         try {
-          governanceUpdateTimelockProposalId = await governanceUpdaterTimelock.run();
-          console.log(`✅ Governance update (timelock only) proposal completed successfully`);
+          const command = `npx ts-node scripts/governor/propose/governance-update/index.ts --network ${NETWORK_NAME}`;
+          
+          console.log(`📝 Running governance update proposal command: ${command}`);
+          
+          const result = execSync(command, { 
+            encoding: 'utf8',
+            stdio: 'pipe',
+            cwd: process.cwd(),
+          });
+          
+          console.log(`✅ Governance update proposal result:`, result);
+          
+          governanceUpdateTimelockProposalId = extractProposalId(result);
           console.log(`📋 Proposal ID: ${governanceUpdateTimelockProposalId}`);
+          console.log(`✅ Governance update (timelock only) proposal completed successfully`);
         } catch (error) {
           console.error(`❌ Governance update (timelock only) failed:`, error);
           throw error;
@@ -1709,7 +1762,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       }
       
       // Get threshold from environment (assume it exists)
-      const threshold = parseInt(process.env.MULTISIG_THRESHOLD!);
+      const threshold = MULTISIG_THRESHOLD;
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
@@ -1819,8 +1872,30 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
     });
+
+    it('should verify governance configuration after update', async function () {
+      console.log(`🧪 Verifying governance configuration after timelock only update`);
+      
+      try {
+        const command = `npx ts-node scripts/governor/test-governor-setup/index.ts --network ${NETWORK_NAME}`;
+        
+        console.log(`📝 Running governance verification command: ${command}`);
+        
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+        
+        console.log('Governance verification output:', result);
+        console.log(`✅ Governance configuration verification passed after timelock only update`);
+      } catch (error) {
+        console.error('Governance verification failed:', error.message);
+        throw error;
+      }
+    });
   });
-  
+
   function getAdminPrivateKey(index: number): string {
     const adminPks = process.env.TEST_ADMIN_PKS;
     if (!adminPks) {
@@ -1901,39 +1976,5 @@ describe('E2E Protocol Governance Test Suite', function () {
     }
   }
 
-  function setupMockFunctions(
-  object: { setMockFunctions: (confirmFn: (prompt: string) => Promise<boolean>, questionFn: (prompt: string) => Promise<string>) => void },
-  mockConfirmAnswers: boolean[],
-  mockQuestionAnswers: string[]
-): void {
-  object.setMockFunctions(
-    // Mock confirm function - consume from array
-    async (prompt: string) => {
-      console.log(`Mock confirm: ${prompt}`);
-      
-      if (mockConfirmAnswers.length === 0) {
-        console.log(`⚠️  No more confirm answers in mock array, defaulting to true`);
-        return true;
-      }
-      
-      const answer = mockConfirmAnswers.shift()!;
-      console.log(`📝 Answering confirm with: ${answer}`);
-      return answer;
-    },
-    // Mock question function - consume from array
-    async (prompt: string) => {
-      console.log(`Mock question: ${prompt}`);
-      
-      if (mockQuestionAnswers.length === 0) {
-        console.log(`⚠️  No more question answers in mock array, defaulting to empty string`);
-        return '';
-      }
-      
-      const answer = mockQuestionAnswers.shift()!;
-      console.log(`📝 Answering question with: ${answer}`);
-      return answer;
-    }
-  );
-  }
 
 });

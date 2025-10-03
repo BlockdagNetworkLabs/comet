@@ -432,3 +432,68 @@ export async function modifyMarketParameters(
     throw error;
   }
 }
+
+/**
+ * Updates infrastructure configuration parameters
+ * @param networkPath - Path to the network deployment directory
+ * @param infrastructureModifications - Object containing infrastructure parameter modifications
+ * @returns Promise<void>
+ */
+export async function updateInfrastructureConfiguration(
+  networkPath: string,
+  infrastructureModifications: Record<string, any>
+): Promise<void> {
+  const infrastructurePath = path.join(networkPath, '_infrastructure');
+  const configPath = path.join(infrastructurePath, 'configuration.json');
+  
+  console.log(`🔧 Updating infrastructure configuration`);
+  console.log(`📁 Infrastructure path: ${infrastructurePath}`);
+  console.log(`📋 Configuration file: ${configPath}`);
+  
+  try {
+    // Check if infrastructure directory exists
+    if (!fs.existsSync(infrastructurePath)) {
+      throw new Error(`Infrastructure directory does not exist: ${infrastructurePath}`);
+    }
+    
+    // Check if configuration file exists
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`Infrastructure configuration file does not exist: ${configPath}`);
+    }
+    
+    // Read current configuration
+    const configContent = await fs.promises.readFile(configPath, 'utf8');
+    const config = JSON.parse(configContent);
+    
+    console.log(`📖 Current infrastructure configuration loaded`);
+    console.log(`🔧 Applying modifications:`, infrastructureModifications);
+    
+    // Apply modifications
+    let modified = false;
+    for (const [key, value] of Object.entries(infrastructureModifications)) {
+      if (config[key] !== undefined) {
+        const oldValue = config[key];
+        config[key] = value;
+        console.log(`✅ Modified ${key}: ${JSON.stringify(oldValue)} → ${JSON.stringify(value)}`);
+        modified = true;
+      } else {
+        console.log(`⚠️  Parameter ${key} not found in infrastructure configuration, adding it`);
+        config[key] = value;
+        modified = true;
+      }
+    }
+    
+    if (modified) {
+      // Write modified configuration back to file
+      const modifiedConfigContent = JSON.stringify(config, null, 2);
+      await fs.promises.writeFile(configPath, modifiedConfigContent, 'utf8');
+      console.log(`💾 Infrastructure configuration file updated successfully`);
+    } else {
+      console.log(`ℹ️  No infrastructure modifications were applied`);
+    }
+    
+  } catch (error) {
+    console.error(`❌ Error updating infrastructure configuration:`, error);
+    throw error;
+  }
+}
