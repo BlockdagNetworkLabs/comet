@@ -18,8 +18,8 @@ export interface TimelockConfig {
  */
 export interface GovernanceUpdate {
   admins?: string[];
-  threshold?: number;
-  timelockDelay?: number;
+  threshold?: bigint;
+  timelockDelay?: bigint;
 }
 
 /**
