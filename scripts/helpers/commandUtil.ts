@@ -1,7 +1,5 @@
 import { execSync } from 'child_process';
 import { log } from './ioUtil';
-import path from 'path';
-import fs from 'fs';
 
 /**
  * Runs a command and returns the output
@@ -205,28 +203,11 @@ export async function proposeFundRewards(network: string, amount: string): Promi
 /**
  * Propose a governance update
  * @param network - The network to propose the update on
- * @param deployment - The deployment name
- * @param admins - Array of admin addresses
- * @param threshold - Number of required approvals
- * @param timelockDelay - Optional timelock delay in seconds
  * @returns Promise<string> - The command output
  */
 export async function proposeGovernanceUpdate(
-  network: string, 
-  admins?: string[], 
-  threshold?: number, 
-  timelockDelay?: number
+  network: string,
 ): Promise<string> {
   let command = `yarn hardhat governor:propose-governance-update --network ${network}`;
-  
-  if (admins && threshold) {
-    const adminsParam = admins.join(',');
-    command += ` --admins "${adminsParam}" --threshold ${threshold}`;
-  }
-  
-  if (timelockDelay) {
-    command += ` --timelock-delay ${timelockDelay}`;
-  }
-  
   return await runCommand(command, 'Proposing governance update');
 }
