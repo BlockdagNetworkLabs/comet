@@ -32,7 +32,7 @@ let MULTISIG_THRESHOLD: number;
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe.skip('Complete Protocol Deployment', function () {
+  describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
       // Set test environment variables
@@ -77,7 +77,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe.skip('Incremental Protocol Deployment', function () {
+  describe('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -494,7 +494,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe.skip('Protocol Deployment with Market Update', function () {
+  describe('Protocol Deployment with Market Update', function () {
     // Tests deploying all markets + updating one market via governance
     let targetMarketForUpdate: string = '';
     let marketPhase1ProposalId: string = '';
@@ -1171,7 +1171,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe.skip('Governance Update (Admins and Timelock Delay)', function () {
+  describe('Governance Update (Admins and Timelock Delay)', function () {
     // Tests governance update proposal flow for both admins and timelock delay
     let governanceUpdateProposalId: string = '';
     let governanceUpdateExecutionTimestamp: number | null = null;
@@ -1407,7 +1407,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe.skip('Governance Update (Admins Only)', function () {
+  describe('Governance Update (Admins Only)', function () {
     // Tests governance update proposal flow for admins only
     let governanceUpdateAdminsProposalId: string = '';
     let governanceUpdateAdminsExecutionTimestamp: number | null = null;
@@ -1639,7 +1639,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe.skip('Governance Update (Timelock Only)', function () {
+  describe('Governance Update (Timelock Only)', function () {
     // Tests governance update proposal flow for timelock delay only
     let governanceUpdateTimelockProposalId: string = '';
     let governanceUpdateTimelockExecutionTimestamp: number | null = null;
