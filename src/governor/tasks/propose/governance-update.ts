@@ -12,24 +12,24 @@ export default async function proposeGovernanceUpdateTask(
 ): Promise<any> {
   const deploymentManager = (hre as any).deploymentManager;
 
-  const { governorSigners, multisigThreshold, timelockDelay } = await getGovConfiguration(hre.network.name);
+  const { governorAdmins, multisigThreshold, timelockDelay } = await getGovConfiguration(hre.network.name);
     
   const onchainGovConfiguration = await getOnchainGovConfiguration(deploymentManager);
   
   const update: GovernanceUpdate = {};
 
-  if(governorSigners !== onchainGovConfiguration.admins || multisigThreshold !== onchainGovConfiguration.multisigThreshold) {
-    update.admins = governorSigners;
+  const set1 = new Set(...onchainGovConfiguration.admins);
+  const set2 = new Set(...governorAdmins);
+  const isAdminsEqual = set1.size === set2.size && [...set1].every(item => set2.has(item));
+
+  if(!isAdminsEqual || multisigThreshold !== onchainGovConfiguration.multisigThreshold) {
+    update.admins = governorAdmins;
     update.threshold = multisigThreshold;
   }
   if(timelockDelay !== onchainGovConfiguration.timelockDelay) {
     update.timelockDelay = timelockDelay;
   }
-
-  if(Object.keys(update).length === 0) {
-    throw new Error('No updates to propose');
-  }
-
+  
   try {
 
     const action = new GovernanceUpdateAction(deploymentManager, update);

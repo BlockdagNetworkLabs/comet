@@ -5,7 +5,7 @@ import { DeploymentManager } from '../../../plugins/deployment_manager';
 import { CustomGovernor, CustomTimelock } from '../../../build/types';
 
 export interface GovConfiguration {
-  governorSigners: string[];
+  governorAdmins: string[];
   multisigThreshold: bigint;
   timelockDelay: bigint;
   gracePeriod: number;
@@ -46,7 +46,7 @@ export async function getGovConfiguration(deploymentNetwork: string): Promise<Go
   
       // Validate required fields
       const requiredFields: (keyof GovConfiguration)[] = [
-        'governorSigners',
+        'governorAdmins',
         'multisigThreshold',
         'timelockDelay',
         'gracePeriod',
@@ -60,17 +60,17 @@ export async function getGovConfiguration(deploymentNetwork: string): Promise<Go
         }
       }
   
-      // Validate governorSigners format (array of addresses)
-      if (Array.isArray(config.governorSigners)) {
+      // Validate governorAdmins format (array of addresses)
+      if (Array.isArray(config.governorAdmins)) {
         const addressRegex = /^0x[a-fA-F0-9]{40}$/;
         
-        for (const address of config.governorSigners) {
+        for (const address of config.governorAdmins) {
           if (typeof address !== 'string' || !addressRegex.test(address)) {
-            throw new Error(`Invalid address format in governorSigners: ${address}`);
+            throw new Error(`Invalid address format in governorAdmins: ${address}`);
           }
         }
       } else {
-        throw new Error('governorSigners must be an array');
+        throw new Error('governorAdmins must be an array');
       }
   
       // Validate numeric fields
@@ -89,8 +89,8 @@ export async function getGovConfiguration(deploymentNetwork: string): Promise<Go
       }
   
       // Validate multisigThreshold is not greater than number of signers
-      if (config.multisigThreshold > config.governorSigners.length) {
-        throw new Error(`multisigThreshold (${config.multisigThreshold}) cannot be greater than number of signers (${config.governorSigners.length})`);
+      if (config.multisigThreshold > config.governorAdmins.length) {
+        throw new Error(`multisigThreshold (${config.multisigThreshold}) cannot be greater than number of signers (${config.governorAdmins.length})`);
       }
   
       // Validate timelock delay constraints
@@ -128,7 +128,6 @@ export async function getGovConfiguration(deploymentNetwork: string): Promise<Go
 }
 
 export async function getOnchainGovConfiguration(dm: DeploymentManager): Promise<OnchainGovConfiguration> {
-
   const governor = (await dm.contract('governor')) as CustomGovernor;
   const timelock = (await dm.contract('timelock')) as CustomTimelock;
 
@@ -138,16 +137,38 @@ export async function getOnchainGovConfiguration(dm: DeploymentManager): Promise
   let onchainAdmins = [];
   let moreAdmins=true;
   let i=0;
-  while(moreAdmins) {
-    const admin = await governor.admins(i);
-    if(admin===ethers.constants.AddressZero) {
-      moreAdmins = false;
-    } else {
-      onchainAdmins.push(admin);
-      i++;
+  while(moreAdmins) {    
+    try {
+      const admin = await governor.admins(i);
+      if (admin === ethers.constants.AddressZero) {
+        moreAdmins = false;
+      } else {
+        onchainAdmins.push(admin);
+        i++;
+      }
+    } catch (error) {
+      if (isAdminIndexOutOfBoundsError(error)) {
+        console.log(`Reached end of admin list at index ${i}`);
+        moreAdmins = false;
+      } else {
+        console.error(`Error getting admin at index ${i}:`, {
+          code: error.code,
+          method: error.method,
+          message: error.message,
+          data: error.data
+        });
+        throw error;
+      }
     }
+    
   }
  
+  function isAdminIndexOutOfBoundsError(error: any): boolean {
+    return error.code === 'CALL_EXCEPTION' && 
+           error.method === 'admins(uint256)' && 
+           error.data === '0x'; // Empty data usually means index out of bounds
+  }
+
   return {
     multisigThreshold: onchainMultisigThreshold.toBigInt(),
     timelockDelay: onchainTimelockDelay.toBigInt(),
@@ -161,9 +182,9 @@ export async function getOnchainGovConfiguration(dm: DeploymentManager): Promise
  * @param deploymentNetwork - The deployment network
  * @returns Promise<string[]> - Array of governance signer addresses
  */
-export async function getGovSigners(deploymentNetwork: string): Promise<string[]> {
+export async function getGovAdmins(deploymentNetwork: string): Promise<string[]> {
   const config = await getGovConfiguration(deploymentNetwork);
-  return config.governorSigners; // Already an array
+  return config.governorAdmins; // Already an array
 }
 
 /**

@@ -395,12 +395,12 @@ async function createBDAGGov(
 
   // Override the gov config while deploying the infrastructure
   // After the deployment, the gov should be upgraded to the correct config (proper multisig, timelock delay, etc)
-  govConfig.timelockDelay = 0;
-  govConfig.governorSigners = [admin.address];
-  govConfig.multisigThreshold = 1;
+  govConfig.timelockDelay = 0n;
+  govConfig.governorAdmins = [admin.address];
+  govConfig.multisigThreshold = 1n;
 
   const { 
-    governorSigners, 
+    governorAdmins, 
     multisigThreshold, 
     timelockDelay, 
     gracePeriod, 
@@ -429,7 +429,7 @@ async function createBDAGGov(
       governorImpl.interface.encodeFunctionData('initialize', [
         timelock.address,
         COMP.address,
-        governorSigners,
+        governorAdmins,
         multisigThreshold
       ])
     ]

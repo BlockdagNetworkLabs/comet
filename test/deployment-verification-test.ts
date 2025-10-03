@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { Contract } from 'ethers';
 import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../src/constants';
-import { getGovSigners, getMultisigThreshold, getTimelockDelay, getGracePeriod, getMinimumDelay, getMaximumDelay } from '../src/deploy/helpers/govConfiguration';
+import { getGovAdmins, getMultisigThreshold, getTimelockDelay, getGracePeriod, getMinimumDelay, getMaximumDelay } from '../src/deploy/helpers/govConfiguration';
 
 describe("Market Verification", function() {
   // This test verifies the deployment configuration for any network/market
@@ -768,22 +768,22 @@ describe("Governance Verification", function() {
   it('should validate BDAG governor configuration matches deployed contract', async function () {
     const { governor } = deployedContracts;
     
-    const signers = await getGovSigners(networkName);
+    const admins = await getGovAdmins(networkName);
     const threshold = await getMultisigThreshold(networkName);
     
-    expect(signers.length).to.be.gt(0);
+    expect(admins.length).to.be.gt(0);
     expect(threshold).to.be.gt(0);
     expect(threshold).to.not.be.NaN;
     
     const deployedThreshold = await governor.multisigThreshold();
     expect(deployedThreshold).to.equal(threshold);
     
-    for (let i = 0; i < signers.length; i++) {
-      const signer = signers[i];
+    for (let i = 0; i < admins.length; i++) {
+      const admin = admins[i];
       
-      expect(ethers.utils.isAddress(signer)).to.be.true;
+      expect(ethers.utils.isAddress(admin)).to.be.true;
       
-      const isAdmin = await governor.isAdmin(signer);
+      const isAdmin = await governor.isAdmin(admin);
       expect(isAdmin).to.be.true;
     }
   });
