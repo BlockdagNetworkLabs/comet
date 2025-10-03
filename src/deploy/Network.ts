@@ -4,7 +4,7 @@ import { DeploySpec, ProtocolConfiguration, wait, COMP_WHALES } from './index';
 import { getConfiguration } from './NetworkConfiguration';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { createProposalManager } from '../governor/helpers/proposalManager';
-import { getValidGovConfig } from './helpers/govValidation';
+import { getGovConfiguration } from './helpers/govConfiguration';
 
 export function sameAddress(a: string, b: string) {
   return BigInt(a) === BigInt(b);
@@ -390,7 +390,7 @@ async function createBDAGGov(
   adminSigner?: SignerWithAddress
 ): Promise<Deployed> {
   const trace = deploymentManager.tracer();
-  const govConfig = getValidGovConfig();
+  const govConfig = await getGovConfiguration(deploymentManager.network);
   const admin = adminSigner ?? await deploymentManager.getSigner();
 
   // Override the gov config while deploying the infrastructure

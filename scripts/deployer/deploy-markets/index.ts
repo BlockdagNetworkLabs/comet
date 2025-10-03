@@ -18,7 +18,7 @@ import {
   proposeFundRewards as proposeFundRewardsCommand,
   proposeGovernanceUpdate as proposeGovernanceUpdateCommand
 } from '../../helpers/commandUtil';
-import { getValidGovConfig } from '../../../src/deploy/helpers/govValidation';
+import { getGovConfiguration } from '../../../src/deploy/helpers/govConfiguration';
 import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../../../src/constants';
 
 interface DeployOptions {
@@ -69,7 +69,7 @@ class MarketsDeployer {
       await this.fundRewardContract();
 
       // Step 10: Propose governance update
-      const { governorSigners, multisigThreshold, timelockDelay } = getValidGovConfig();
+      const { governorSigners, multisigThreshold, timelockDelay } = await getGovConfiguration(this.options.network);
       await this.governanceUpdate(governorSigners, multisigThreshold, timelockDelay);
 
       // Step 11: Run verification tests (optional)
