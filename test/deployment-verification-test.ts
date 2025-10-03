@@ -1,8 +1,15 @@
-import { expect } from 'chai';
-import { ethers, network } from 'hardhat';
-import { Contract } from 'ethers';
-import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../src/constants';
-import { getGovAdmins, getMultisigThreshold, getTimelockDelay, getGracePeriod, getMinimumDelay, getMaximumDelay } from '../src/deploy/helpers/govConfiguration';
+import { expect } from "chai";
+import { ethers, network } from "hardhat";
+import { Contract } from "ethers";
+import { DEFAULT_REWARDS_FUNDING_AMOUNT } from "../src/constants";
+import {
+  getGovAdmins,
+  getMultisigThreshold,
+  getTimelockDelay,
+  getGracePeriod,
+  getMinimumDelay,
+  getMaximumDelay,
+} from "../src/deploy/helpers/govConfiguration";
 
 describe("Market Verification", function() {
   // This test verifies the deployment configuration for any network/market
@@ -70,6 +77,7 @@ describe("Market Verification", function() {
     // Run spider to refresh roots.json before testing
     console.log(`🕷️  Running spider to refresh roots.json...`);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { execSync } = require("child_process");
       const spiderCommand = `yarn hardhat spider --network ${networkName} --deployment ${market}`;
       execSync(spiderCommand, { stdio: "inherit" });
@@ -80,8 +88,8 @@ describe("Market Verification", function() {
       );
     }
 
-    
     const rootsPath = `../deployments/${networkName}/${market}/roots.json`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
     const contracts: any = {};
 
@@ -488,6 +496,7 @@ describe("Market Verification", function() {
 
     // Load roots.json to get the actual addresses
     const rootsPath = `../deployments/${network.name}/${market}/roots.json`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
 
     if (config.assets && typeof config.assets === "object") {
@@ -639,6 +648,7 @@ describe("Market Verification", function() {
 
     // Load roots.json to get the actual addresses
     const rootsPath = `../deployments/${network.name}/${market}/roots.json`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
 
     if (config.interestRateModel) {
@@ -667,6 +677,7 @@ describe("Market Verification", function() {
 
     // Load roots.json to get the actual addresses
     const rootsPath = `../deployments/${network.name}/${market}/roots.json`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
 
     if (config.rewards) {
@@ -734,7 +745,6 @@ describe("Market Verification", function() {
 });
 
 describe("Governance Verification", function() {
-  
   let deployedContracts: any;
   let networkName: string;
 
@@ -745,8 +755,9 @@ describe("Governance Verification", function() {
     console.log(
       `🔍 Testing governance configuration on network: ${networkName}`
     );
-    
+
     const rootsPath = `../deployments/${networkName}/_infrastructure/roots.json`;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
     const contracts: any = {};
 
@@ -764,76 +775,84 @@ describe("Governance Verification", function() {
     }
     deployedContracts = contracts;
   });
-  
-  it('should validate BDAG governor configuration matches deployed contract', async function () {
+
+  it("should validate BDAG governor configuration matches deployed contract", async function() {
     const { governor } = deployedContracts;
-    
+
     const admins = await getGovAdmins(networkName);
     const threshold = await getMultisigThreshold(networkName);
-    
+
     expect(admins.length).to.be.gt(0);
     expect(threshold).to.be.gt(0);
     expect(threshold).to.not.be.NaN;
-    
+
     const deployedThreshold = await governor.multisigThreshold();
     expect(deployedThreshold).to.equal(threshold);
-    
+
     for (let i = 0; i < admins.length; i++) {
       const admin = admins[i];
-      
+
       expect(ethers.utils.isAddress(admin)).to.be.true;
-      
+
       const isAdmin = await governor.isAdmin(admin);
       expect(isAdmin).to.be.true;
     }
   });
 
-  it('should validate BDAG timelock delay configuration matches deployed contract', async function () {
+  it("should validate BDAG timelock delay configuration matches deployed contract", async function() {
     const { timelock } = deployedContracts;
-    
+
     const delay = await getTimelockDelay(networkName);
-    
+
     const deployedDelay = await timelock.delay();
-    
+
     expect(deployedDelay).to.equal(delay);
 
-    console.log(`✅ Timelock delay validation passed: ${deployedDelay} seconds (${delay} from env)`);
+    console.log(
+      `✅ Timelock delay validation passed: ${deployedDelay} seconds (${delay} from env)`
+    );
   });
 
-  it('should validate BDAG timelock grace period configuration matches deployed contract', async function () {
+  it("should validate BDAG timelock grace period configuration matches deployed contract", async function() {
     const { timelock } = deployedContracts;
-    
+
     const gracePeriod = await getGracePeriod(networkName);
-    
+
     const deployedGracePeriod = await timelock.GRACE_PERIOD();
 
     expect(deployedGracePeriod).to.equal(gracePeriod);
-    
-    console.log(`✅ Timelock grace period validation passed: ${deployedGracePeriod} seconds (${gracePeriod} from env)`);
+
+    console.log(
+      `✅ Timelock grace period validation passed: ${deployedGracePeriod} seconds (${gracePeriod} from env)`
+    );
   });
 
-  it('should validate BDAG timelock minimum delay configuration matches deployed contract', async function () {
+  it("should validate BDAG timelock minimum delay configuration matches deployed contract", async function() {
     const { timelock } = deployedContracts;
-    
+
     const minimumDelay = await getMinimumDelay(networkName);
 
     const deployedMinimumDelay = await timelock.MINIMUM_DELAY();
-    
+
     expect(deployedMinimumDelay).to.equal(minimumDelay);
-    
-    console.log(`✅ Timelock minimum delay validation passed: ${deployedMinimumDelay} seconds (${minimumDelay} from env)`);
+
+    console.log(
+      `✅ Timelock minimum delay validation passed: ${deployedMinimumDelay} seconds (${minimumDelay} from env)`
+    );
   });
 
-  it('should validate BDAG timelock maximum delay configuration matches deployed contract', async function () {
+  it("should validate BDAG timelock maximum delay configuration matches deployed contract", async function() {
     const { timelock } = deployedContracts;
-    
+
     const maximumDelay = await getMaximumDelay(networkName);
-    
+
     const deployedMaximumDelay = await timelock.MAXIMUM_DELAY();
-    
+
     expect(deployedMaximumDelay).to.equal(maximumDelay);
-    
-    console.log(`✅ Timelock maximum delay validation passed: ${deployedMaximumDelay} seconds (${maximumDelay} from env)`);
+
+    console.log(
+      `✅ Timelock maximum delay validation passed: ${deployedMaximumDelay} seconds (${maximumDelay} from env)`
+    );
   });
 });
 
@@ -844,31 +863,35 @@ async function getProxyAdmin(contractAddress: string): Promise<Contract> {
     // Method 1: Try to get admin directly from contract
     const contract = new Contract(
       contractAddress,
-      ['function admin() external view returns (address)'],
+      ["function admin() external view returns (address)"],
       ethers.provider
     );
     const adminAddress = await contract.admin();
-    
+
     return new Contract(
       adminAddress,
       [
-        'function owner() external view returns (address)',
-        'function getProxyImplementation(address) external view returns (address)'
+        "function owner() external view returns (address)",
+        "function getProxyImplementation(address) external view returns (address)",
       ],
       ethers.provider
     );
   } catch (error) {
     // Method 2: Try to get admin using storage slot
-    const adminSlot = '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103';
-    const adminAddress = await ethers.provider.getStorageAt(contractAddress, adminSlot);
-    
+    const adminSlot =
+      "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+    const adminAddress = await ethers.provider.getStorageAt(
+      contractAddress,
+      adminSlot
+    );
+
     return new Contract(
       ethers.utils.getAddress(adminAddress.slice(26)), // Remove padding
       [
-        'function owner() external view returns (address)',
-        'function getProxyImplementation(address) external view returns (address)'
+        "function owner() external view returns (address)",
+        "function getProxyImplementation(address) external view returns (address)",
       ],
       ethers.provider
     );
   }
-} 
+}
