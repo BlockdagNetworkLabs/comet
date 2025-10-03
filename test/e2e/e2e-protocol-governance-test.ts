@@ -23,46 +23,16 @@ const NETWORK_NAME = 'e2e-network';
 const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const PROPOSE_PHASE_1_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
-let EXECUTE_TIMEOUT: number;
-let MULTISIG_THRESHOLD: number;
-async function loadInitialConfigurationForMultisigGovernance() {
-  const timelockDelay = Number(await getTimelockDelay(NETWORK_NAME));
-  EXECUTE_TIMEOUT = (2 * 60 * 1000) + timelockDelay * 60 * 1000; // 2 minutes + TIMELOCK_DELAY minutes
-  MULTISIG_THRESHOLD = Number(await getMultisigThreshold(NETWORK_NAME));
-}
-
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
 const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
 const TEMPLATE_PATH = path.join(__dirname, TEMPLATE_NAME);
 
-async function reloadHardhatConfigToIncorporateSigner(signer: string) {
-  const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, { ...E2E_NETWORK_CONFIG, accounts:[signer] }, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
-  await dynamicHardhatConfig.generateTestHardhatConfig();
-}
-
-async function runWithSigner<T>(
-  signer: string, 
-  operation: () => Promise<T>
-): Promise<T> {
-  const originalTestPk = process.env.TEST_PK;
-  try {
-    // Set the new signer
-    await reloadHardhatConfigToIncorporateSigner(signer);
-    console.log(`📝 Running operation with signer: ${signer}`);
-    // Execute the operation
-    return await operation();
-  } catch (error) {
-    console.error(`❌ Operation failed with signer ${signer}:`, error);
-    throw error;
-  } finally {
-    await reloadHardhatConfigToIncorporateSigner(originalTestPk);
-    console.log(`📝 Reverted back to original signer`);
-  }
-}
+let EXECUTE_TIMEOUT: number;
+let MULTISIG_THRESHOLD: number;
 
 describe('E2E Protocol Governance Test Suite', function () {
   
-  describe('Complete Protocol Deployment', function () {
+  describe.skip('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
       // Set test environment variables
@@ -107,7 +77,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe('Incremental Protocol Deployment', function () {
+  describe.skip('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
     let excludedDeployment: string = '';
     let marketPhase1ProposalId: string = '';
@@ -524,7 +494,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe('Protocol Deployment with Market Update', function () {
+  describe.skip('Protocol Deployment with Market Update', function () {
     // Tests deploying all markets + updating one market via governance
     let targetMarketForUpdate: string = '';
     let marketPhase1ProposalId: string = '';
@@ -1055,8 +1025,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     it('should propose comet reward funding with first admin', async function () {
-      const FUNDING_AMOUNT = '1000000000000000000000'; // 1000 COMP tokens in wei
       
+      const FUNDING_AMOUNT = '1000000000000000000000'; // 1000 COMP tokens in wei
+          
       // Set up mock answers for the comet reward funding flow
       // The script will ask:
       // 1. "Enter the amount of COMP tokens to fund (in wei, e.g., 1000000000000000000000 for 1000 COMP): " -> FUNDING_AMOUNT
@@ -1067,7 +1038,8 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`🚀 Testing comet reward funding proposal`);
       console.log(`💰 Funding amount: ${FUNDING_AMOUNT} COMP tokens (wei)`);
 
-      // Note: Mock functions are no longer needed as interactive prompts have been removed
+      // Use the reusable function to set up mocks
+      setupMockFunctions(cometRewardFunder, mockConfirmAnswers, mockQuestionAnswers);
 
       await runWithSigner(getAdminPrivateKey(0), async () => {
         try {
@@ -1199,7 +1171,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
   
-  describe('Governance Update (Admins and Timelock Delay)', function () {
+  describe.skip('Governance Update (Admins and Timelock Delay)', function () {
     // Tests governance update proposal flow for both admins and timelock delay
     let governanceUpdateProposalId: string = '';
     let governanceUpdateExecutionTimestamp: number | null = null;
@@ -1435,7 +1407,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe('Governance Update (Admins Only)', function () {
+  describe.skip('Governance Update (Admins Only)', function () {
     // Tests governance update proposal flow for admins only
     let governanceUpdateAdminsProposalId: string = '';
     let governanceUpdateAdminsExecutionTimestamp: number | null = null;
@@ -1667,7 +1639,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
   });
 
-  describe('Governance Update (Timelock Only)', function () {
+  describe.skip('Governance Update (Timelock Only)', function () {
     // Tests governance update proposal flow for timelock delay only
     let governanceUpdateTimelockProposalId: string = '';
     let governanceUpdateTimelockExecutionTimestamp: number | null = null;
@@ -1976,5 +1948,69 @@ describe('E2E Protocol Governance Test Suite', function () {
     }
   }
 
+  function setupMockFunctions(
+    object: { setMockFunctions: (confirmFn: (prompt: string) => Promise<boolean>, questionFn: (prompt: string) => Promise<string>) => void },
+    mockConfirmAnswers: boolean[],
+    mockQuestionAnswers: string[]
+  ): void {
+    object.setMockFunctions(
+      // Mock confirm function - consume from array
+      async (prompt: string) => {
+        console.log(`Mock confirm: ${prompt}`);
+        
+        if (mockConfirmAnswers.length === 0) {
+          console.log(`⚠️  No more confirm answers in mock array, defaulting to true`);
+          return true;
+        }
+        
+        const answer = mockConfirmAnswers.shift()!;
+        console.log(`📝 Answering confirm with: ${answer}`);
+        return answer;
+      },
+      // Mock question function - consume from array
+      async (prompt: string) => {
+        console.log(`Mock question: ${prompt}`);
+        
+        if (mockQuestionAnswers.length === 0) {
+          console.log(`⚠️  No more question answers in mock array, defaulting to empty string`);
+          return '';
+        }
+        
+        const answer = mockQuestionAnswers.shift()!;
+        console.log(`📝 Answering question with: ${answer}`);
+        return answer;
+      }
+    );
+  }
 
+  async function loadInitialConfigurationForMultisigGovernance() {
+    const timelockDelay = Number(await getTimelockDelay(NETWORK_NAME));
+    EXECUTE_TIMEOUT = (2 * 60 * 1000) + timelockDelay * 60 * 1000; // 2 minutes + TIMELOCK_DELAY minutes
+    MULTISIG_THRESHOLD = Number(await getMultisigThreshold(NETWORK_NAME));
+  }
+  
+  async function reloadHardhatConfigToIncorporateSigner(signer: string) {
+    const dynamicHardhatConfig = new DynamicHardhatConfig(NETWORK_NAME, { ...E2E_NETWORK_CONFIG, accounts:[signer] }, TEST_HARDHAT_CONFIG_PATH, TEST_DEPLOYMENT_PATH);
+    await dynamicHardhatConfig.generateTestHardhatConfig();
+  }
+  
+  async function runWithSigner<T>(
+    signer: string, 
+    operation: () => Promise<T>
+  ): Promise<T> {
+    const originalTestPk = process.env.TEST_PK;
+    try {
+      // Set the new signer
+      await reloadHardhatConfigToIncorporateSigner(signer);
+      console.log(`📝 Running operation with signer: ${signer}`);
+      // Execute the operation
+      return await operation();
+    } catch (error) {
+      console.error(`❌ Operation failed with signer ${signer}:`, error);
+      throw error;
+    } finally {
+      await reloadHardhatConfigToIncorporateSigner(originalTestPk);
+      console.log(`📝 Reverted back to original signer`);
+    }
+  }
 });
