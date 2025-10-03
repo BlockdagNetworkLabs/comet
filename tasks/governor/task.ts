@@ -10,7 +10,6 @@ import {
   proposeGovernanceUpdateTask
 } from '../../src/governor/tasks';
 import { createProposalManager } from '../../src/governor/helpers/proposalManager';
-
 // Helper function to create deployment manager
 async function createDeploymentManager(hre: any, deployment?: string, options?: any) {
   const network = hre.network.name;
@@ -143,45 +142,12 @@ task('governor:propose-fund-comet-rewards', 'Propose to fund CometRewards contra
     }
   });
 
-
-
 // Task to propose governance update (improved version)
 task('governor:propose-governance-update', 'Propose governance configuration and/or timelock delay updates')
-  .addParam('deployment', 'The deployment to use')
-  .addOptionalParam('admins', 'Comma-separated list of new admin addresses (optional)')
-  .addOptionalParam('threshold', 'New multisig threshold (optional)')
-  .addOptionalParam('timelockDelay', 'New timelock delay in seconds (optional)')
-  .setAction(async (taskArgs, hre) => {
-    const adminsParam = taskArgs.admins;
-    const threshold = taskArgs.threshold ? parseInt(taskArgs.threshold) : undefined;
-    const deployment = taskArgs.deployment;
-    const timelockDelay = taskArgs.timelockDelay ? parseInt(taskArgs.timelockDelay) : undefined;
-    
-    await createDeploymentManager(hre, deployment);
-    
-    // Parse admin addresses if provided
-    let admins: string[] | undefined;
-    if (adminsParam) {
-      admins = adminsParam.split(',').map((addr: string) => addr.trim());
-    }
-    
-    // Validate that at least one update is provided
-    if (!admins && !threshold && !timelockDelay) {
-      throw new Error('❌ At least one update must be provided (admins/threshold or timelockDelay)');
-    }
-    
-    // Validate that if admins are provided, threshold is also provided
-    if (admins && !threshold) {
-      throw new Error('❌ Threshold must be provided when admins are specified');
-    }
-    
-    // Validate that if threshold is provided, admins are also provided
-    if (threshold && !admins) {
-      throw new Error('❌ Admins must be provided when threshold is specified');
-    }
-    
+  .setAction(async (_, hre) => {
+    await createDeploymentManager(hre);
     try {
-      const result = await proposeGovernanceUpdateTask(hre, admins, threshold, timelockDelay);
+      const result = await proposeGovernanceUpdateTask(hre);
       return result;
     } catch (error) {
       console.error(`❌ Failed to propose governance update:`, error);

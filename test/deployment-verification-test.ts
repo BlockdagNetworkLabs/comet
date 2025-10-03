@@ -4,7 +4,7 @@ import { Contract } from 'ethers';
 import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../src/constants';
 import { getGovSigners, getMultisigThreshold, getTimelockDelay, getGracePeriod, getMinimumDelay, getMaximumDelay } from '../src/deploy/helpers/govConfiguration';
 
-describe("Deployment Verification", function() {
+describe("Market Verification", function() {
   // This test verifies the deployment configuration for any network/market
   // export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
   let deployedContracts: any;
@@ -733,7 +733,7 @@ describe("Deployment Verification", function() {
   });
 });
 
-describe("Governance Configuration", function() {
+describe("Governance Verification", function() {
   
   let deployedContracts: any;
   let networkName: string;

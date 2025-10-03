@@ -31,28 +31,12 @@ print_error() {
 
 # Function to show help
 show_help() {
-    echo -e "${BLUE}🔧 Governance Update Script Wrapper${NC}"
-    echo ""
-    echo "Usage: ./scripts/governor/propose/governance-update/index.sh [options]"
-    echo ""
-    echo "Options:"
-    echo "  -n, --network <network>     Network to use (default: local)"
-    echo "  -d, --deployment <market>   Deployment to use (default: dai)"
-    echo "  -h, --help                  Show this help message"
-    echo ""
     echo "Examples:"
-    echo "  # Update governance configuration on local network (interactive)"
-    echo "  ./scripts/governor/propose/governance-update/index.sh -n local -d dai"
+    echo "  # Update governance configuration on local network"
+    echo "  ./scripts/governor/propose/governance-update/index.sh -n local"
     echo ""
-    echo "  # Update governance configuration on polygon network (interactive)"
-    echo "  ./scripts/governor/propose/governance-update/index.sh -n polygon -d usdc"
-    echo ""
-    echo "Interactive prompts:"
-    echo "  - Choose what to update: governance config, timelock delay, or both"
-    echo "  - Admin addresses: Enter comma-separated list of admin addresses (if updating governance)"
-    echo "  - Threshold: Enter number of required approvals (if updating governance)"
-    echo "  - Timelock delay: Enter new delay in seconds (if updating timelock)"
-    echo "  - Confirmation: Confirm the configuration before proceeding"
+    echo "  # Update governance configuration on polygon network"
+    echo "  ./scripts/governor/propose/governance-update/index.sh -n polygon"
     echo ""
     echo "Note: This script will guide you through the complete governance process:"
     echo "  1. Create proposal"
@@ -61,7 +45,6 @@ show_help() {
     echo "  4. Execute proposal (if you choose to)"
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
-    echo "Available deployments: dai, usdc, usdt, weth, wbtc, etc."
 }
 
 # Function to check if required tools are installed
@@ -85,16 +68,11 @@ check_requirements() {
 
 # Parse command line arguments
 NETWORK="local"
-DEPLOYMENT="dai"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -n|--network)
             NETWORK="$2"
-            shift 2
-            ;;
-        -d|--deployment)
-            DEPLOYMENT="$2"
             shift 2
             ;;
         -h|--help)
@@ -113,7 +91,6 @@ done
 main() {
     print_info "Starting Governance Update process..."
     print_info "Network: $NETWORK"
-    print_info "Deployment: $DEPLOYMENT"
     print_info "Configuration will be asked interactively"
     
     # Check requirements
@@ -123,8 +100,7 @@ main() {
     print_info "Executing governance update script..."
     
     yarn ts-node scripts/governor/propose/governance-update/index.ts \
-        --network "$NETWORK" \
-        --deployment "$DEPLOYMENT"
+        --network "$NETWORK"
     
     print_success "Governance update script completed"
 }

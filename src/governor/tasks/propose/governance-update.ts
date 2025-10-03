@@ -2,53 +2,35 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { GovernanceService } from '../../services/GovernanceService';
 import { GovernanceUpdateAction } from '../../actions/GovernanceUpdateAction';
 import { GovernanceUpdate } from '../../models/GovernanceConfig';
+import { getGovConfiguration, getOnchainGovConfiguration } from '../../../deploy/helpers/govConfiguration';
 
 /**
  * Task for proposing governance updates (admins/threshold and/or timelock delay)
  */
 export default async function proposeGovernanceUpdateTask(
   hre: HardhatRuntimeEnvironment,
-  newAdmins?: string[],
-  newThreshold?: number,
-  newTimelockDelay?: number
 ): Promise<any> {
   const deploymentManager = (hre as any).deploymentManager;
+
+  const { governorSigners, multisigThreshold, timelockDelay } = await getGovConfiguration(hre.network.name);
+    
+  const onchainGovConfiguration = await getOnchainGovConfiguration(deploymentManager);
   
-  if (!deploymentManager) {
-    throw new Error('DeploymentManager not found. Make sure to call createDeploymentManager first.');
+  const update: GovernanceUpdate = {};
+
+  if(governorSigners !== onchainGovConfiguration.admins || multisigThreshold !== onchainGovConfiguration.multisigThreshold) {
+    update.admins = governorSigners;
+    update.threshold = multisigThreshold;
+  }
+  if(timelockDelay !== onchainGovConfiguration.timelockDelay) {
+    update.timelockDelay = timelockDelay;
   }
 
-  // Validate that at least one update is provided
-  if (!newAdmins && !newThreshold && !newTimelockDelay) {
-    throw new Error('At least one update must be provided (admins/threshold or timelockDelay)');
-  }
-
-  // Validate that if admins are provided, threshold is also provided
-  if (newAdmins && newThreshold === undefined) {
-    throw new Error('Threshold must be provided when admins are specified');
-  }
-
-  // Validate that if threshold is provided, admins are also provided
-  if (newThreshold !== undefined && !newAdmins) {
-    throw new Error('Admins must be provided when threshold is specified');
-  }
-
-  console.log(`Proposing governance update:`);
-  if (newAdmins && newThreshold !== undefined) {
-    console.log(`  New admins: ${newAdmins.join(', ')}`);
-    console.log(`  New threshold: ${newThreshold}`);
-  }
-  if (newTimelockDelay !== undefined) {
-    console.log(`  New timelock delay: ${newTimelockDelay} seconds`);
+  if(Object.keys(update).length === 0) {
+    throw new Error('No updates to propose');
   }
 
   try {
-    // Create the governance update action
-    const update: GovernanceUpdate = {
-      admins: newAdmins,
-      threshold: newThreshold,
-      timelockDelay: newTimelockDelay
-    };
 
     const action = new GovernanceUpdateAction(deploymentManager, update);
     const proposal = await action.build();
@@ -62,9 +44,9 @@ export default async function proposeGovernanceUpdateTask(
 
     return {
       ...result,
-      newAdmins: summary.updatingGovernance ? newAdmins : null,
-      newThreshold: summary.updatingGovernance ? newThreshold : null,
-      newTimelockDelay: summary.updatingTimelock ? newTimelockDelay : null,
+      newAdmins: summary.updatingGovernance ? update.admins : null,
+      newThreshold: summary.updatingGovernance ? update.threshold : null,
+      newTimelockDelay: summary.updatingTimelock ? update.timelockDelay : null,
       updatingGovernance: summary.updatingGovernance,
       updatingTimelock: summary.updatingTimelock
     };

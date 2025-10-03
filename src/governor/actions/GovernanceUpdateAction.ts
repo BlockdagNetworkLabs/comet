@@ -75,7 +75,7 @@ export class GovernanceUpdateAction {
   /**
    * Validate governance configuration
    */
-  private validateGovernanceConfig(admins: string[], threshold: number): void {
+  private validateGovernanceConfig(admins: string[], threshold: bigint): void {
     if (admins.length === 0) {
       throw new Error('At least one admin address is required');
     }

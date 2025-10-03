@@ -18,7 +18,6 @@ import {
   proposeFundRewards as proposeFundRewardsCommand,
   proposeGovernanceUpdate as proposeGovernanceUpdateCommand
 } from '../../helpers/commandUtil';
-import { getGovConfiguration } from '../../../src/deploy/helpers/govConfiguration';
 import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../../../src/constants';
 
 interface DeployOptions {
@@ -69,8 +68,7 @@ class MarketsDeployer {
       await this.fundRewardContract();
 
       // Step 10: Propose governance update
-      const { governorSigners, multisigThreshold, timelockDelay } = await getGovConfiguration(this.options.network);
-      await this.governanceUpdate(governorSigners, multisigThreshold, timelockDelay);
+      await this.governanceUpdate();
 
       // Step 11: Run verification tests (optional)
       await this.runVerificationTests();
@@ -229,7 +227,7 @@ class MarketsDeployer {
    * - Propose a governance update to set the new admins and threshold
    * - Return the proposal ID for governance flow
    */
-  private async governanceUpdate(admins: string[], threshold: number, timelockDelay?: number): Promise<string> {
+  private async governanceUpdate(): Promise<string> {
     const shouldProposeGovernanceUpdate = await confirm(`\nDo you want to propose a governance update?`);
 
     if (!shouldProposeGovernanceUpdate) {
@@ -239,10 +237,6 @@ class MarketsDeployer {
 
     const output = await proposeGovernanceUpdateCommand(
       this.options.network, 
-      this.options.deployments[0], // Use first deployment for governance update
-      admins, 
-      threshold, 
-      timelockDelay
     );
     
     const proposalId = extractProposalId(output);

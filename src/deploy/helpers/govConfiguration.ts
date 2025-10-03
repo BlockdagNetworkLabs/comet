@@ -1,13 +1,22 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { ethers } from 'ethers';
+import { DeploymentManager } from '../../../plugins/deployment_manager';
+import { CustomGovernor, CustomTimelock } from '../../../build/types';
 
 export interface GovConfiguration {
   governorSigners: string[];
-  multisigThreshold: number;
-  timelockDelay: number;
+  multisigThreshold: bigint;
+  timelockDelay: bigint;
   gracePeriod: number;
   minimumDelay: number;
   maximumDelay: number;
+}
+
+export interface OnchainGovConfiguration {
+  multisigThreshold: bigint;
+  timelockDelay: bigint;
+  admins: string[];
 }
 
 /**
@@ -118,6 +127,35 @@ export async function getGovConfiguration(deploymentNetwork: string): Promise<Go
     }
 }
 
+export async function getOnchainGovConfiguration(dm: DeploymentManager): Promise<OnchainGovConfiguration> {
+
+  const governor = (await dm.contract('governor')) as CustomGovernor;
+  const timelock = (await dm.contract('timelock')) as CustomTimelock;
+
+  const onchainMultisigThreshold = await governor.multisigThreshold();
+  const onchainTimelockDelay = await timelock.delay();
+
+  let onchainAdmins = [];
+  let moreAdmins=true;
+  let i=0;
+  while(moreAdmins) {
+    const admin = await governor.admins(i);
+    if(admin===ethers.constants.AddressZero) {
+      moreAdmins = false;
+    } else {
+      onchainAdmins.push(admin);
+      i++;
+    }
+  }
+ 
+  return {
+    multisigThreshold: onchainMultisigThreshold.toBigInt(),
+    timelockDelay: onchainTimelockDelay.toBigInt(),
+    admins: onchainAdmins
+  };
+
+}
+
 /**
  * Gets the governance signers as an array of addresses
  * @param deploymentNetwork - The deployment network
@@ -133,7 +171,7 @@ export async function getGovSigners(deploymentNetwork: string): Promise<string[]
  * @param deploymentNetwork - The deployment network
  * @returns Promise<number> - The multisig threshold
  */
-export async function getMultisigThreshold(deploymentNetwork: string): Promise<number> {
+export async function getMultisigThreshold(deploymentNetwork: string): Promise<bigint> {
   const config = await getGovConfiguration(deploymentNetwork);
   return config.multisigThreshold;
 }
@@ -143,7 +181,7 @@ export async function getMultisigThreshold(deploymentNetwork: string): Promise<n
  * @param deploymentNetwork - The deployment network
  * @returns Promise<number> - The timelock delay in seconds
  */
-export async function getTimelockDelay(deploymentNetwork: string): Promise<number> {
+export async function getTimelockDelay(deploymentNetwork: string): Promise<bigint> {
   const config = await getGovConfiguration(deploymentNetwork);
   return config.timelockDelay;
 }
