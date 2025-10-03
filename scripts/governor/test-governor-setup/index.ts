@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import { log } from '../../helpers/ioUtil';
-import { execSync } from 'child_process';
+import { runDeploymentVerificationForGovernance } from '../../helpers/commandUtil';
 
 interface GovernorSetupOptions {
   network: string;
@@ -18,19 +18,10 @@ export class GovernorSetupVerifier {
     log(`Network: ${this.options.network}`, 'info');
 
     try {
-
-      // Build the test command
-      let command = `yarn hardhat test test/deployment-verification-test.ts --network ${this.options.network} --grep "Governance Verification"`;
+      // Execute the test command using commandUtil
+      const result = await runDeploymentVerificationForGovernance(this.options.network);
+      console.log(result);
       
-      log(`📝 Running command: ${command}`, 'info');
-
-      // Execute the test command
-      const result = execSync(command, { 
-        encoding: 'utf8',
-        stdio: 'inherit',
-        cwd: process.cwd(),
-      });
-
       log(`\n✅ Governance Verification Tests Completed Successfully`, 'success');
       
     } catch (error) {

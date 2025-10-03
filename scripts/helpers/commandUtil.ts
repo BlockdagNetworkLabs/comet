@@ -211,3 +211,29 @@ export async function proposeGovernanceUpdate(
   let command = `yarn hardhat governor:propose-governance-update --network ${network}`;
   return await runCommand(command, 'Proposing governance update');
 }
+
+/**
+ * Run deployment verification test for governance
+ * @param network - The network to run the test on
+ * @returns Promise<string> - The command output
+ */
+export async function runDeploymentVerificationForGovernance(
+  network: string,
+): Promise<string> {
+  const command = `yarn hardhat test test/deployment-verification-test.ts --network ${network} --grep "Governance Verification"`;
+  return await runCommand(command, `Running deployment verification for governance`);
+}
+
+/**
+ * Run deployment verification test for a specific market
+ * @param network - The network to run the test on
+ * @param deployment - The deployment/market name (e.g., 'dai', 'usdc')
+ * @returns Promise<string> - The command output
+ */
+export async function runDeploymentVerificationForMarket(
+  network: string,
+  deployment: string
+): Promise<string> {
+  const command = `MARKET=${deployment} yarn hardhat test test/deployment-verification-test.ts --network ${network}`;
+  return await runCommand(command, `Running deployment verification for market: ${deployment}`);
+}
