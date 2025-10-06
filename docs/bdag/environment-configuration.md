@@ -23,7 +23,7 @@ ETH_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 ### API Keys
 
-These next API key variables are required for contract verification and mainnet contract cloning and hardhat expects to be set, if you are not using some of them, you can set them to placeholder values. Check the [Environment template](../../.env.template) for more information.
+These next API key variables are required for contract verification and mainnet contract cloning and hardhat expects to be set, if you are not using some of them, you can set them to placeholder values. Check the [Environment example](../../.env.example) for more information.
 - **ETHERSCAN_KEY**
 - **SNOWTRACE_KEY**
 - **INFURA_KEY**
@@ -35,16 +35,6 @@ These next API key variables are required for contract verification and mainnet 
 - **MANTLESCAN_KEY**
 - **SCROLLSCAN_KEY**
 - **UNICHAIN_QUICKNODE_KEY**
-
-### BDAG-Specific Variables
-
-For BDAG governor deployment:
-
-- **GOV_SIGNERS**: Comma-separated admin addresses for multisig governor
-- **MULTISIG_THRESHOLD**: Required number of approvals for proposals
-- **TIMELOCK_DELAY**: Delay before transaction execution (0 for development)
-- **GRACE_PERIOD**: Grace period after delay expires
-- **MINIMUM_DELAY** / **MAXIMUM_DELAY**: Timelock delay bounds
 
 ## Related Documentation
 

@@ -11,7 +11,7 @@ import { getMultisigThreshold, getTimelockDelay } from '../src/deploy/helpers/go
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
-  chainId: process.env.E2E_CHAIN_ID ? parseInt(process.env.E2E_CHAIN_ID) : 31337, 
+  chainId: process.env.E2E_CHAIN_ID ? parseInt(process.env.E2E_CHAIN_ID) : process.env.LOCAL_CHAIN_ID ? parseInt(process.env.LOCAL_CHAIN_ID) : 1337, 
   url: process.env.E2E_RPC_URL || 'http://127.0.0.1:8545', 
 } as any;
 const TEMPLATE_NAME = process.env.E2E_TEMPLATE || '_template-1';
