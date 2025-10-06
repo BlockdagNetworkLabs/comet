@@ -217,18 +217,7 @@ The `execute-proposal` script is a **generic execution script** that can handle 
 
 ## Admin Usage Prerequisites
 
-Before using the governance scripts, admins need to set up their environment:
-
-Copy the environment template file and update only the required values:
-
-```bash
-# Copy the example file
-cp .env.example .env
-
-# Edit the .env file and update your private key
-# Change ETH_PK=your_private_key_here to your actual private key
-ETH_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-```
+Before using the governance scripts, admins need to set up their environment, see [Environment Configuration Section](./environment-configuration.md)
 
 **Required Changes:**
 - **`ETH_PK`**: Replace with your actual private key for admin operations
