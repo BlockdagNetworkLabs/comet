@@ -19,9 +19,12 @@
 ```bash
 # Copy environment template
 cp .env.example .env
-```
 
-**You can use LOCAL_CHAIN_ID=1337 for hardhat or LOCAL_CHAIN_ID=31337 for anvil**
+# Edit the .env file and update your private key
+# Change ETH_PK=your_private_key_here to your actual private key
+ETH_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+LOCAL_CHAIN_ID=1337|31337 #depending if using hardhat or anvil local networks
+```
 
 ```bash
 # Install dependencies

@@ -4,7 +4,8 @@
 
 ## Overview
 
-The BlockDAG environment requires specific environment variables for deployment and testing. The setup is straightforward and can be done by copying the [Environment template](../../.env.template) and updating the required values.
+The BlockDAG environment requires specific environment variables for deployment and testing. The setup is straightforward and can be done by copying the [Environment template](../../.env.example) and updating the required values.
+
 
 ## Setup Environment file
 
@@ -35,6 +36,10 @@ These next API key variables are required for contract verification and mainnet 
 - **MANTLESCAN_KEY**
 - **SCROLLSCAN_KEY**
 - **UNICHAIN_QUICKNODE_KEY**
+
+### Local Chain Id
+
+If running locally, you can use LOCAL_CHAIN_ID=1337 for hardhat or LOCAL_CHAIN_ID=31337 for anvil
 
 ## Related Documentation
 
