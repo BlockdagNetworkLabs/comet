@@ -23,7 +23,6 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 
 ### 📚 Advanced Topics
 - **[Deployment Caching](./deployment-caching.md)** - Understanding the caching system
-- **[Contract Cloning](./contract-cloning.md)** - How contract cloning works
 - **[Spider Tool](./spider-tool.md)** - Contract discovery and management
 
 ### ⚠️ Important Limitations
