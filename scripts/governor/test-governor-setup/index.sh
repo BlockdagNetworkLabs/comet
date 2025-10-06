@@ -11,7 +11,7 @@ NETWORK="local"
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --network)
+    -n|--network)
       NETWORK="$2"
       shift 2
       ;;
@@ -19,15 +19,17 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: $0 [options]"
       echo ""
       echo "Options:"
-      echo "  --network <network>    Network to test (default: local)"
-      echo "  --help, -h            Show this help message"
+      echo "  -n, --network <network>    Network to test (default: local)"
+      echo "  --help, -h                Show this help message"
       echo ""
       echo "Examples:"
       echo "  # Run governance verification tests on local network"
       echo "  $0 --network local"
+      echo "  $0 -n local"
       echo ""
       echo "  # Run governance verification tests on polygon network"
       echo "  $0 --network polygon"
+      echo "  $0 -n polygon"
       echo ""
       echo "Note: This script validates the deployed governance configuration"
       echo "against the expected configuration values."
