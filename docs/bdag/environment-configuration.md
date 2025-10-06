@@ -4,26 +4,37 @@
 
 ## Overview
 
-The BlockDAG environment requires specific API keys for blockchain explorers and services. Most keys can use placeholder values except for ETHERSCAN_KEY.
+The BlockDAG environment requires specific environment variables for deployment and testing. The setup is straightforward and can be done by copying the [Environment template](../../.env.template) and updating the required values.
+
+## Setup Environment file
+
+Copy the environment template file and update only the required values:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit the .env file and update your private key
+# Change ETH_PK=your_private_key_here to your actual private key
+ETH_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+```
 
 ## Required Environment Variables
 
-### Core API Keys
+### API Keys
 
-- **ETHERSCAN_KEY**: Required for contract verification and mainnet contract cloning
-- **INFURA_KEY**: Blockchain RPC endpoints
-- **ANKR_KEY**: Alternative RPC endpoints
-
-### Network-Specific Explorer Keys
-
-- **SNOWTRACE_KEY**: Avalanche explorer
-- **POLYGONSCAN_KEY**: Polygon explorer  
-- **ARBISCAN_KEY**: Arbitrum explorer
-- **LINEASCAN_KEY**: Linea explorer
-- **OPTIMISMSCAN_KEY**: Optimism explorer
-- **MANTLESCAN_KEY**: Mantle explorer
-- **SCROLLSCAN_KEY**: Scroll explorer
-- **UNICHAIN_QUICKNODE_KEY**: Unichain quicknode endpoint
+These next API key variables are required for contract verification and mainnet contract cloning and hardhat expects to be set, if you are not using some of them, you can set them to placeholder values. Check the [Environment template](../../.env.template) for more information.
+- **ETHERSCAN_KEY**
+- **SNOWTRACE_KEY**
+- **INFURA_KEY**
+- **ANKR_KEY**
+- **POLYGONSCAN_KEY**
+- **ARBISCAN_KEY**
+- **LINEASCAN_KEY**
+- **OPTIMISMSCAN_KEY**
+- **MANTLESCAN_KEY**
+- **SCROLLSCAN_KEY**
+- **UNICHAIN_QUICKNODE_KEY**
 
 ### BDAG-Specific Variables
 
@@ -34,25 +45,6 @@ For BDAG governor deployment:
 - **TIMELOCK_DELAY**: Delay before transaction execution (0 for development)
 - **GRACE_PERIOD**: Grace period after delay expires
 - **MINIMUM_DELAY** / **MAXIMUM_DELAY**: Timelock delay bounds
-
-### Security Considerations
-
-**Important Security Notes:**
-
-- API keys should be kept secure and not committed to version control
-- Use placeholder values for non-critical keys when setting up development environment
-- Only ETHERSCAN_KEY requires a real value for mainnet contract operations
-
-## What You Need to Document Next
-
-This environment configuration guide should include:
-
-- **Detailed setup instructions** for each API key
-- **Security best practices** for managing secrets
-- **Environment validation** scripts or commands
-- **Template .env file** with all required variables
-- **Platform-specific instructions** for obtaining API keys
-- **Troubleshooting section** for common configuration issues
 
 ## Related Documentation
 
