@@ -136,12 +136,6 @@ Once the governance system is deployed and configured, the protocol can be gover
 - After the delay period, any admin can execute the proposal
 - All proposal actions execute atomically (all succeed or all fail)
 
-#### 4. Emergency Procedures
-The governance system includes several emergency mechanisms:
-- **Timelock Delay Changes**: Modify execution delays via governance
-- **Governor Upgrades**: Upgrade the governor contract implementation
-- **Admin Changes**: Add or remove multisig signers through governance
-
 ### Scripts to Govern the Protocol
 
 The BDAG governance system includes a comprehensive set of scripts located in `scripts/governor/` that facilitate the entire governance lifecycle. These scripts provide a user-friendly interface for managing proposals, approvals, and execution.
@@ -220,3 +214,23 @@ The `execute-proposal` script is a **generic execution script** that can handle 
 # Reward funding
 --execution-type comet-reward-funding
 ```
+
+## Admin Usage Prerequisites
+
+Before using the governance scripts, admins need to set up their environment:
+
+Copy the environment template file and update only the required values:
+
+```bash
+# Copy the template file
+cp .env.template .env
+
+# Edit the .env file and update your private key
+# Change ETH_PK=your_private_key_here to your actual private key
+ETH_PK=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+```
+
+**Required Changes:**
+- **`ETH_PK`**: Replace with your actual private key for admin operations
+
+
