@@ -63,6 +63,10 @@ describe("Market Verification", function() {
     networkName = network.name;
 
     // Get market from environment variable or throw error
+    if(!process.env.MARKET) {
+      throw new Error("❌ MARKET environment variable is required. Usage: export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local");
+    }
+    
     market = process.env.MARKET;
 
     if (!market) {
@@ -137,6 +141,7 @@ describe("Market Verification", function() {
 
     // Verify comet governor is set correctly
     expect(await comet.governor()).to.equal(timelock.address);
+    expect(await comet.pauseGuardian()).to.equal(timelock.address);
 
     // Verify proxy admin ownership
     const proxyAdmin = await getProxyAdmin(comet.address);

@@ -59,13 +59,13 @@ The `deployment-verification-test.ts` provides comprehensive deployment validati
 **Usage:**
 ```bash
 # Test local DAI deployment
-export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
+export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
 
 # Test Polygon USDC deployment
-export MARKET=usdc && yarn hardhat test test/deployment-verification-test.ts --network polygon
+export MARKET=usdc && yarn hardhat test e2e/deployment-verification-test.ts --network polygon
 
 # Test Base WETH deployment
-export MARKET=weth && yarn hardhat test test/deployment-verification-test.ts --network base
+export MARKET=weth && yarn hardhat test e2e/deployment-verification-test.ts --network base
 ```
 
 **Expected Output:**

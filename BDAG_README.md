@@ -124,13 +124,13 @@ The `deployment-verification-test.ts` is a comprehensive test that verifies your
 **Usage:**
 ```bash
 # Test local DAI deployment
-export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
+export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
 
 # Test Polygon USDC deployment
-export MARKET=usdc && yarn hardhat test test/deployment-verification-test.ts --network polygon
+export MARKET=usdc && yarn hardhat test e2e/deployment-verification-test.ts --network polygon
 
 # Test Base WETH deployment
-export MARKET=weth && yarn hardhat test test/deployment-verification-test.ts --network base
+export MARKET=weth && yarn hardhat test e2e/deployment-verification-test.ts --network base
 ```
 
 **Expected Output:**
@@ -249,7 +249,7 @@ DEBUG=* yarn hardhat deploy_infrastructure --network local --bdag
 yarn hardhat deploy --bdag --network local --deployment dai
 
 # Run deployment verification test
-export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
+export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
 
 ```
 
@@ -758,7 +758,7 @@ yarn hardhat governor:propose-upgrade --network local --deployment dai --impleme
 **4. Test deployment** 
 
 ```bash
-export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
+export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
 ```
 **5. Fund CometRewards with COMP tokens**
    **Note**: This step is only required if you need to distribute reward tokens to users. The CometRewards contract manages the distribution of COMP tokens to users based on their supply/borrow activity. Use the `governor:propose-fund-comet-rewards` task to create a governance proposal that transfers COMP tokens from the timelock to the CometRewards contract.

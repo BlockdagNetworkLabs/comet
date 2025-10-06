@@ -51,7 +51,7 @@ echo ""
 echo "🧪 Running Governance Verification Tests..."
 echo ""
 
-yarn hardhat test test/deployment-verification-test.ts --network "$NETWORK" --grep "Governance Verification"
+yarn hardhat test e2e/deployment-verification-test.ts --network "$NETWORK" --grep "Governance Verification"
 
 echo ""
 echo "✅ Governor Setup Verification Completed"
