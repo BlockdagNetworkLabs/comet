@@ -11,7 +11,7 @@
 ## Overview of Process
 
 1. **Environment Setup** - Configure API keys and environment variables
-2. **Local Testing** - Deploy and test on local network
+2. **Deploy Comet Protocol** - Deploy the protocol locally
 
 ## Quick Commands
 
@@ -19,7 +19,11 @@
 ```bash
 # Copy environment template
 cp .env.example .env
+```
 
+**You can use LOCAL_CHAIN_ID=1337 for hardhat or LOCAL_CHAIN_ID=31337 for anvil**
+
+```bash
 # Install dependencies
 yarn install
 yarn build
@@ -30,6 +34,13 @@ yarn build
 ```bash
 # Start anvil in a different terminal
 anvil
+```
+
+or
+
+```bash
+# Start hardhat in a different terminal
+yarn hardhat node
 ```
 
 ```bash

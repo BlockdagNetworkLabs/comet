@@ -77,7 +77,7 @@ export class DynamicHardhatConfig {
         'NETWORK_NAME_PLACEHOLDER':'NETWORK_PLACEHOLDER'
       },
       deploymentManager: {
-        relationConfigMap: config!.deploymentManager!.relationConfigMap!,
+        relationConfigMap: (config as any).deploymentManager.relationConfigMap,
         networks: {
           'NETWORK_NAME_PLACEHOLDER':'DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER'
         }
