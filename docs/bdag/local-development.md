@@ -1,6 +1,6 @@
 # Local Development Guide
 
-*This document provides comprehensive guidance for local BlockDAG development, including environment setup, testing, deployment, and understanding the deployment process.*
+*This document provides comprehensive guidance for local Mercury (Compound Comet v3) development on BlockDAG, including environment setup, testing, deployment, and understanding the deployment process.*
 
 ## Table of Contents
 
@@ -17,6 +17,7 @@
 ## Prerequisites
 
 - Node.js and Yarn installed
+- Foundry (For Anvil) or Hardhat installed
 - Git access to the repository
 - Basic understanding of Ethereum/blockchain development
 - Familiarity with command-line tools
@@ -46,9 +47,21 @@ yarn hardhat compile
 # Copy environment template
 cp .env.example .env
 
-# Edit .env and configure your private key
+# Edit .env and configure required variables
 # ETH_PK=your_private_key_here
+# LOCAL_CHAIN_ID=31337  # for Anvil, or 1337 for Hardhat
 ```
+
+**Required Environment Variables:**
+
+The project requires the following API keys (can use placeholders if not needed):
+- `ETHERSCAN_KEY`, `SNOWTRACE_KEY`, `INFURA_KEY`, `ANKR_KEY`
+- `POLYGONSCAN_KEY`, `ARBISCAN_KEY`, `LINEASCAN_KEY`, `OPTIMISMSCAN_KEY`
+- `MANTLESCAN_KEY`, `SCROLLSCAN_KEY`, `UNICHAIN_QUICKNODE_KEY`
+
+**Required:**
+- `ETH_PK` - Your private key for deployment operations
+- `LOCAL_CHAIN_ID` - `31337` for Anvil or `1337` for Hardhat
 
 For detailed environment configuration, see [Environment Configuration](./environment-configuration.md).
 
@@ -84,7 +97,18 @@ yarn hardhat test
 
 ## Running Tests
 
-Refer to the [Testing Guide](./testing-guide.md) for more information on running tests.
+Mercury includes 40+ test files covering all protocol functionality including supply, withdraw, liquidation, governance, and custom BlockDAG features (CustomGovernor, Proposal Manager, E2E deployment verification).
+
+**Quick Start:**
+```bash
+# Run all tests
+yarn hardhat test
+
+# Run specific test pattern
+yarn hardhat test --grep "governance"
+```
+
+For comprehensive testing documentation including E2E tests, custom tests, and configuration, see [Testing Guide](./testing-guide.md).
 
 ## Deploying Markets Locally
 
@@ -119,20 +143,22 @@ yes | ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c
 ./scripts/deployer/deploy-markets/index.sh -n local -d all
 ```
 
+For more information on how to add new networks or markets, check the respective documentation:
+- [Adding New Network Support](./new-network-support.md)
+- [Adding New Market Support](./new-market-support.md)
+
 ### What the Deployment Script Does
 
 The automated script performs these steps:
 
 1. **Builds the project** - Compiles contracts
-2. **Clears proposal stack** - Resets governance queue
-3. **Deploys infrastructure** - Governor, Timelock, COMP token
+2. **Clears proposal stack** - Resets governance queue to avoid conflicts
+3. **Deploys infrastructure** - Governor, Timelock, COMP token and other shared contracts
 4. **Prompts for configuration** - Asks you to update `configuration.json`
 5. **Deploys market(s)** - Deploys Comet implementations
-6. **Creates governance proposals** - Proposes market additions
-7. **Runs governance flow** - Approve, queue, execute proposals
-8. **Proposes upgrades** - Upgrades to new implementations
-9. **Funds rewards** - Transfers COMP to CometRewards
-10. **Runs verification** - Tests deployment validity
+6. **Proposes Market upgrades** - Upgrades markets to new implementations
+7. **Funds rewards** - Transfers COMP to CometRewards
+8. **Runs Deployment verification** - Tests deployment validity
 
 ## Understanding the Deployment Process
 
@@ -191,29 +217,12 @@ Blockchain (Anvil/Network)
 1. **Fund Rewards**: Transfer COMP tokens to CometRewards
 2. **Verify Deployment**: Run automated verification tests
 
+**Note**: When executing the deploy-markets script, for multiple markets, the script will use the [Proposal Service](../../src/governor/services/ProposalService.ts) to create batched proposals for the market implementations and upgrades. This means that the script will create a single proposal for all the market implementations and upgrades, and then execute it.
+
 #### 5. Verification & Caching
 - Contract verification (when applicable)
 - Cache storage for future deployments
 - Logging of deployment statistics and gas usage
-
-### Contract Cloning Mechanism
-
-For efficiency, some contracts are cloned from Ethereum mainnet:
-
-```typescript
-const clone = {
-  comp: '0xc00e94cb662c3520282e6f5717214004a7f26888',
-  governorBravoImpl: '0xef3b6e9e13706a8f01fe98fdcf66335dc5cfdeed',
-  governorBravo: '0xc0da02939e1441f497fd74f78ce7decb17b66529',
-};
-```
-
-**What Gets Cloned:**
-- Contract bytecode and storage layout
-- Constructor arguments and initial state
-- Verification data for compatibility
-
-**Note**: This requires `ETHERSCAN_KEY` in your `.env` file.
 
 ### Infrastructure vs Market Deployment
 
@@ -229,31 +238,21 @@ const clone = {
 
 ### Configuration Files
 
-Before deploying markets, you need to configure two files:
+Before deploying markets, configure two key files:
 
 **1. Infrastructure Configuration** (`deployments/{network}/_infrastructure/configuration.json`):
-```json
-{
-  "governorAdmins": ["0x...", "0x...", "0x..."],
-  "multisigThreshold": 2,
-  "timelockDelay": 60,
-  "gracePeriod": 1209600,
-  "minimumDelay": 0,
-  "maximumDelay": 2592000
-}
-```
+- Governor admins and multisig threshold
+- Timelock delay and grace period settings
 
 **2. Market Configuration** (`deployments/{network}/{market}/configuration.json`):
-```json
-{
-  "baseToken": "USDC",
-  "baseTokenPriceFeed": "0x...",
-  "trackingIndexScale": "1e6",
-  "assets": [...]
-}
-```
+- Protocol settings (name, symbol, base token)
+- Interest rate models (`rates` section)
+- Reward tracking (`tracking` section)
+- Collateral assets with price feeds and risk parameters
 
-For detailed configuration guidance, see [Market Configuration](./market-configuration.md).
+For complete configuration examples and detailed parameter explanations, see:
+- [Market Configuration](./market-configuration.md) - Configuring market parameters
+- [Governance System](./governance-system.md) - Infrastructure configuration
 
 ## Deployment Scripts Reference
 
@@ -295,21 +294,46 @@ Located in `scripts/governor/`:
 - `test-governor-setup/` - Verify governance configuration
 - `test-market-setup/` - Verify market deployment
 
-**Example Governance Flow:**
+**Governance Proposal Workflow:**
+
+Mercury's governance follows a structured workflow with clear states:
+
+**Proposal States:**
+- **Pending**: Proposal created, waiting for approvals
+- **Approved**: Multisig threshold reached, queued in Timelock
+- **Queued**: In timelock delay period
+- **Executable**: Delay passed, ready for execution
+- **Executed**: Successfully executed on-chain
+
+**Example: Deploy New Market**
 ```bash
-# 1. Create a market proposal
-./scripts/governor/propose/market-phase-1/index.sh -n local -d dai
+# Phase 1: Deploy market implementation
+./scripts/governor/propose/market-phase-1/index.sh -n local -d wbtc
 # Output: Proposal ID: 1
 
-# 2. Approve the proposal
+# Phase 2: Approve, queue, and execute implementation
 ./scripts/governor/accept-proposal/index.sh -n local -p 1
-
-# 3. Queue the proposal
 ./scripts/governor/queue-proposal/index.sh -n local -p 1
-
-# 4. Execute the proposal
 ./scripts/governor/execute-proposal/index.sh -n local -p 1 -t comet-impl-in-configuration
+
+# Phase 3: Propose upgrade to new implementation
+./scripts/governor/propose/market-phase-2/index.sh -n local -d wbtc -i <IMPLEMENTATION_ADDRESS>
+# Output: Proposal ID: 2
+
+# Phase 4: Approve, queue, and execute upgrade
+./scripts/governor/accept-proposal/index.sh -n local -p 2
+./scripts/governor/queue-proposal/index.sh -n local -p 2
+./scripts/governor/execute-proposal/index.sh -n local -p 2 -t comet-upgrade
+
+# Verify market setup
+./scripts/governor/test-market-setup/index.sh -n local -d wbtc
 ```
+
+**Execution Types:**
+- `comet-impl-in-configuration` - For market implementation deployments (Phase 1)
+- `comet-upgrade` - For market upgrades (Phase 2)
+- `governance-update` - For governance configuration changes
+- `comet-reward-funding` - For CometRewards funding proposals
 
 ### Manual Deployment (Advanced)
 
@@ -342,116 +366,47 @@ yarn hardhat governor:execute --network local --proposal-id 1 --execution-type c
 
 ## Debugging and Development Tools
 
-### Interactive Console
-
+**Interactive Console:**
 ```bash
-# Connect to Anvil for interactive contract interaction
 yarn hardhat console --network local
 ```
 
-### Deployment Verification
-
+**Deployment Verification:**
 ```bash
-# Verify specific market deployment
 ./scripts/governor/test-market-setup/index.sh -n local -d dai
-
-# Verify governance configuration
 ./scripts/governor/test-governor-setup/index.sh -n local
 ```
 
-### Spider Tool
-
-The Spider tool discovers and maps contract relationships:
-
+**Spider Tool** (contract discovery and relationship mapping):
 ```bash
-# Refresh contract relationships for a market
 yarn hardhat spider --network local --deployment dai
 ```
 
-**What Spider Does:**
-- Discovers deployed contracts
-- Maps contract relationships
-- Updates `roots.json` and `aliases.json`
-- Validates contract configurations
-
-### Gas Reporting
-
+**Debugging:**
 ```bash
-# Run tests with detailed gas usage
+# Gas reporting
 REPORT_GAS=true yarn hardhat test
-```
 
-### Debug Logging
-
-```bash
-# Enable debug output for deployment
+# Debug logging
 DEBUG=* yarn hardhat deploy --network local --deployment dai --bdag
 ```
 
 ## Deployment Caching System
 
-### Cache Structure
+Mercury uses deployment caching to avoid re-deploying existing contracts, improving development efficiency and ensuring consistency.
 
-The deployment system uses caching to avoid re-deploying existing contracts:
-
-```
-deployments/{network}/{deployment}/.contracts/
-├── cache.json          # Contract addresses and metadata
-├── governor.json       # Governor contract details
-├── comet.json         # Comet contract details
-├── configurator.json  # Configurator contract details
-└── ...                # Other deployed contracts
-```
-
-### Cache Behavior
-
-1. **First Deployment**: Contracts are deployed and cached
-2. **Subsequent Runs**: Contracts are loaded from cache
-3. **Tests**: Use cached contract addresses automatically
-
-### Cache Management
-
+**Quick Cache Management:**
 ```bash
-# Check if contracts are cached
-ls deployments/local/dai/.contracts/
-
-# View cached contract addresses
-cat deployments/local/dai/.contracts/cache.json
-
-# Clear cache to force re-deployment (for a specific market)
-rm -rf deployments/local/dai/.contracts/
-
-# Clear all deployment cache for network
-rm -rf deployments/local/*/.contracts/
-rm -rf deployments/local/*/aliases.json
-rm -rf deployments/local/*/roots.json
-```
-
-### Using the Clean Flag
-
-The deployment script provides a `--clean` flag for convenience:
-
-```bash
-# Automatically clears cache before deployment
+# Deploy with clean cache (recommended for fresh start)
 ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c
+
+# Manually clear specific market cache
+rm -rf deployments/local/dai/.contracts/
 ```
 
-### Cache Benefits
+**Cache Location:** `deployments/{network}/{deployment}/.contracts/`
 
-- **Faster Development**: No need to re-deploy for each test
-- **Consistent State**: Tests use same contract instances
-- **Cost Savings**: Avoid unnecessary gas costs
-- **Team Consistency**: Share deployment state across team members
-
-### BlockDAG-Specific Considerations
-
-Unlike standard networks, BlockDAG networks don't have block explorer APIs yet:
-
-- **Manual Cache Management**: Contract addresses must be committed to repository
-- **Team Consistency**: All team members need access to same contract instances
-- **Deployment Preservation**: Cache files preserve contract state across repository clones
-
-For more details, see [Deployment Caching](./deployment-caching.md).
+For detailed caching behavior, benefits, and BlockDAG-specific considerations, see [Deployment Caching](./deployment-caching.md).
 
 ## Local Development Best Practices
 
@@ -501,42 +456,20 @@ Always update your `configuration.json` files with correct:
 
 ## Troubleshooting
 
-### Common Issues
+**Common Quick Fixes:**
 
-**1. "Contract already deployed" Error**
-
-Clear the deployment cache:
 ```bash
+# Clear deployment cache
 ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c
-```
 
-**2. "Insufficient Funds" Error**
+# Clear proposal stack
+yarn hardhat governor:clear-stack --network local
 
-Ensure Anvil is running and your account has ETH:
-```bash
-# Check Anvil is running on default port
+# Check Anvil is running
 curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://127.0.0.1:8545
 ```
 
-**3. "Proposal Already Queued" Error**
-
-Clear the proposal stack:
-```bash
-yarn hardhat governor:clear-stack --network local
-```
-
-**4. Tests Failing After Deployment**
-
-Ensure you're using Hardhat network for tests (no --network flag):
-```bash
-# Correct - uses Hardhat network
-yarn hardhat test
-
-# Incorrect - don't specify network for tests
-yarn hardhat test --network local
-```
-
-For more troubleshooting, see [Troubleshooting Guide](./troubleshooting.md).
+For comprehensive troubleshooting including deployment failures, governance issues, and network problems, see [Troubleshooting Guide](./troubleshooting.md).
 
 ## Related Documentation
 
