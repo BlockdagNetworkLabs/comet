@@ -19,27 +19,27 @@ The project includes 40+ test files covering all protocol functionality includin
 
 ### Run all tests
 ```bash
-yarn hardhat test --network local
+yarn hardhat test
 ```
 
 ### Run specific tests using grep
 ```bash
 # Run tests matching a pattern
-yarn hardhat test --network local --grep "supply"
-yarn hardhat test --network local --grep "governance"
-yarn hardhat test --network local --grep "liquidation"
-yarn hardhat test --network local --grep "rewards"
-yarn hardhat test --network local --grep "price"
+yarn hardhat test --grep "supply"
+yarn hardhat test --grep "governance"
+yarn hardhat test --grep "liquidation"
+yarn hardhat test --grep "rewards"
+yarn hardhat test --grep "price"
 ```
 
 ## Custom unit tests for BlockDAG
 
-BlockDAG has implemented custom unit tests to validate the specific governance and deployment logic that extends the standard Comet protocol.
+Custom unit tests were implemented to validate the specific governance and deployment logic that extends the standard Comet protocol.
 
 ### CustomGovernor Tests
 ```bash
 # Run CustomGovernor tests
-yarn hardhat test test/governance/custom-governor-test.ts --network local
+yarn hardhat test test/governance/custom-governor-test.ts
 
 ```
 
@@ -54,10 +54,10 @@ yarn hardhat test test/governance/custom-governor-test.ts --network local
 ### Proposal Manager Tests
 ```bash
 # Run proposal manager tests
-yarn hardhat test test/governance/proposal-manager.test.ts --network local
+yarn hardhat test test/governance/proposal-manager.test.ts
 
 # Test specific market configurations
-export MARKET=dai && yarn hardhat test test/governance/proposal-manager.test.ts --network local
+export MARKET=dai && yarn hardhat test test/governance/proposal-manager.test.ts
 ```
 
 **What it tests:**
@@ -73,10 +73,10 @@ End-to-end tests validate complete protocol deployment and governance workflows 
 ### Deployment Verification Tests
 ```bash
 # Run deployment verification
-yarn hardhat test e2e/deployment-verification-test.ts --network local
+yarn hardhat test e2e/deployment-verification-test.ts
 
 # Test specific market deployments
-export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
+export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts
 ```
 
 **What it tests:**
