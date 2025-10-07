@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { discoverMarkets, updateInfrastructureConfiguration } from './helpers/deployment-manager';
 import { CometRewardFunder } from '../scripts/governor/propose/comet-reward-funding/index';
 import { getMultisigThreshold, getTimelockDelay } from '../src/deploy/helpers/govConfiguration';
+import { fundPrivateKeysInAnvil, fundPrivateKeysInHardhat } from './helpers/network-utils';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
@@ -34,6 +35,14 @@ let EXECUTE_TIMEOUT: number;
 let MULTISIG_THRESHOLD: number;
 
 describe('E2E Protocol Governance Test Suite', function () {
+
+  before(async function () {
+    if(E2E_NETWORK_CONFIG.chainId == "31337") {
+      await fundPrivateKeysInAnvil(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    } else if(E2E_NETWORK_CONFIG.chainId == "1337") {
+      await fundPrivateKeysInHardhat(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    }
+  });
   
   describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
