@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import { discoverMarkets, updateInfrastructureConfiguration } from './helpers/deployment-manager';
 import { CometRewardFunder } from '../scripts/governor/propose/comet-reward-funding/index';
 import { getMultisigThreshold, getTimelockDelay } from '../src/deploy/helpers/govConfiguration';
-import { fundPrivateKeysInAnvil, fundPrivateKeysInHardhat } from './helpers/network-utils';
+import { fundPrivateKeysInAnvil, fundPrivateKeysInHardhat, checkAccountBalances } from './helpers/network-utils';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
@@ -37,11 +37,7 @@ let MULTISIG_THRESHOLD: number;
 describe('E2E Protocol Governance Test Suite', function () {
 
   before(async function () {
-    if(E2E_NETWORK_CONFIG.chainId == "31337") {
-      await fundPrivateKeysInAnvil(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
-    } else if(E2E_NETWORK_CONFIG.chainId == "1337") {
-      await fundPrivateKeysInHardhat(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
-    }
+    await setupTestAccounts(this);
   });
   
   describe('Complete Protocol Deployment', function () {
@@ -2025,4 +2021,22 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📝 Reverted back to original signer`);
     }
   }
+
+  async function setupTestAccounts(testContext: any): Promise<void> {
+    // Fund accounts for local networks
+    if(E2E_NETWORK_CONFIG.chainId == "31337") {
+      await fundPrivateKeysInAnvil(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    } else if(E2E_NETWORK_CONFIG.chainId == "1337") {
+      await fundPrivateKeysInHardhat(TEST_ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    }
+    
+    // Check if all accounts have sufficient balance
+    const allPrivateKeys = [TEST_PK, ...TEST_ADMIN_PKS.split(',').map(pk => pk.trim())].filter(pk => pk);
+    const hasBalance = await checkAccountBalances(allPrivateKeys, E2E_NETWORK_CONFIG.url);
+    if (!hasBalance) {
+      console.log('⚠️  Skipping tests: TEST_PK or TEST_ADMIN_PKS accounts have insufficient balance');
+      testContext.skip();
+    }
+  }
+
 });

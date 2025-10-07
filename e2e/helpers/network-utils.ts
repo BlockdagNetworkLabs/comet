@@ -111,3 +111,40 @@ async function _fundInHardhat(provider: ethers.providers.JsonRpcProvider, addres
     throw error;
   }
 }
+
+export async function checkAccountBalances(
+  privateKeys: string[],
+  rpcUrl: string = 'http://127.0.0.1:8545'
+): Promise<boolean> {
+  console.log('🔍 Checking account balances...');
+  
+  try {
+    // Create provider for the network
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    
+    // Check each private key balance
+    for (let i = 0; i < privateKeys.length; i++) {
+      const privateKey = privateKeys[i].trim();
+      
+      if (!privateKey) {
+        console.log(`❌ Private key at index ${i} is empty`);
+        return false;
+      }
+      
+      const wallet = new ethers.Wallet(privateKey, provider);
+      const balance = await provider.getBalance(wallet.address);
+      console.log(`📊 Account[${i}] (${wallet.address}) balance: ${ethers.utils.formatEther(balance)} ETH`);
+      
+      if (balance.eq(0)) {
+        console.log(`❌ Account[${i}] has zero balance`);
+        return false;
+      }
+    }
+    
+    console.log('✅ All accounts have sufficient balance');
+    return true;
+  } catch (error) {
+    console.error('❌ Error checking account balances:', error);
+    return false;
+  }
+}
