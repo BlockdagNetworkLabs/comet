@@ -48,5 +48,5 @@ yarn hardhat node
 
 ```bash
 # Deploy with BDAG governor
- yes | ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c
+ yes | ./scripts/deployer/deploy-markets/index.sh -n local -d all -c
 ```
