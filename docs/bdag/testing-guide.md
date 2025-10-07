@@ -10,7 +10,7 @@ For BlockDAG, we included specific unit tests to ensure the CustomGovernor is wo
 
 Similarly, we added `proposal-manager.test.ts` to test the batching of proposals, a custom logic that was created and used during the protocol deployment. This test can be found in `test/governance/proposal-manager.test.ts`
 
-Finally, we added E2E tests to ensure the custom logic regarding the deployment of the protocol and how it's governed is working as expected through the scripts we developed. These tests can be found in: `./e2e/deployment-verification-test.ts` and `./e2e/e2e-protocol-governance-test.ts`
+Finally, we added E2E tests to ensure the custom logic regarding the deployment of the protocol and how it's governed is working as expected through the scripts we developed. These tests can be found in: `./e2e/deployment-verification-test.ts` and `./e2e/protocol-governance-test.ts`
 
 
 ## Already built
@@ -88,13 +88,13 @@ export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --net
 ### Protocol Governance E2E Tests
 ```bash
 # Run complete governance workflow test
-yarn hardhat test e2e/e2e-protocol-governance-test.ts
+yarn hardhat test e2e/protocol-governance-test.ts
 
 # Test with specific template
-export E2E_TEMPLATE="_template-1" && yarn hardhat test e2e/e2e-protocol-governance-test.ts
+export E2E_TEMPLATE="_template-1" && yarn hardhat test e2e/protocol-governance-test.ts
 
 # Test in specific chain
-export E2E_CHAIN_ID="1043" && E2E_RPC_URL="https://node-blockdag.spacedev.io/rpc" && yarn hardhat test e2e/e2e-protocol-governance-test.ts
+export E2E_CHAIN_ID="1043" && E2E_RPC_URL="https://node-blockdag.spacedev.io/rpc" && yarn hardhat test e2e/protocol-governance-test.ts
 ```
 
 **What it tests:**
