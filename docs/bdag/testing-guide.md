@@ -79,7 +79,7 @@ yarn hardhat test e2e/deployment-verification-test.ts --network local
 export MARKET=dai && yarn hardhat test e2e/deployment-verification-test.ts --network local
 ```
 
-**What it verifies:**
+**What it tests:**
 - Ownership relationships (timelock admin, comet governor, proxy admin)
 - Base token configuration (token address, price feed)
 - Asset configurations (supply caps, collateral factors, price feeds)

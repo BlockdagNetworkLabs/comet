@@ -37,7 +37,12 @@ let MULTISIG_THRESHOLD: number;
 describe('E2E Protocol Governance Test Suite', function () {
 
   before(async function () {
+    await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     await setupTestAccounts(this);
+  });
+
+  after(async function () {
+    await deleteHardhatConfigFile()
   });
   
   describe('Complete Protocol Deployment', function () {
@@ -49,13 +54,10 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -102,13 +104,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -164,12 +163,12 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       await runWithSigner(getAdminPrivateKey(0), async () => {
       
-        console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
+      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
       // Create a proposal to deploy the excluded market
       const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
       
       console.log(`📝 Running proposal command: ${command}`);
-        console.log(`📝 Using admin private key for governance operations`);
+      console.log(`📝 Using admin private key for governance operations`);
 
       const result = execSync(command, { 
         encoding: 'utf8',
@@ -520,13 +519,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -997,13 +993,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -1193,13 +1186,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -1233,7 +1223,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       // Test configuration
       const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
-      const TEST_THRESHOLD = 2;
+      const TEST_THRESHOLD = 1;
       const TEST_TIMELOCK_DELAY = 3600; // 1 hour in seconds
       
       console.log(`🚀 Testing governance update proposal (admins and timelock delay)`);
@@ -1429,13 +1419,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
@@ -1469,7 +1456,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       // Test configuration
       const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
-      const TEST_THRESHOLD = 2;
+      const TEST_THRESHOLD = 1;
       
       console.log(`🚀 Testing governance update proposal (admins only)`);
       console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES.join(', ')}`);
@@ -1661,13 +1648,10 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;

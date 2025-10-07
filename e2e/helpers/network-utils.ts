@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { execSync } from 'child_process';
 
 // Configuration
-const FUNDING_AMOUNT_ETH = '100'; // Amount of ETH to fund each address
+const FUNDING_AMOUNT_ETH = '10000'; // Amount of ETH to fund each address
 
 export async function fundPrivateKeysInAnvil(
   privateKeys: string,
