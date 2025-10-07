@@ -74,6 +74,6 @@ This network configuration guide should include:
 
 ## Related Documentation
 
-- [Deployment Process](./deployment-process.md) - How networks affect deployment
+- [Local Development](./local-development.md) - Complete deployment workflow
 - [Environment Configuration](./environment-configuration.md) - Network-specific API keys
 - [Market Configuration](./market-configuration.md) - Market-specific network settings

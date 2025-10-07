@@ -116,6 +116,6 @@ This troubleshooting guide should include:
 ## Related Documentation
 
 - [Environment Configuration](./environment-configuration.md) - Common environment issues
-- [Deployment Process](./deployment-process.md) - Deployment-specific troubleshooting
+- [Local Development](./local-development.md) - Deployment workflow and troubleshooting
 - [Testing Guide](./testing-guide.md) - Testing issue resolution
 - [Network Configuration](./network-configuration.md) - Network-specific problems

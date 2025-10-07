@@ -59,6 +59,5 @@ This deployment caching guide should include:
 
 ## Related Documentation
 
-- [Deployment Process](./deployment-process.md) - How caching affects deployment
-- [Local Development](./local-development.md) - Local cache usage
+- [Local Development](./local-development.md) - Complete deployment workflow with caching details
 - [Troubleshooting](./troubleshooting.md) - Common caching issues

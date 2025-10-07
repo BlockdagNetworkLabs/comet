@@ -55,7 +55,7 @@ The repository already included `SimpleTimelock` and `Timelock` contracts, but w
 
 ## Protocol Governance
 
-The governance of the protocol starts immediately after deployment. You can read more about the protocol deployment process in **[Deployment Process](./deployment-process.md)**.
+The governance of the protocol starts immediately after deployment. You can read more about the protocol deployment process in **[Local Development Guide](./local-development.md#understanding-the-deployment-process)**.
 
 Before deployment, developers need to configure the governance system with the appropriate parameters. Let's understand how this setup works by examining the deployment structure.
 

@@ -9,9 +9,10 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 - **[Local Development](./local-development.md)** - Setting up your local development environment
 
 ### 📋 Deployment Guides
+- **[Local Development](./local-development.md)** - Complete local development workflow and deployment process
 - **[Environment Configuration](./environment-configuration.md)** - Required environment variables and API keys
 - **[Network Configuration](./network-configuration.md)** - Understanding networks and deployment structure
-- **[Deployment Process](./deployment-process.md)** - Step-by-step deployment walkthrough
+- **[Market Configuration](./market-configuration.md)** - Configuring lending market parameters
 
 ### 🧪 Testing & Validation
 - **[Testing Guide](./testing-guide.md)** - Running tests and validation procedures
@@ -19,7 +20,6 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 
 ### 🔧 Governance & Configuration
 - **[Governance System](./governance-system.md)** - Custom BDAG governor implementation
-- **[Market Configuration](./market-configuration.md)** - Configuring lending market parameters
 
 ### 📚 Advanced Topics
 - **[Deployment Caching](./deployment-caching.md)** - Understanding the caching system

@@ -121,6 +121,6 @@ export TEST_ADMIN_PKS="admin1_pk,admin2_pk,admin3_pk"
 
 ## Related Documentation
 
-- [Local Development](./local-development.md) - Setting up local testing environment
-- [Deployment Process](./deployment-process.md) - Testing after deployment
+- [Local Development](./local-development.md) - Complete local development and deployment workflow
 - [Network Configuration](./network-configuration.md) - Testing across different networks
+- [Governance System](./governance-system.md) - Testing governance proposals

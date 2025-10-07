@@ -97,4 +97,4 @@ This market configuration guide should include:
 - [Network Configuration](./network-configuration.md) - Understanding network-specific requirements
 - [Governance System](./governance-system.md) - Making configuration changes through governance
 - [Environment Configuration](./environment-configuration.md) - Required setup for configuration
-- [Deployment Process](./deployment-process.md) - How configuration affects deployment
+- [Local Development](./local-development.md) - Complete deployment workflow

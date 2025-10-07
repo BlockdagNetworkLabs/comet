@@ -97,4 +97,4 @@ This limitations guide should include:
 
 - [Market Configuration](./market-configuration.md) - Understanding configuration parameters
 - [Governance System](./governance-system.md) - Making configuration changes through governance
-- [Deployment Process](./deployment-process.md) - Ensuring proper initial configuration
+- [Local Development](./local-development.md) - Deployment workflow and initial configuration
