@@ -25,15 +25,12 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 - **[Deployment Caching](./deployment-caching.md)** - Understanding the caching system
 - **[Spider Tool](./spider-tool.md)** - Contract discovery and management
 
-### ⚠️ Important Limitations
-- **[Comet Reconfiguration](./comet-limitations.md)** - Critical restrictions when reconfiguring markets
-
 ## Automated Scripts
 
 We provide automated scripts for common operations:
 
-- **[Market Deployment Script](../scripts/deploy-market/index.ts)** - Complete deployment automation
-- **[Reward Funding Script](../scripts/comet-reward-funding/index.ts)** - Funding CometRewards with COMP tokens
+- **[Market Deployment Script](../../scripts/deployer/deploy-markets/index.ts)** - Complete deployment automation
+- (Others inside the script folder)
 
 ## Troubleshooting
 
