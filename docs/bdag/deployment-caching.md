@@ -11,10 +11,10 @@ The BlockDAG deployment system uses caching to avoid re-deploying existing contr
 ### Cache Location
 ```
 deployments/{network}/{deployment}/.contracts/
-├── cache.json          # Contract addresses and metadata
-├── governor.json       # Governor contract details
-├── comet.json         # Comet contract details
-└── ...                # Other deployed contracts
+├── [contract_address1].json
+├── [contract_address2].json
+├── [contract_address3].json
+├── ...
 ```
 
 ### Cache Behavior
@@ -34,7 +34,7 @@ Unlike standard networks, BlockDAG networks don't have block explorer APIs yet, 
 
 Clear the cache before deploying a new market using the -c/ --clean flag (recommended):
 ```bash
-./scripts/deploy-market/index.sh -n local -d dai -c
+./scripts/deploy-markets/index.sh -n local -d dai -c
 ```
 Or manually clear the cache:
 ```bash
@@ -117,7 +117,7 @@ Spider automatically runs:
 Spider stores discovered contracts in:
 ```
 deployments/{network}/{deployment}/
-├── .contracts/cache.json      # Contract addresses and metadata
+├── .contracts/[contract_address].json      # Contract addresses and metadata
 ├── aliases.json               # Human-readable name → address mapping
 └── roots.json                 # Starting points for spider
 ```
@@ -158,16 +158,6 @@ The Deployment Manager is the central orchestrator for all deployment operations
    - Builds contract map for easy access in tests/scripts
    - Maintains alias mappings
 
-3. **Deployment Workflow**
-   - Reads deployment scripts from `deployments/{network}/{deployment}/deploy.ts`
-   - Executes deployments in correct order
-   - Handles proxy patterns and implementations
-
-4. **Testing Support**
-   - Provides contract instances to tests
-   - Manages test signers and accounts
-   - Tracks deployment state
-
 ### Usage in Code
 
 ```typescript
@@ -196,9 +186,8 @@ const usdc = await dm.contract('USDC');
 ### How It Works Together
 
 1. **Deploy**: Deployment Manager runs deployment scripts
-2. **Cache**: New contracts are saved to `.contracts/cache.json`
+2. **Cache**: New contracts are saved to `.contracts/[contract_address].json`
 3. **Spider**: Spider discovers relationships and creates aliases
-4. **Test**: Tests use aliases to access contracts
 
 ```bash
 # Full workflow example
