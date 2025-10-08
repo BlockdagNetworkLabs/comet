@@ -158,7 +158,7 @@ export async function executeBatchProposal(network: string): Promise<string> {
  * @returns Promise<string> - The command output
  */
 export async function runDeploymentVerification(network: string, deployment: string, printOutput: boolean = true): Promise<string> {
-  const command = `MARKET=${deployment} yarn hardhat test test/deployment-verification-test.ts --network ${network}`;
+  const command = `MARKET=${deployment} yarn hardhat test e2e/deployment-verification-test.ts --network ${network}`;
   return await runCommand(command, `Running deployment verification test for ${deployment}`, printOutput);
 }
 
@@ -220,7 +220,7 @@ export async function proposeGovernanceUpdate(
 export async function runDeploymentVerificationForGovernance(
   network: string,
 ): Promise<string> {
-  const command = `yarn hardhat test test/deployment-verification-test.ts --network ${network} --grep "Governance Verification"`;
+  const command = `yarn hardhat test e2e/deployment-verification-test.ts --network ${network} --grep "Governance Verification"`;
   return await runCommand(command, `Running deployment verification for governance`);
 }
 
@@ -234,6 +234,6 @@ export async function runDeploymentVerificationForMarket(
   network: string,
   deployment: string
 ): Promise<string> {
-  const command = `MARKET=${deployment} yarn hardhat test test/deployment-verification-test.ts --network ${network}`;
+  const command = `MARKET=${deployment} yarn hardhat test e2e/deployment-verification-test.ts --network ${network}`;
   return await runCommand(command, `Running deployment verification for market: ${deployment}`);
 }

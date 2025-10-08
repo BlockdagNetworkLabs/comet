@@ -3,15 +3,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { DynamicHardhatConfig } from './helpers/dynamic-hardhat-config';
-import { extractProposalId } from '../../scripts/helpers/commandUtil';
+import { extractProposalId } from '../scripts/helpers/commandUtil';
 import { expect } from 'chai';
 import { discoverMarkets, updateInfrastructureConfiguration } from './helpers/deployment-manager';
-import { CometRewardFunder } from '../../scripts/governor/propose/comet-reward-funding/index';
-import { getMultisigThreshold, getTimelockDelay } from '../../src/deploy/helpers/govConfiguration';
+import { CometRewardFunder } from '../scripts/governor/propose/comet-reward-funding/index';
+import { getMultisigThreshold, getTimelockDelay } from '../src/deploy/helpers/govConfiguration';
+import { fundPrivateKeysInAnvil, fundPrivateKeysInHardhat, checkAccountBalances } from './helpers/network-utils';
 
 //Parameters
 let E2E_NETWORK_CONFIG = {
-  chainId: process.env.E2E_CHAIN_ID ? parseInt(process.env.E2E_CHAIN_ID) : 31337, 
+  chainId: process.env.E2E_CHAIN_ID ? parseInt(process.env.E2E_CHAIN_ID) : process.env.LOCAL_CHAIN_ID ? parseInt(process.env.LOCAL_CHAIN_ID) : 1337, 
   url: process.env.E2E_RPC_URL || 'http://127.0.0.1:8545', 
 } as any;
 const TEMPLATE_NAME = process.env.E2E_TEMPLATE || '_template-1';
@@ -24,14 +25,21 @@ const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 const PROPOSE_PHASE_1_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
-const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../../deployments', NETWORK_NAME);
+const TEST_DEPLOYMENT_PATH = path.join(__dirname, '../deployments', NETWORK_NAME);
 const TEMPLATE_PATH = path.join(__dirname, TEMPLATE_NAME);
+
+const DEFAULT_PK = process.env.TEST_PK ?? '';
+const ADMIN_PKS = process.env.TEST_ADMIN_PKS ?? '';
 
 let EXECUTE_TIMEOUT: number;
 let MULTISIG_THRESHOLD: number;
 
 describe('E2E Protocol Governance Test Suite', function () {
-  
+
+  before(async function () {
+    await setupTestAccounts(this);
+  });
+
   describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
@@ -41,16 +49,15 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -94,16 +101,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy all deployments except one', async function () {
@@ -156,12 +162,12 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       await runWithSigner(getAdminPrivateKey(0), async () => {
       
-        console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
+      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
       // Create a proposal to deploy the excluded market
       const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
       
       console.log(`📝 Running proposal command: ${command}`);
-        console.log(`📝 Using admin private key for governance operations`);
+      console.log(`📝 Using admin private key for governance operations`);
 
       const result = execSync(command, { 
         encoding: 'utf8',
@@ -190,7 +196,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -360,7 +366,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for market phase 2 proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -512,16 +518,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -673,7 +678,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -840,7 +845,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for market phase 2 proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -989,16 +994,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1062,7 +1066,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for comet reward funding proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -1185,16 +1189,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1225,7 +1228,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       // Test configuration
       const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
-      const TEST_THRESHOLD = 2;
+      const TEST_THRESHOLD = 1;
       const TEST_TIMELOCK_DELAY = 3600; // 1 hour in seconds
       
       console.log(`🚀 Testing governance update proposal (admins and timelock delay)`);
@@ -1276,7 +1279,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -1421,16 +1424,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1461,7 +1463,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       // Test configuration
       const TEST_ADMIN_ADDRESSES = ['0x1234567890123456789012345678901234567890', '0x0987654321098765432109876543210987654321'];
-      const TEST_THRESHOLD = 2;
+      const TEST_THRESHOLD = 1;
       
       console.log(`🚀 Testing governance update proposal (admins only)`);
       console.log(`👥 Admin addresses: ${TEST_ADMIN_ADDRESSES.join(', ')}`);
@@ -1509,7 +1511,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -1653,16 +1655,15 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
-
-      await reloadHardhatConfigToIncorporateSigner(process.env.TEST_PK);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
       await deleteDirectory();
-      await deleteHardhatConfigFile();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1738,7 +1739,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📋 Required threshold for governance update proposal acceptance: ${threshold}`);
       
       // Get admin signers from environment (assume it exists)
-      const adminSigners = process.env.TEST_ADMIN_PKS!;
+      const adminSigners = ADMIN_PKS;
       const adminPkArray = adminSigners.split(',').map(pk => pk.trim());
       console.log(`📋 Available admin signers: ${adminPkArray.length}`);
       
@@ -1869,7 +1870,7 @@ describe('E2E Protocol Governance Test Suite', function () {
   });
 
   function getAdminPrivateKey(index: number): string {
-    const adminPks = process.env.TEST_ADMIN_PKS;
+    const adminPks = ADMIN_PKS;
     if (!adminPks) {
       throw new Error('TEST_ADMIN_PKS environment variable is not set');
     }
@@ -1998,7 +1999,7 @@ describe('E2E Protocol Governance Test Suite', function () {
     signer: string, 
     operation: () => Promise<T>
   ): Promise<T> {
-    const originalTestPk = process.env.TEST_PK;
+    const originalTestPk = DEFAULT_PK;
     try {
       // Set the new signer
       await reloadHardhatConfigToIncorporateSigner(signer);
@@ -2013,4 +2014,22 @@ describe('E2E Protocol Governance Test Suite', function () {
       console.log(`📝 Reverted back to original signer`);
     }
   }
+
+  async function setupTestAccounts(testContext: any): Promise<void> {
+    // Fund accounts for local networks
+    if(E2E_NETWORK_CONFIG.chainId == "31337") {
+      await fundPrivateKeysInAnvil(ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    } else if(E2E_NETWORK_CONFIG.chainId == "1337") {
+      await fundPrivateKeysInHardhat(ADMIN_PKS, E2E_NETWORK_CONFIG.url);
+    }
+    
+    // Check if all accounts have sufficient balance
+    const allPrivateKeys = [DEFAULT_PK, ...ADMIN_PKS.split(',').map(pk => pk.trim())].filter(pk => pk);
+    const hasBalance = await checkAccountBalances(allPrivateKeys, E2E_NETWORK_CONFIG.url);
+    if (!hasBalance) {
+      console.log('⚠️  Skipping tests: TEST_PK or TEST_ADMIN_PKS accounts have insufficient balance');
+      testContext.skip();
+    }
+  }
+
 });

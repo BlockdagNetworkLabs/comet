@@ -1,7 +1,7 @@
-import { hre } from "../../helpers";
 import { discoverMarkets } from './deployment-manager';
 import * as fs from 'fs';
 import * as path from 'path';
+import { config } from 'hardhat';
 
 export class DynamicHardhatConfig {
   private networkName: string;
@@ -40,7 +40,7 @@ export class DynamicHardhatConfig {
     // Load infrastructure relation config first
     const infrastructureRelationPath = path.join(this.testDeploymentPath, '_infrastructure', 'relations.ts');
     if (fs.existsSync(infrastructureRelationPath)) {
-      // Fix: Calculate relative path from the test/e2e/ directory, not from helpers/
+      // Fix: Calculate relative path from the e2e directory, not from helpers/
       const relativePath = path.relative(path.join(__dirname, '..'), infrastructureRelationPath).replace(/\\/g, '/');
       const importName = `infrastructureRelationConfig`;
       imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
@@ -56,7 +56,7 @@ export class DynamicHardhatConfig {
       const relationPath = path.join(this.testDeploymentPath, market, 'relations.ts');
       
       if (fs.existsSync(relationPath)) {
-        // Fix: Calculate relative path from the test/e2e/ directory, not from helpers/
+        // Fix: Calculate relative path from the e2e directory, not from helpers/
         const relativePath = path.relative(path.join(__dirname, '..'), relationPath).replace(/\\/g, '/');
         const importName = `${market}RelationConfig`;
         imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
@@ -72,12 +72,12 @@ export class DynamicHardhatConfig {
 
   private async createTestHardhatConfig(imports: string[], configEntries: string[]): Promise<void> {
     const cleanConfig = {
-      ...hre.config,
+      ...config,
       networks: {
         'NETWORK_NAME_PLACEHOLDER':'NETWORK_PLACEHOLDER'
       },
       deploymentManager: {
-        relationConfigMap: hre.config.deploymentManager.relationConfigMap,
+        relationConfigMap: (config as any).deploymentManager.relationConfigMap,
         networks: {
           'NETWORK_NAME_PLACEHOLDER':'DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER'
         }
@@ -93,6 +93,18 @@ export class DynamicHardhatConfig {
     .replace("\"NETWORK_PLACEHOLDER\"", () => JSON.stringify(this.e2eNetworkConfig))
     .replace("\"DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER\"",`{${configEntries.join(',')}}`);
 
+    // Calculate relative paths for task imports
+    const taskImports = [
+      'deployment_manager/task.ts',
+      'spider/task.ts', 
+      'scenario/task.ts',
+      'governor/task.ts'
+    ].map(taskPath => {
+      const fullTaskPath = path.join(__dirname, '../../tasks', taskPath);
+      const relativePath = path.relative(path.dirname(this.testHardhatConfigPath), fullTaskPath).replace(/\\/g, '/');
+      return `import '${relativePath}';`;
+    }).join('\n');
+
     const testConfig = `
 import 'dotenv/config';
 
@@ -107,11 +119,8 @@ import 'hardhat-contract-sizer';
 import 'hardhat-cover';
 import 'hardhat-gas-reporter';
 
-// Hardhat tasks - adjust paths to be relative to test/e2e/
-import '../../tasks/deployment_manager/task.ts';
-import '../../tasks/spider/task.ts';
-import '../../tasks/scenario/task.ts';
-import '../../tasks/governor/task.ts';
+// Hardhat tasks - dynamically calculated paths
+${taskImports}
 
 // Dynamic relation configs
 ${imports.join('\n')}
