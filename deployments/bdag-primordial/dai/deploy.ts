@@ -1,14 +1,23 @@
-import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
-import { DeploySpec, deployComet } from '../../../src/deploy';
-import { getExistingTokens, setupPriceFeeds } from '../helpers';
+import {
+  Deployed,
+  DeploymentManager,
+} from "../../../plugins/deployment_manager";
+import { DeploySpec, deployComet } from "../../../src/deploy";
+import { getExistingTokens, setupPriceFeeds } from "../../helpers";
 
-export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
+export default async function deploy(
+  deploymentManager: DeploymentManager,
+  deploySpec: DeploySpec
+): Promise<Deployed> {
   // Set verification strategy to none to skip contract verification
-  deploymentManager.setVerificationStrategy('none');
+  deploymentManager.setVerificationStrategy("none");
 
   // Load infrastructure contracts from the _infrastructure deployment
-  const infrastructureSpider = await deploymentManager.spiderOther(deploymentManager.network, '_infrastructure');
-  
+  const infrastructureSpider = await deploymentManager.spiderOther(
+    deploymentManager.network,
+    "_infrastructure"
+  );
+
   // Add infrastructure contracts to the current deployment's contract map
   const infrastructureContracts = {};
   for (const [alias, contract] of infrastructureSpider.contracts) {
@@ -16,17 +25,17 @@ export default async function deploy(deploymentManager: DeploymentManager, deplo
     infrastructureContracts[alias] = contract;
   }
 
-  // Get existing test tokens using helper function
+  // Get existing test tokens (automatically loaded from configuration.json)
   await getExistingTokens(deploymentManager);
 
-  // Setup price feeds from configuration using helper function
+  // Setup price feeds from configuration
   await setupPriceFeeds(deploymentManager);
 
   // Deploy all Comet-related contracts
   const deployed = await deployComet(deploymentManager, deploySpec);
 
-  return { 
+  return {
     ...deployed,
-    ...infrastructureContracts
+    ...infrastructureContracts,
   };
 }

@@ -211,3 +211,21 @@ export async function getPriceFeeds(
 
   return priceFeeds;
 }
+
+export async function getTokenAddresses(
+  deploymentManager: DeploymentManager,
+): Promise<{ [name: string]: string }> {
+  const config = await getConfiguration(deploymentManager, {});
+  const tokenAddresses: { [name: string]: string } = {};
+  
+  // Add base token address
+  tokenAddresses[config.baseTokenSymbol] = config.baseToken;
+  
+  // Add asset token addresses
+  Object.entries(config.assetAddresses).forEach(([assetIndex, assetConfig]) => {
+    const assetName = assetIndex;
+    tokenAddresses[assetName] = assetConfig;
+  });
+
+  return tokenAddresses;
+}
