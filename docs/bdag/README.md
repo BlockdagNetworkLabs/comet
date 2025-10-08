@@ -29,8 +29,25 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 
 We provide automated scripts for common operations:
 
-- **[Market Deployment Script](../../scripts/deployer/deploy-markets/index.ts)** - Complete deployment automation
-- (Others inside the script folder)
+### 🚀 Deployment Scripts
+- **[Deploy Markets](../../scripts/deployer/deploy-markets/)** - Automated market deployment
+
+### 🏛️ Governance Scripts
+
+#### Proposal Creation
+- **[Market Phase 1 Proposal](../../scripts/governor/propose/market-phase-1/)** - Create phase 1 market deployment proposal
+- **[Market Phase 2 Proposal](../../scripts/governor/propose/market-phase-2/)** - Create phase 2 market deployment proposal
+- **[Comet Reward Funding Proposal](../../scripts/governor/propose/comet-reward-funding/)** - Propose reward funding
+- **[Governance Update Proposal](../../scripts/governor/propose/governance-update/)** - Propose governance parameter changes
+
+#### Proposal Management
+- **[Accept Proposal](../../scripts/governor/accept-proposal/)** - Accept/approve governance proposals
+- **[Queue Proposal](../../scripts/governor/queue-proposal/)** - Queue proposals for execution
+- **[Execute Proposal](../../scripts/governor/execute-proposal/)** - Execute approved proposals
+
+#### Testing & Validation
+- **[Test Governor Setup](../../scripts/governor/test-governor-setup/)** - Validate governor configuration
+- **[Test Market Setup](../../scripts/governor/test-market-setup/)** - Validate market setup
 
 ## Troubleshooting
 
