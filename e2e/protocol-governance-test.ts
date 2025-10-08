@@ -37,14 +37,9 @@ let MULTISIG_THRESHOLD: number;
 describe('E2E Protocol Governance Test Suite', function () {
 
   before(async function () {
-    await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     await setupTestAccounts(this);
   });
 
-  after(async function () {
-    await deleteHardhatConfigFile()
-  });
-  
   describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
@@ -54,6 +49,7 @@ describe('E2E Protocol Governance Test Suite', function () {
        
       // Copy template files to e2e root
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -61,6 +57,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -104,6 +101,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -111,6 +109,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy all deployments except one', async function () {
@@ -519,6 +518,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -526,6 +526,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -993,6 +994,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -1000,6 +1002,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1186,6 +1189,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -1193,6 +1197,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1419,6 +1424,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -1426,6 +1432,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1648,6 +1655,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       await copyDirectory(TEMPLATE_PATH, TEST_DEPLOYMENT_PATH, [TEMPLATE_NAME]);
 
       await loadInitialConfigurationForMultisigGovernance();
+      await reloadHardhatConfigToIncorporateSigner(DEFAULT_PK);
     });
 
     after(async function () {
@@ -1655,6 +1663,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
+      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
