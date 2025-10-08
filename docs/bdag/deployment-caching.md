@@ -20,7 +20,6 @@ deployments/{network}/{deployment}/.contracts/
 ### Cache Behavior
 1. **First Deployment**: Contracts are deployed and cached
 2. **Subsequent Runs**: Contracts are loaded from cache
-3. **Tests**: Use cached contract addresses automatically
 
 ## BlockDAG-Specific Considerations
 
@@ -32,13 +31,14 @@ Unlike standard networks, BlockDAG networks don't have block explorer APIs yet, 
 - **Deployment Preservation**: Cache files preserve contract state across repository clones
 
 ### Cache Management
-```bash
-# Check if contracts are cached
-ls deployments/local/dai/.contracts/
 
-# Clear cache to force re-deployment
+Clear the cache before deploying a new market using the -c/ --clean flag (recommended):
+```bash
+./scripts/deploy-market/index.sh -n local -d dai -c
+```
+Or manually clear the cache:
+```bash
 rm -rf deployments/local/dai/.contracts/
-yarn hardhat deploy --bdag --network local --deployment dai
 ```
 
 ## Benefits
@@ -47,15 +47,168 @@ yarn hardhat deploy --bdag --network local --deployment dai
 - **Consistent State**: Tests use same contract instances
 - **Cost Savings**: Avoid unnecessary gas costs on real networks
 
-## What You Need to Document Next
+## The Spider System
 
-This deployment caching guide should include:
+### What is Spider?
 
-- **Cache management best practices** and workflows
-- **Synchronization procedures** for team development
-- **Cache troubleshooting** and recovery procedures
-- **Integration with CI/CD** pipelines for automated deployments
-- **Version control considerations** for cache files
+Spider is an automated contract discovery system that "crawls" through your deployed contracts to map out all relationships and dependencies. Think of it as a web crawler that follows links between contracts.
+
+### How Spider Works
+
+1. **Starting from Roots**: Spider begins with "root" contracts (like `comet`, `configurator`, `governor`) that are stored in the cache
+2. **Following Relations**: It reads contract methods to discover related contracts (e.g., `comet.baseTokenPriceFeed()`)
+3. **Building the Map**: Spider creates a complete map of all contracts and their relationships
+4. **Caching Results**: All discovered contracts are cached with human-readable aliases
+
+### The Crawling Process
+
+```typescript
+// Example: Spider discovers contracts like this:
+comet (root)
+├── baseToken → USDC (via comet.baseToken())
+├── baseTokenPriceFeed → USDC:priceFeed (via comet.baseTokenPriceFeed())
+├── assets[0] → WETH (via comet.getAssetInfo(0))
+├── assets[1] → WBTC (via comet.getAssetInfo(1))
+├── cometAdmin → ProxyAdmin (via storage slot)
+│   └── timelock → Timelock (via cometAdmin.owner())
+│       └── governor → Governor (via timelock.admin())
+└── comet:implementation → CometImpl (via proxy storage slot)
+```
+
+### Relation Configuration
+
+Spider uses relation configurations defined in `deployments/relations.ts` and `deployments/relations.bdag.ts`:
+
+```typescript
+// Example from relations.bdag.ts
+comet: {
+  delegates: {
+    field: { slot: '0x360894a...' }  // Find implementation via proxy pattern
+  },
+  relations: {
+    baseToken: {
+      alias: async (token) => token.symbol(),  // Name it by symbol (e.g., "USDC")
+    },
+    assets: {
+      field: async (comet) => {
+        // Discover all collateral assets
+        const n = await comet.numAssets();
+        return Promise.all(
+          Array(n).fill(0).map((_, i) => 
+            (await comet.getAssetInfo(i)).asset
+          )
+        );
+      },
+      alias: async (token) => token.symbol(),  // "WETH", "WBTC", etc.
+    }
+  }
+}
+```
+
+### When Spider Runs
+
+Spider automatically runs:
+- **After deployments**: To discover newly deployed contracts
+- **Before tests**: To load contract addresses for testing
+- **On demand**: Via `yarn hardhat spider --deployment dai`
+
+### Spider Cache Output
+
+Spider stores discovered contracts in:
+```
+deployments/{network}/{deployment}/
+├── .contracts/cache.json      # Contract addresses and metadata
+├── aliases.json               # Human-readable name → address mapping
+└── roots.json                 # Starting points for spider
+```
+
+### Example Aliases Output
+```json
+{
+  "comet": "0x5FbDB...",
+  "USDC": "0x9A9f...",
+  "USDC:priceFeed": "0x7B8f...",
+  "WETH": "0x4C5D...",
+  "WETH:priceFeed": "0x8E2A...",
+  "configurator": "0x1F3E...",
+  "governor": "0x6D7C..."
+}
+```
+
+## Deployment Manager
+
+### What is Deployment Manager?
+
+The Deployment Manager is the central orchestrator for all deployment operations. It manages:
+- **Contract Deployment**: Deploying new contracts with proper configuration
+- **Caching**: Reading/writing contract data to disk
+- **Spidering**: Discovering contract relationships
+- **Verification**: Verifying contracts on block explorers (when available)
+- **Migrations**: Running governance migrations
+
+### Key Responsibilities
+
+1. **Cache Management**
+   - Loads existing contract addresses from cache
+   - Saves newly deployed contracts
+   - Manages cache invalidation
+
+2. **Contract Discovery (via Spider)**
+   - Runs spider to discover all related contracts
+   - Builds contract map for easy access in tests/scripts
+   - Maintains alias mappings
+
+3. **Deployment Workflow**
+   - Reads deployment scripts from `deployments/{network}/{deployment}/deploy.ts`
+   - Executes deployments in correct order
+   - Handles proxy patterns and implementations
+
+4. **Testing Support**
+   - Provides contract instances to tests
+   - Manages test signers and accounts
+   - Tracks deployment state
+
+### Usage in Code
+
+```typescript
+// Creating a DeploymentManager instance
+const dm = new DeploymentManager(
+  'local',              // network
+  'dai',                // deployment name
+  hre,                  // Hardhat Runtime Environment
+  {
+    writeCacheToDisk: true,
+    verificationStrategy: 'lazy'
+  }
+);
+
+// Running deployment script
+await dm.runDeployScript({ allMissing: true });
+
+// Running spider to discover contracts
+await dm.spider();
+
+// Accessing contracts
+const comet = await dm.contract('comet');
+const usdc = await dm.contract('USDC');
+```
+
+### How It Works Together
+
+1. **Deploy**: Deployment Manager runs deployment scripts
+2. **Cache**: New contracts are saved to `.contracts/cache.json`
+3. **Spider**: Spider discovers relationships and creates aliases
+4. **Test**: Tests use aliases to access contracts
+
+```bash
+# Full workflow example
+yarn hardhat deploy --network local --deployment dai
+# → Deployment Manager deploys contracts
+# → Contracts cached in deployments/local/dai/.contracts/
+# → Spider runs automatically to discover relationships
+# → Aliases saved in deployments/local/dai/aliases.json
+# → Ready for testing!
+```
 
 ## Related Documentation
 
