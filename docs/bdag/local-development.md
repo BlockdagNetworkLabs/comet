@@ -473,7 +473,6 @@ For comprehensive troubleshooting including deployment failures, governance issu
 
 ## Related Documentation
 
-- [Quick Start Guide](./quick-start.md) - Fast-track setup
 - [Environment Configuration](./environment-configuration.md) - API keys and environment setup
 - [Market Configuration](./market-configuration.md) - Configuring market parameters
 - [Governance System](./governance-system.md) - Understanding BDAG governance

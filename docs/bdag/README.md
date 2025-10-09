@@ -4,11 +4,7 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 
 ## Documentation Overview
 
-### 🚀 Quick Start
-- **[Getting Started](./quick-start.md)** - Environment setup and first deployment
-- **[Local Development](./local-development.md)** - Setting up your local development environment
-
-### 📋 Deployment Guides
+### 📋 Development Guides
 - **[Local Development](./local-development.md)** - Complete local development workflow and deployment process
 - **[Environment Configuration](./environment-configuration.md)** - Required environment variables and API keys
 - **[New Network Support](./new-network-support.md)** - Adding support for a new blockchain network

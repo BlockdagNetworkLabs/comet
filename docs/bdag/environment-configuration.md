@@ -43,6 +43,5 @@ If running locally, you can use LOCAL_CHAIN_ID=1337 for hardhat or LOCAL_CHAIN_I
 
 ## Related Documentation
 
-- [Quick Start Guide](./quick-start.md) - Initial setup overview
 - [Local Development](./local-development.md) - Complete deployment workflow
 - [Network Configuration](./network-configuration.md) - Network-specific settings
