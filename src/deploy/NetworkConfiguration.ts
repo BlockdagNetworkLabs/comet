@@ -133,7 +133,7 @@ function getAssetConfigs(
   }));
 }
 
-function getAssetTokens(config: NetworkConfiguration): AssetTokens {
+function getMarketTokens(config: NetworkConfiguration): AssetTokens {
   const initialAcc = config.baseTokenAddress ? { [config.baseToken]: config.baseTokenAddress } : {};
   // Filter out assets that don't have an address and 
   // reduce to a map of symbol to address
@@ -182,7 +182,7 @@ function getOverridesOrConfig(
     ...interestRateInfoMapping(config.rates),
     ...trackingInfoMapping(config.tracking),
     assetConfigs: _ => getAssetConfigs(config.assets, contracts),
-    assetAddresses: _ => getAssetTokens(config),
+    assetAddresses: _ => getMarketTokens(config),
     rewardTokenAddress: _ => (config.rewardToken || config.rewardTokenAddress) ?
       getContractAddress(config.rewardToken, contracts, config.rewardTokenAddress) :
       undefined,
