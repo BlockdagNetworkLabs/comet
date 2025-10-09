@@ -82,6 +82,10 @@ interface NetworkAssetConfiguration {
   supplyCap: ScientificNotation;
 }
 
+export type AssetTokens = {
+  [symbol: string]: string;
+}
+
 export interface NetworkConfiguration {
   name: string;
   symbol: string;
@@ -129,6 +133,20 @@ function getAssetConfigs(
   }));
 }
 
+function getAssetTokens(config: NetworkConfiguration): AssetTokens {
+  const initialAcc = config.baseTokenAddress ? { [config.baseToken]: config.baseTokenAddress } : {};
+  // Filter out assets that don't have an address and 
+  // reduce to a map of symbol to address
+  const assetTokens = Object.entries(config.assets)
+    .filter(([_, value]) => value.address)
+    .reduce((acc, [key, value]) => ({
+      [key]: value.address,
+      ...acc,
+    }), initialAcc);
+
+  return assetTokens;
+}
+
 function getOverridesOrConfig(
   overrides: ProtocolConfiguration,
   config: NetworkConfiguration,
@@ -164,6 +182,7 @@ function getOverridesOrConfig(
     ...interestRateInfoMapping(config.rates),
     ...trackingInfoMapping(config.tracking),
     assetConfigs: _ => getAssetConfigs(config.assets, contracts),
+    assetAddresses: _ => getAssetTokens(config),
     rewardTokenAddress: _ => (config.rewardToken || config.rewardTokenAddress) ?
       getContractAddress(config.rewardToken, contracts, config.rewardTokenAddress) :
       undefined,
@@ -216,16 +235,5 @@ export async function getTokenAddresses(
   deploymentManager: DeploymentManager,
 ): Promise<{ [name: string]: string }> {
   const config = await getConfiguration(deploymentManager, {});
-  const tokenAddresses: { [name: string]: string } = {};
-  
-  // Add base token address
-  tokenAddresses[config.baseTokenSymbol] = config.baseToken;
-  
-  // Add asset token addresses
-  Object.entries(config.assetAddresses).forEach(([assetIndex, assetConfig]) => {
-    const assetName = assetIndex;
-    tokenAddresses[assetName] = assetConfig;
-  });
-
-  return tokenAddresses;
+  return config.assetAddresses;
 }

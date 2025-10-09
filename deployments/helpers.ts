@@ -15,12 +15,14 @@ export async function getExistingToken(
   address: string,
   contractPath: string = "contracts/test/StandardToken.sol:StandardToken"
 ): Promise<FaucetToken> {
+  const tracer = deploymentManager.tracer();
   const existing = await deploymentManager.existing(
     symbol,
     address,
     deploymentManager.network,
     contractPath
   );
+  tracer(`Loaded existing token ${symbol} from ${address}`);
   return existing as FaucetToken;
 }
 
