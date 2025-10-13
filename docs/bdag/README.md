@@ -21,6 +21,9 @@ Welcome to the BlockDAG fork of Compound Comet. This documentation provides comp
 - **[Deployment Caching](./deployment-caching.md)** - Understanding the caching system
 - **[Spider Tool](./spider-tool.md)** - Contract discovery and management
 
+### 🛠️ Development Tools
+- **[Faucet Tool](./faucet-tool.md)** - Automated token distribution for testing
+
 ## Automated Scripts
 
 We provide automated scripts for common operations:
