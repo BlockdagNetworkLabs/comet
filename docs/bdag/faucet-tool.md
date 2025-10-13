@@ -65,38 +65,3 @@ Cannot drip yet. 24h cooldown not met.
 ## Security
 
 ⚠️ **Never commit your private key to version control!**
-
-For safer usage, use environment variables:
-
-```bash
-export FAUCET_ADDRESS="0x949b2175F38BF40e30A3A68D506B2999acEC4b85"
-export RPC_URL="https://rpc.blockdag.network"
-export PRIVATE_KEY="0x..."
-
-yarn dev
-```
-
-Update config to use them:
-```typescript
-const CONFIG: FaucetConfig = {
-  faucetAddress: process.env.FAUCET_ADDRESS || "",
-  rpcUrl: process.env.RPC_URL || "",
-  privateKey: process.env.PRIVATE_KEY || "",
-  tokens: [...]
-};
-```
-
-## Troubleshooting
-
-**"Cannot drip yet. 24h cooldown not met"**  
-→ Wait for the cooldown to expire, then run again
-
-**Transaction fails**  
-→ Check you have enough native tokens for gas
-
-**RPC errors**  
-→ Verify your RPC URL is correct and accessible
-
----
-
-*Part of the BlockDAG development toolkit*
