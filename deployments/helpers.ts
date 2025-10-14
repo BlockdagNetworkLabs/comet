@@ -13,7 +13,7 @@ export async function getExistingToken(
   deploymentManager: DeploymentManager,
   symbol: string,
   address: string,
-  contractPath: string = "contracts/test/StandardToken.sol:StandardToken"
+  contractPath: string = "contracts/test/FaucetToken.sol:StandardToken"
 ): Promise<FaucetToken> {
   const tracer = deploymentManager.tracer();
   const existing = await deploymentManager.existing(
@@ -32,7 +32,7 @@ export async function getExistingToken(
  */
 export async function getExistingTokens(
   deploymentManager: DeploymentManager,
-  contractPath: string = "contracts/test/StandardToken.sol:StandardToken"
+  contractPath: string = "contracts/test/FaucetToken.sol:StandardToken"
 ): Promise<Record<string, FaucetToken>> {
   const tokenAddresses = await getTokenAddresses(deploymentManager);
   const tokens: Record<string, FaucetToken> = {};
