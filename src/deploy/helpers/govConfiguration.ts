@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ethers } from "ethers";
 import { DeploymentManager } from "../../../plugins/deployment_manager";
 import { CustomGovernor, CustomTimelock } from "../../../build/types";
 
@@ -159,42 +158,8 @@ export async function getOnchainGovConfiguration(
 
   const onchainMultisigThreshold = await governor.multisigThreshold();
   const onchainTimelockDelay = await timelock.delay();
-
-  let onchainAdmins = [];
-  let moreAdmins = true;
-  let i = 0;
-  while (moreAdmins) {
-    try {
-      const admin = await governor.admins(i);
-      if (admin === ethers.constants.AddressZero) {
-        moreAdmins = false;
-      } else {
-        onchainAdmins.push(admin);
-        i++;
-      }
-    } catch (error) {
-      if (isAdminIndexOutOfBoundsError(error)) {
-        console.log(`Reached end of admin list at index ${i}`);
-        moreAdmins = false;
-      } else {
-        console.error(`Error getting admin at index ${i}:`, {
-          code: error.code,
-          method: error.method,
-          message: error.message,
-          data: error.data,
-        });
-        throw error;
-      }
-    }
-  }
-
-  function isAdminIndexOutOfBoundsError(error: any): boolean {
-    return (
-      error.code === "CALL_EXCEPTION" &&
-      error.method === "admins(uint256)" &&
-      error.data === "0x"
-    ); // Empty data usually means index out of bounds
-  }
+  
+  const onchainAdmins = await governor.getAdmins();
 
   return {
     multisigThreshold: onchainMultisigThreshold.toBigInt(),
