@@ -94,7 +94,7 @@ yarn hardhat test e2e/protocol-governance-test.ts
 export E2E_TEMPLATE="_template-1" && yarn hardhat test e2e/protocol-governance-test.ts
 
 # Test in specific chain
-export E2E_CHAIN_ID="1043" && E2E_RPC_URL="https://node-blockdag.spacedev.io/rpc" && yarn hardhat test e2e/protocol-governance-test.ts
+export E2E_CHAIN_ID="1043" && export E2E_RPC_URL="https://node-blockdag.spacedev.io/rpc" && yarn hardhat test e2e/protocol-governance-test.ts
 ```
 
 **What it tests:**
