@@ -28,7 +28,7 @@
     "DAI": {
       "address": "0x8F8a825b9f87781439977fd53AEc6983f3fF4b3C",
       "priceFeed": "0x7535a65547F3bCa868a90Cc6AAcCfD97F68B881d",
-      "decimals": "6",
+      "decimals": "18",
       "borrowCF": 0.85,
       "liquidateCF": 0.9,
       "liquidationFactor": 0.95,

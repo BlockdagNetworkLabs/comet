@@ -53,6 +53,7 @@ import localInfrastructureRelationConfigMap from './deployments/local/_infrastru
 import bdagPrimordialDaiRelationConfigMap from './deployments/bdag-primordial/dai/relations';
 import bdagPrimordialInfrastructureRelationConfigMap from './deployments/bdag-primordial/_infrastructure/relations';
 import bdagAwakeningDaiRelationConfigMap from './deployments/bdag-awakening/dai/relations';
+import bdagAwakeningUsdcRelationConfigMap from './deployments/bdag-awakening/usdc/relations';
 import bdagAwakeningInfrastructureRelationConfigMap from './deployments/bdag-awakening/_infrastructure/relations';
 
 task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
@@ -307,7 +308,7 @@ const config: HardhatUserConfig = {
       }, {}),
     },
     local: {
-      url: "http://127.0.0.1:8545",
+      url: 'http://127.0.0.1:8545',
       chainId: parseInt(LOCAL_CHAIN_ID), 
       accounts: ETH_PK ?
         [...deriveAccounts(ETH_PK)]
@@ -482,6 +483,7 @@ const config: HardhatUserConfig = {
       },
       'bdag-awakening': {
         dai: bdagAwakeningDaiRelationConfigMap,
+        usdc: bdagAwakeningUsdcRelationConfigMap,
         _infrastructure: bdagAwakeningInfrastructureRelationConfigMap
       }
     },
