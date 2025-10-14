@@ -10,6 +10,10 @@ The BDAG Comet project supports multiple blockchain networks through a structure
 2. **Relations Import** - Network-specific contract relationship mappings
 3. **Deployment Structure** - Network-specific deployment configurations and scripts
 
+## Example
+
+You can find a nice Pull Request that adds support for the BlockDAG-Awakening network [here](https://github.com/BlockdagNetworkLabs/comet/pull/47).
+
 ## Step-by-Step Guide
 
 ### 1. Update Hardhat Configuration (`hardhat.config.ts`)
