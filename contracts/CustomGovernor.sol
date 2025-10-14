@@ -217,6 +217,22 @@ contract CustomGovernor is IGovernorBravo, ERC1967Upgrade, Initializable {
     }
 
     /**
+     * @notice Get all admin addresses
+     * @return Array of all admin addresses
+     */
+    function getAdmins() external view returns (address[] memory) {
+        return admins;
+    }
+
+    /**
+     * @notice Get the number of admins
+     * @return Number of admins
+     */
+    function getAdminCount() external view returns (uint) {
+        return admins.length;
+    }
+
+    /**
      * @notice Set new governance admins and threshold
      * @param admins_ new admins
      * @param threshold_ new threshold

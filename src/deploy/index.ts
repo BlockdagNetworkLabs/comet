@@ -1,6 +1,5 @@
 import { AssetConfigStruct } from '../../build/types/Comet';
 import { BigNumberish, Contract, PopulatedTransaction, utils } from 'ethers';
-import { AssetTokens } from './NetworkConfiguration';
 
 export { cloneGov, deployNetworkComet as deployComet, sameAddress } from './Network';
 export { getConfiguration, getConfigurationStruct } from './NetworkConfiguration';
@@ -32,7 +31,6 @@ export interface ProtocolConfiguration {
   baseBorrowMin?: BigNumberish;
   targetReserves?: BigNumberish;
   assetConfigs?: AssetConfigStruct[];
-  assetAddresses?: AssetTokens;
   rewardTokenAddress?: string;
 }
 

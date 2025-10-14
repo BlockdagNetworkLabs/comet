@@ -49,4 +49,20 @@ export default {
       }
     }
   },
+  // TODO: Needed as BDAG doesnt have etherscan API yet, once available we recommend to remove this
+  comet: {
+    ...baseRelationConfig.comet,
+    relations: (() => {
+      const { 
+        baseToken: _baseToken, 
+        baseTokenPriceFeed: _baseTokenPriceFeed, 
+        assets: _assets, 
+        assetPriceFeeds: _assetPriceFeeds, 
+        ...otherRelations 
+      } = baseRelationConfig.comet.relations;
+      return {
+        ...otherRelations,
+      };
+    })()
+  }
 }; 

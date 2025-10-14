@@ -182,7 +182,6 @@ function getOverridesOrConfig(
     ...interestRateInfoMapping(config.rates),
     ...trackingInfoMapping(config.tracking),
     assetConfigs: _ => getAssetConfigs(config.assets, contracts),
-    assetAddresses: _ => getMarketTokens(config),
     rewardTokenAddress: _ => (config.rewardToken || config.rewardTokenAddress) ?
       getContractAddress(config.rewardToken, contracts, config.rewardTokenAddress) :
       undefined,
@@ -214,17 +213,17 @@ export async function getConfigurationStruct(
 export async function getPriceFeeds(
   deploymentManager: DeploymentManager,
 ): Promise<{ [name: string]: string }> {
-  const config = await getConfiguration(deploymentManager, {});
+  const config = await deploymentManager.readConfig<NetworkConfiguration>();
   const baseAssetPriceFeed = config.baseTokenPriceFeed;
   // Convert assets object to array of price feeds
   const priceFeeds: { [name: string]: string } = {};
   
   // Add base token price feed    
-  priceFeeds[config.baseTokenSymbol] = baseAssetPriceFeed;
+  priceFeeds[config.baseToken] = baseAssetPriceFeed;
   
   // Add asset price feeds
-  Object.entries(config.assetConfigs).forEach(([assetIndex, assetConfig]) => {
-    const assetName = config.assetConfigs[assetIndex].symbol;
+  Object.entries(config.assets).forEach(([assetIndex, assetConfig]) => {
+    const assetName = assetIndex;
     priceFeeds[assetName] = assetConfig.priceFeed;
   });
 
@@ -234,6 +233,6 @@ export async function getPriceFeeds(
 export async function getTokenAddresses(
   deploymentManager: DeploymentManager,
 ): Promise<{ [name: string]: string }> {
-  const config = await getConfiguration(deploymentManager, {});
-  return config.assetAddresses;
+  const config = await deploymentManager.readConfig<NetworkConfiguration>();
+  return getMarketTokens(config);
 }

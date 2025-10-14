@@ -1,7 +1,7 @@
 import { Deployed, DeploymentManager } from '../../../plugins/deployment_manager';
 import { DeploySpec, deployComet} from '../../../src/deploy';
-import { makeToken, makePriceFeed, makeFauceteer } from '../_helpers/deploymentTokenInfra';
-import { ConfiguratorModifierHelper } from '../_helpers/configuratorModificator';
+import { makeToken, makePriceFeed, makeFauceteer } from '../../../test/helpers/deploymentTokenInfra';
+import { ConfiguratorModifierHelper } from '../../../src/deploy/helpers/configuratorModificator';
 import { exp, wait } from '../../../src/deploy';
 
 export default async function deploy(deploymentManager: DeploymentManager, deploySpec: DeploySpec): Promise<Deployed> {
@@ -99,5 +99,5 @@ async function deployTokenInfra(deploymentManager: DeploymentManager){
     compPriceFeed,
     linkPriceFeed,
     uniPriceFeed,
-  }
+  };
 }
