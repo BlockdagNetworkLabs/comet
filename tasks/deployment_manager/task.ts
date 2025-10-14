@@ -453,7 +453,7 @@ task('validate:config', 'Validates BDAG configuration against Comet constructor 
       
       // Load infrastructure contracts first (if they exist)
       try {
-        const infrastructureSpider = await dm.spiderOther('bdag-primordial', '_infrastructure');
+        const infrastructureSpider = await dm.spiderOther(network, '_infrastructure');
         if (infrastructureSpider && infrastructureSpider.contracts) {
           for (const [alias, contract] of infrastructureSpider.contracts) {
             await dm.putAlias(alias, contract);
