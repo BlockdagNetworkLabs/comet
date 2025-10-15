@@ -9,5 +9,6 @@
     "timelock": "0x1428E9c9450FB67fE344fa60e3a1C306C7C1B5eA",
     "cometAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd",
     "configurator:implementation": "0x14aD3dC45caB56d2b20efFE864ca9a1df9211429",
-    "configuratorAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd"
+    "configuratorAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd",
+    "fauceteer": "0x3c01427a893fa78E49bc902568b1fCC614b511aB"
 }

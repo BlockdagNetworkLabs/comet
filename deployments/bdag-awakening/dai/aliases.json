@@ -13,5 +13,6 @@
     "configurator:implementation": "0x14aD3dC45caB56d2b20efFE864ca9a1df9211429",
     "configuratorAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd",
     "cometFactory": "0xc215FA7a396b9eAc28FEb43A4f14Af86910e3f47",
-    "rewards": "0x43BD431B70236711c95785a3B84BB68F1214aAF2"
+    "rewards": "0x43BD431B70236711c95785a3B84BB68F1214aAF2",
+    "fauceteer": "0x6bA8D6876ef40593Ef2a97204d8E4c9B0814723A"
 }

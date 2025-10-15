@@ -187,6 +187,35 @@ describe("Market Verification", function() {
     expect(Object.keys(config.assets).length).to.be.gt(0);
   });
 
+  it("should have storage initialized with totalsBasic and accrualTime", async function() {
+    const { comet } = deployedContracts;
+
+    // Get totalsBasic struct which contains all the initialized storage values
+    const totalsBasic = await comet.totalsBasic();
+
+    // Check that lastAccrualTime is initialized (not 0)
+    expect(totalsBasic.lastAccrualTime).to.be.gt(0);
+    console.log(`✅ lastAccrualTime is initialized: ${totalsBasic.lastAccrualTime}`);
+
+    // BASE_INDEX_SCALE is 1e15 in Comet (from CometCore.sol)
+    const BASE_INDEX_SCALE = ethers.utils.parseUnits("1", 15);
+
+    // Check baseSupplyIndex is initialized to BASE_INDEX_SCALE
+    expect(totalsBasic.baseSupplyIndex).to.be.gte(BASE_INDEX_SCALE);
+    console.log(`✅ baseSupplyIndex is initialized: ${totalsBasic.baseSupplyIndex.toString()}`);
+
+    // Check baseBorrowIndex is initialized to BASE_INDEX_SCALE
+    expect(totalsBasic.baseBorrowIndex).to.be.gte(BASE_INDEX_SCALE);
+    console.log(`✅ baseBorrowIndex is initialized: ${totalsBasic.baseBorrowIndex.toString()}`);
+
+    // Check totalSupplyBase and totalBorrowBase exist (should be 0 or greater initially)
+    expect(totalsBasic.totalSupplyBase).to.be.gte(0);
+    console.log(`✅ totalSupplyBase is initialized: ${totalsBasic.totalSupplyBase.toString()}`);
+
+    expect(totalsBasic.totalBorrowBase).to.be.gte(0);
+    console.log(`✅ totalBorrowBase is initialized: ${totalsBasic.totalBorrowBase.toString()}`);
+  });
+
   // ===== COMET-SPECIFIC PARAMETER TESTS =====
 
   it("should have correct proxy implementation", async function() {
