@@ -52,6 +52,9 @@ import localUsdcRelationConfigMap from './deployments/local/usdc/relations';
 import localInfrastructureRelationConfigMap from './deployments/local/_infrastructure/relations';
 import bdagPrimordialDaiRelationConfigMap from './deployments/bdag-primordial/dai/relations';
 import bdagPrimordialInfrastructureRelationConfigMap from './deployments/bdag-primordial/_infrastructure/relations';
+import bdagAwakeningDaiRelationConfigMap from './deployments/bdag-awakening/dai/relations';
+import bdagAwakeningUsdcRelationConfigMap from './deployments/bdag-awakening/usdc/relations';
+import bdagAwakeningInfrastructureRelationConfigMap from './deployments/bdag-awakening/_infrastructure/relations';
 
 task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
   for (const account of await hre.ethers.getSigners()) console.log(account.address);
@@ -193,6 +196,11 @@ const networkConfigs: NetworkConfig[] = [
     url: 'https://node-blockdag.spacedev.io/rpc',//"http://13.234.176.105:18545"
   },
   {
+    network: 'bdag-awakening',
+    chainId: 1043,
+    url: 'http://79.125.65.36:18545',
+  },
+  {
     network: 'local',
     chainId: parseInt(LOCAL_CHAIN_ID),
     url: 'http://127.0.0.1:8545',
@@ -300,7 +308,7 @@ const config: HardhatUserConfig = {
       }, {}),
     },
     local: {
-      url: "http://127.0.0.1:8545",
+      url: 'http://127.0.0.1:8545',
       chainId: parseInt(LOCAL_CHAIN_ID), 
       accounts: ETH_PK ?
         [...deriveAccounts(ETH_PK)]
@@ -396,6 +404,14 @@ const config: HardhatUserConfig = {
           apiURL: '',//There is no apiUrl yet
           browserURL: 'https://primordial.bdagscan.com/' //"http://13.234.176.105:18545"
         }
+      },
+      {
+        network: 'bdag-awakening',
+        chainId: 1043,
+        urls: {
+          apiURL: '',//There is no apiUrl yet
+          browserURL: 'https://awakening.bdagscan.com/'
+        }
       }
     ]
   },
@@ -464,6 +480,11 @@ const config: HardhatUserConfig = {
       'bdag-primordial': {
         dai: bdagPrimordialDaiRelationConfigMap,
         _infrastructure: bdagPrimordialInfrastructureRelationConfigMap
+      },
+      'bdag-awakening': {
+        dai: bdagAwakeningDaiRelationConfigMap,
+        usdc: bdagAwakeningUsdcRelationConfigMap,
+        _infrastructure: bdagAwakeningInfrastructureRelationConfigMap
       }
     },
   },
