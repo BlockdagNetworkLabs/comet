@@ -19,9 +19,9 @@
   },
   "tracking": {
     "indexScale": "1e15",
-    "baseSupplySpeed": "231481481481e0",
-    "baseBorrowSpeed": "92592592592e0",
-    "baseMinForRewards": "1000e18"
+    "baseSupplySpeed": "0.000011574074074074073e15",
+    "baseBorrowSpeed": "0.0011458333333333333e15",
+    "baseMinForRewards": "1000000e6"
   },
   "rewardToken": "COMP",
   "assets": {
