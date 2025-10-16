@@ -31,7 +31,7 @@ export async function getCometUpgradeProposal(
   
   // Action 2: initialize storage in the Comet contract (only if not already initialized)
   const totalsBasic = await comet.totalsBasic();
-  const isStorageInitialized = totalsBasic.lastAccrualTime !== 0n;
+  const isStorageInitialized = Number(totalsBasic.lastAccrualTime) !== 0;
   
   if (!isStorageInitialized) {
     targets.push(comet.address);

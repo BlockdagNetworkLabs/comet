@@ -1,12 +1,12 @@
 {
-    "governor": "0xE122CfDfeF775933698b500786A0dd841e573a35",
-    "governor:implementation": "0x751955346cf12E9c79280594e05B970F59b48b4c",
-    "COMP": "0x04d353c6e43e401B1F8fd0A757349819CcA10482",
-    "timelock": "0x1428E9c9450FB67fE344fa60e3a1C306C7C1B5eA",
-    "cometAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd",
-    "cometFactory": "0xc215FA7a396b9eAc28FEb43A4f14Af86910e3f47",
-    "configurator": "0x61e38c853813eeB12675A226f91F3a19DecaF0B3",
-    "configurator:implementation": "0x14aD3dC45caB56d2b20efFE864ca9a1df9211429",
-    "configuratorAdmin": "0x37F4Beef978B329Cdac64835C62d7a064685dEEd",
-    "rewards": "0x43BD431B70236711c95785a3B84BB68F1214aAF2"
+    "governor": "0x1898c92F9558077aEA9667211B5cB04911b0C3FB",
+    "governor:implementation": "0x197ADce6F741164d326160cD6C2FC2F42A997Cea",
+    "COMP": "0xe29F2e8418530Bc16bCAe336f9Cfbde4D99B0578",
+    "timelock": "0xBbF099a0A1eEFFD88AdB786843E412E92144f4B0",
+    "cometAdmin": "0xb664b070D3b05dBb815269aF393B4ed5D463305D",
+    "cometFactory": "0x1aeB6809645C3E6c84b12Bc5355F11B9cDf38988",
+    "configurator": "0x5AEEE98062104CeB9449A8eea55FfA482Ae9D9F1",
+    "configurator:implementation": "0x963dd54C0724E15cCBb6AB41a2aa2FD66dC187D6",
+    "configuratorAdmin": "0xb664b070D3b05dBb815269aF393B4ed5D463305D",
+    "rewards": "0x1E153A0Aef2fc32bEb982b9f2643ff2111673438"
 }
