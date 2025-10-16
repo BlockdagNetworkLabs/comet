@@ -20,7 +20,7 @@ contract CustomGovernor is IGovernorBravo, ERC1967Upgrade, Initializable {
     uint public proposalCount;
 
     /// @notice The maximum number of actions that can be included in a proposal
-    uint public constant proposalMaxOperations = 10;
+    uint public constant proposalMaxOperations = 30;
 
     /// @notice The official record of all proposals ever proposed
     mapping (uint => Proposal) public _proposals;
