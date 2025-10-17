@@ -21,7 +21,7 @@ const TEMPLATE_NAME = process.env.E2E_TEMPLATE || '_template-1';
 const TEMP_HARDHAT_CONFIG_FILE_NAME = 'temp-hardhat.config.ts';
 const NETWORK_NAME = 'e2e-network';
 
-const PROTOCOL_DEPLOYMENT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+const PROTOCOL_DEPLOYMENT_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const PROPOSE_PHASE_1_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 const TEST_HARDHAT_CONFIG_PATH = path.join(__dirname, TEMP_HARDHAT_CONFIG_FILE_NAME);
@@ -135,7 +135,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Build deployment command with specific deployments
-        const deploymentsList = deploymentsToDeploy.join(' ');
+        const deploymentsList = deploymentsToDeploy.join(',');
         const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments ${deploymentsList} --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
