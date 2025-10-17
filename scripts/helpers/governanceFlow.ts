@@ -6,6 +6,7 @@ export interface GovernanceFlowOptions {
   network: string;
   proposalId: string;
   executionType?: ExecutionType;
+  yes?: boolean;
 }
 
 export class GovernanceFlowHelper {
@@ -41,8 +42,8 @@ export class GovernanceFlowHelper {
   ): Promise<string> {
     log(`\n🎯 Running governance flow for proposal ${options.proposalId}...`, 'info');
     
-    // Ask user if they want to proceed with governance
-    const shouldProcessGovernance = await confirm(`\nDo you want to approve, queue, and execute proposal ${options.proposalId}?`);
+    // Ask user if they want to proceed with governance (or auto-confirm if yes flag is set)
+    const shouldProcessGovernance = options.yes || await confirm(`\nDo you want to approve, queue, and execute proposal ${options.proposalId}?`);
     
     let governanceFlowResponse = '';
     if (shouldProcessGovernance) {

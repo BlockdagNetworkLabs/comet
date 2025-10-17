@@ -24,6 +24,7 @@ interface DeployOptions {
   network: string;
   deployments: string[];
   clean?: boolean;
+  yes?: boolean;
 }
 
 class MarketsDeployer {
@@ -39,6 +40,10 @@ class MarketsDeployer {
       log(`\n🚀 Starting market deployment for ${this.options.deployments.length} markets: ${deploymentList} on ${this.options.network}`, 'info');
       
       log(`🔧 Using BDAG custom governor`, 'info');
+      
+      if (this.options.yes) {
+        log(`✅ Auto-confirm mode enabled (all prompts will be automatically accepted)`, 'info');
+      }
 
       // Step 1: Prepare deployment environment
       await this.prepareDeployment();
@@ -194,7 +199,8 @@ class MarketsDeployer {
       const governanceFlowResponse = await runGovernanceFlow({
         network: this.options.network,
         proposalId,
-        executionType: 'comet-reward-funding'
+        executionType: 'comet-reward-funding',
+        yes: this.options.yes
       });
 
       log(`\n🎉 Governance flow response for rewards funding: ${governanceFlowResponse}`, 'success');
@@ -228,7 +234,7 @@ class MarketsDeployer {
    * - Return the proposal ID for governance flow
    */
   private async governanceUpdate(): Promise<string> {
-    const shouldProposeGovernanceUpdate = await confirm(`\nDo you want to propose a governance update?`);
+    const shouldProposeGovernanceUpdate = this.options.yes || await confirm(`\nDo you want to propose a governance update?`);
 
     if (!shouldProposeGovernanceUpdate) {
       log(`\n⏸️  Governance update cancelled.`, 'warning');
@@ -244,7 +250,8 @@ class MarketsDeployer {
     const governanceFlowResponse = await runGovernanceFlow({
       network: this.options.network,
       proposalId,
-      executionType: 'governance-update'
+      executionType: 'governance-update',
+      yes: this.options.yes
     });
 
     log(`\n🎉 Governance flow response for governance update: ${governanceFlowResponse}`, 'success');
@@ -259,7 +266,7 @@ class MarketsDeployer {
    * - Run tests for all deployed markets
    */
   private async runVerificationTests(): Promise<void> {
-    const runVerification = await confirm(`\nDo you want to run deployment verification tests for all markets?`);
+    const runVerification = this.options.yes || await confirm(`\nDo you want to run deployment verification tests for all markets?`);
     
     if (runVerification) {
       for (const deployment of this.options.deployments) {
@@ -337,7 +344,7 @@ class MarketsDeployer {
     log(`   - Supply caps and collateral factors`, 'info');
     log(`   - Any other market-specific settings`, 'info');
     
-    const shouldContinue = await confirm(
+    const shouldContinue = this.options.yes || await confirm(
       `\nHave you updated all configuration.json files for the ${this.options.deployments.length} markets and are ready to continue with deployment?`
     );
     
@@ -380,7 +387,8 @@ class MarketsDeployer {
     const governanceFlowResponse = await runGovernanceFlow({
       network: this.options.network,
       proposalId,
-      executionType: 'comet-impl-in-configuration'
+      executionType: 'comet-impl-in-configuration',
+      yes: this.options.yes
     });
     log(`\n🎉 Governance flow response for all markets: ${governanceFlowResponse}`, 'success');
     log(`\n🎉 Governance flow to accept implementation completed successfully for all markets!`, 'success');
@@ -401,10 +409,10 @@ class MarketsDeployer {
   private async proposeUpgrade(implementationAddresses: string[]): Promise<void> {
     // Propose upgrade (if needed)
     try {
-      const shouldProposeUpgrade = await confirm(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
+      const shouldProposeUpgrade = this.options.yes || await confirm(`\nDo you want to propose an upgrade to a new implementation for all markets?`);
 
-      log(`\n🔧 Proposing upgrade to a new implementation for all markets...`, 'info');
       if (shouldProposeUpgrade) {
+        log(`\n🔧 Proposing upgrade to a new implementation for all markets...`, 'info');
         // Propose upgrade to new implementation using batch deploy mode for each deployment
         for (let i = 0; i < this.options.deployments.length; i++) {
           const deployment = this.options.deployments[i];
@@ -434,7 +442,8 @@ class MarketsDeployer {
       const governanceFlowResponse = await runGovernanceFlow({
         network: this.options.network,
         proposalId,
-        executionType: 'comet-upgrade'
+        executionType: 'comet-upgrade',
+        yes: this.options.yes
       });
 
       log(`\n🎉 Governance flow response for ${deployments}: ${governanceFlowResponse}`, 'success');
@@ -513,6 +522,11 @@ function parseArguments(): DeployOptions {
       case '--clean':
         options.clean = true;
         break;
+      
+      case '--yes':
+      case '-y':
+        options.yes = true;
+        break;
 
       case '--help':
       case '-h':
@@ -536,10 +550,9 @@ Options:
   --deployment <market(s)>      Market(s) to deploy (default: dai)
                                Supports single market, comma-separated list, or 'all'
   --deployments <market(s)>     Alias for --deployment
-
   --clean                       Clean deployment cache before deploying
-
-  --help, -h                   Show this help message
+  --yes, -y                     Automatically answer yes to all prompts
+  --help, -h                    Show this help message
 
 Examples:
   # Deploy single DAI market on local network
@@ -553,6 +566,9 @@ Examples:
 
   # Deploy all markets with clean cache
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all --clean
+
+  # Deploy all markets with auto-confirm (skip all prompts)
+  yarn ts-node scripts/deployer/deploy-markets/index.ts --network local --deployment all --yes
 
   # Deploy all major markets on mainnet
   yarn ts-node scripts/deployer/deploy-markets/index.ts --network mainnet --deployment dai,usdc,usdt,weth,wbtc
