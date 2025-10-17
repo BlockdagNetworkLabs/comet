@@ -1,0 +1,56 @@
+{
+    "name": "Compound WBTC - Low Rewards",
+    "symbol": "cWBTCv3-LR",
+    "baseToken": "WBTC",
+    "baseTokenAddress": "0xfA717E098F1f4F5655a895FecD107a6a7921A604",
+    "baseTokenPriceFeed": "0x7563dE8Fb091ee32A6971C3e71e960fA2C55FDb2",
+    "borrowMin": "0.001e8",
+    "storeFrontPriceFactor": 0.55,
+    "targetReserves": "50e8",
+    "rates": {
+        "supplyKink": 0.9,
+        "supplySlopeLow": 0.025,
+        "supplySlopeHigh": 0.35,
+        "supplyBase": 0,
+        "borrowKink": 0.9,
+        "borrowSlopeLow": 0.03,
+        "borrowSlopeHigh": 0.2,
+        "borrowBase": 0.01
+    },
+    "tracking": {
+        "indexScale": "1e15",
+        "baseSupplySpeed": "92592592592e0",
+        "baseBorrowSpeed": "46296296296e0",
+        "baseMinForRewards": "0.01e8"
+    },
+    "rewardToken": "COMP",
+    "assets": {
+        "DAI": {
+            "address": "0x8F8a825b9f87781439977fd53AEc6983f3fF4b3C",
+            "priceFeed": "0x7535a65547F3bCa868a90Cc6AAcCfD97F68B881d",
+            "decimals": "18",
+            "borrowCF": 0.85,
+            "liquidateCF": 0.90,
+            "liquidationFactor": 0.95,
+            "supplyCap": "500000e18"
+        },
+        "USDC": {
+            "address": "0x7cd4D24964c122d44cB56662A9B6F92342C2EAC8",
+            "priceFeed": "0x1658c16aD145C78fA559d53590473d0cc6E852Df",
+            "decimals": "6",
+            "borrowCF": 0.85,
+            "liquidateCF": 0.90,
+            "liquidationFactor": 0.95,
+            "supplyCap": "1000000e6"
+        },
+        "WETH": {
+            "address": "0xD594D0274D7ae8F63Cf61C2Ff3fe40c7357c2B5B",
+            "priceFeed": "0xfA588b1bc7ae513e2499BAF101dB6B3bD0f58570",
+            "decimals": "18",
+            "borrowCF": 0.80,
+            "liquidateCF": 0.90,
+            "liquidationFactor": 0.95,
+            "supplyCap": "1000e18"
+        }
+    }
+}

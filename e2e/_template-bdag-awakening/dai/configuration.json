@@ -30,7 +30,7 @@
       "priceFeed": "0x1658c16aD145C78fA559d53590473d0cc6E852Df",
       "decimals": "6",
       "borrowCF": 0.85,
-      "liquidateCF": 0.9,
+      "liquidateCF": 0.90,
       "liquidationFactor": 0.95,
       "supplyCap": "10000000e6"
     },
@@ -47,8 +47,8 @@
       "address": "0xD594D0274D7ae8F63Cf61C2Ff3fe40c7357c2B5B",
       "priceFeed": "0xfA588b1bc7ae513e2499BAF101dB6B3bD0f58570",
       "decimals": "18",
-      "borrowCF": 0.8,
-      "liquidateCF": 0.9,
+      "borrowCF": 0.80,
+      "liquidateCF": 0.90,
       "liquidationFactor": 0.95,
       "supplyCap": "11000e18"
     }
