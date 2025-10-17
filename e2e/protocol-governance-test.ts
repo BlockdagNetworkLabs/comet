@@ -140,12 +140,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Selective deployment test passed - deployed: ${deploymentsToDeploy.join(', ')}`);
         console.log(`✅ Excluded deployment: ${excludedDeployment}`);
       } catch (error) {
@@ -156,35 +155,35 @@ describe('E2E Protocol Governance Test Suite', function () {
 
     it('should propose deployment for excluded market', async function () {
       this.timeout(PROPOSE_PHASE_1_TIMEOUT);
-      
+
       if (!excludedDeployment) {
         throw new Error('⚠️  No excluded deployment to propose');
       }
-      
-      await runWithSigner(getAdminPrivateKey(0), async () => {
-      
-      console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
-      // Create a proposal to deploy the excluded market
-      const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
-      
-      console.log(`📝 Running proposal command: ${command}`);
-      console.log(`📝 Using admin private key for governance operations`);
 
-      const result = execSync(command, { 
-        encoding: 'utf8',
-        stdio: 'pipe',
-        cwd: process.cwd(),
+      await runWithSigner(getAdminPrivateKey(0), async () => {
+
+        console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
+        // Create a proposal to deploy the excluded market
+        const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
+
+        console.log(`📝 Running proposal command: ${command}`);
+        console.log(`📝 Using admin private key for governance operations`);
+
+        const result = execSync(command, { 
+          encoding: 'utf8',
+          stdio: 'pipe',
+          cwd: process.cwd(),
+        });
+          
+        try {
+          marketPhase1ProposalId = extractProposalId(result);
+          console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
+          console.log(`✅ Governance proposal test passed for ${excludedDeployment}`);
+        } catch (extractError) {
+          console.error(`❌ Failed to extract proposal ID: ${extractError.message}`);
+          throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
+        }
       });
-        
-      try {
-        marketPhase1ProposalId = extractProposalId(result);
-        console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
-        console.log(`✅ Governance proposal test passed for ${excludedDeployment}`);
-      } catch (extractError) {
-        console.error(`❌ Failed to extract proposal ID: ${extractError.message}`);
-        throw new Error(`Proposal ID extraction failed: ${extractError.message}`);
-      }
-    });
     });
 
     it('should accept market phase 1 proposal with required admin signatures', async function () {      
@@ -211,13 +210,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} acceptance result`);
         });
       }
       
@@ -381,13 +380,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept market phase 2 proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for market phase 2 proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} market phase 2 acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} market phase 2 acceptance result`);
         });
       }
       
@@ -462,13 +461,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         console.log(`📝 Running execute market phase 2 proposal command: ${command}`);
         console.log(`📝 Using first admin private key for market phase 2 proposal execution`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log(`✅ Execute market phase 2 proposal result:`, result);
+        console.log(`✅ Execute market phase 2 proposal result`);
       });
       
       console.log(`✅ Market phase 2 proposal execution completed with first admin`);
@@ -486,13 +485,12 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running market test command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log('Market test output:', result);
         console.log(`✅ Market deployment test passed for ${excludedDeployment}`);
       } catch (error) {
         console.error('Market test failed:', error.message);
@@ -540,12 +538,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
         console.error('Deployment failed:', error.message);
@@ -1016,12 +1013,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
         console.error('Deployment failed:', error.message);
@@ -1081,13 +1077,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept comet reward funding proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for comet reward funding proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} comet reward funding acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} comet reward funding acceptance result`);
         });
       }
       
@@ -1162,13 +1158,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         console.log(`📝 Running execute comet reward funding proposal command: ${command}`);
         console.log(`📝 Using first admin private key for comet reward funding proposal execution`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log(`✅ Execute comet reward funding proposal result:`, result);
+        console.log(`✅ Execute comet reward funding proposal result`);
       });
       
       console.log(`✅ Comet reward funding proposal execution completed with first admin`);
@@ -1211,12 +1207,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
         console.error('Deployment failed:', error.message);
@@ -1294,13 +1289,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept governance update proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for governance update proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} governance update acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} governance update acceptance result`);
         });
       }
       
@@ -1375,13 +1370,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         console.log(`📝 Running execute governance update proposal command: ${command}`);
         console.log(`📝 Using first admin private key for governance update proposal execution`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log(`✅ Execute governance update proposal result:`, result);
+        console.log(`✅ Execute governance update proposal result`);
       });
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
@@ -1396,13 +1391,12 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running governance verification command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log('Governance verification output:', result);
         console.log(`✅ Governance configuration verification passed after admins and timelock delay update`);
       } catch (error) {
         console.error('Governance verification failed:', error.message);
@@ -1446,12 +1440,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
         console.error('Deployment failed:', error.message);
@@ -1526,13 +1519,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept governance update proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for governance update proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} governance update acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} governance update acceptance result`);
         });
       }
       
@@ -1607,13 +1600,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         console.log(`📝 Running execute governance update proposal command: ${command}`);
         console.log(`📝 Using first admin private key for governance update proposal execution`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log(`✅ Execute governance update proposal result:`, result);
+        console.log(`✅ Execute governance update proposal result`);
       });
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
@@ -1627,13 +1620,12 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running governance verification command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log('Governance verification output:', result);
         console.log(`✅ Governance configuration verification passed after admins only update`);
       } catch (error) {
         console.error('Governance verification failed:', error.message);
@@ -1677,12 +1669,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
         console.error('Deployment failed:', error.message);
@@ -1754,13 +1745,13 @@ describe('E2E Protocol Governance Test Suite', function () {
           console.log(`📝 Running accept governance update proposal command: ${command}`);
           console.log(`📝 Using admin private key ${i + 1} for governance update proposal acceptance`);
           
-          const result = execSync(command, { 
+          execSync(command, { 
             encoding: 'utf8',
-            stdio: 'pipe',
+            stdio: 'inherit',
             cwd: process.cwd(),
           });
           
-          console.log(`✅ Admin ${i + 1} governance update acceptance result:`, result);
+          console.log(`✅ Admin ${i + 1} governance update acceptance result`);
         });
       }
       
@@ -1835,13 +1826,13 @@ describe('E2E Protocol Governance Test Suite', function () {
         console.log(`📝 Running execute governance update proposal command: ${command}`);
         console.log(`📝 Using first admin private key for governance update proposal execution`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log(`✅ Execute governance update proposal result:`, result);
+        console.log(`✅ Execute governance update proposal result`);
       });
       
       console.log(`✅ Governance update proposal execution completed with first admin`);
@@ -1855,13 +1846,12 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running governance verification command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
         
-        console.log('Governance verification output:', result);
         console.log(`✅ Governance configuration verification passed after timelock only update`);
       } catch (error) {
         console.error('Governance verification failed:', error.message);
