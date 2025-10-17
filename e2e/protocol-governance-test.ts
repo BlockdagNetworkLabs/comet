@@ -70,14 +70,15 @@ describe('E2E Protocol Governance Test Suite', function () {
         
         console.log(`📝 Running deployment command: ${command}`);
         
-        const result = execSync(command, { 
+        execSync(command, { 
           encoding: 'utf8',
-          stdio: 'pipe',
+          stdio: 'inherit',
           cwd: process.cwd(),
         });
-        console.log('Deployment output:', result);
         console.log(`✅ Protocol deployment test passed for ${TEMPLATE_NAME}`);
       } catch (error) {
+
+        console.error(`${JSON.stringify(error)}`);
         console.error('Deployment failed:', error.message);
         throw error;
       }
