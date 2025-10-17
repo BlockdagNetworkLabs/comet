@@ -124,7 +124,7 @@ anvil
 ./scripts/deployer/deploy-markets/index.sh -n local -d dai
 
 # Deploy with auto-confirmation (non-interactive)
-yes | ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c
+./scripts/deployer/deploy-markets/index.sh -n local -d dai -c -y
 ```
 
 ### Deployment Options

@@ -66,7 +66,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -136,7 +136,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       try {
         // Build deployment command with specific deployments
         const deploymentsList = deploymentsToDeploy.join(' ');
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments ${deploymentsList} --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments ${deploymentsList} --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -536,7 +536,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -1012,7 +1012,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -1207,7 +1207,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -1442,7 +1442,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
@@ -1673,7 +1673,7 @@ describe('E2E Protocol Governance Test Suite', function () {
       
       try {
         // Run deployment command - all internal hardhat commands will now use the test config
-        const command = `yes | npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean`;
+        const command = `npx ts-node scripts/deployer/deploy-markets/index.ts --network ${NETWORK_NAME} --deployments all --clean --yes`;
         
         console.log(`📝 Running deployment command: ${command}`);
         
