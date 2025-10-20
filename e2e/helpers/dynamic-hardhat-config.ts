@@ -17,9 +17,9 @@ export class DynamicHardhatConfig {
   ) {
     this.networkName = networkName;
     this.e2eNetworkConfig = {
-        ...e2eNetworkConfig,
-        gas: 'auto',
-        gasPrice: 'auto',
+      ...e2eNetworkConfig,
+      gas: 'auto',
+      gasPrice: 'auto',
     };
     this.testHardhatConfigPath = testHardhatConfigPath;
     this.testDeploymentPath = testDeploymentPath;
@@ -62,7 +62,7 @@ export class DynamicHardhatConfig {
       // Fix: Calculate relative path from the e2e directory, not from helpers/
       const relativePath = path.relative(path.join(__dirname, '..'), infrastructureRelationPath).replace(/\\/g, '/');
       const importName = `infrastructureRelationConfig`;
-      imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
+      imports.push(`import ${importName} from '${relativePath}';`.replace('.ts', ''));
       
       configEntries.push(`_infrastructure: ${importName}`);
       console.log(`✅ Loaded infrastructure relation config`);
@@ -78,7 +78,7 @@ export class DynamicHardhatConfig {
         // Fix: Calculate relative path from the e2e directory, not from helpers/
         const relativePath = path.relative(path.join(__dirname, '..'), relationPath).replace(/\\/g, '/');
         const importName = `${this.toCamelCase(market)}RelationConfig`;
-        imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
+        imports.push(`import ${importName} from '${relativePath}';`.replace('.ts', ''));
         
         configEntries.push(`${this.formatPropertyKey(market)}: ${importName}`);
         console.log(`✅ Loaded ${market} relation config`);
@@ -101,6 +101,10 @@ export class DynamicHardhatConfig {
           'NETWORK_NAME_PLACEHOLDER':'DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER'
         }
       },
+      mocha: {
+        ...(config as any).mocha,
+        timeout: 30 * 60 * 1000, // 30 minutes for E2E tests
+      },
     };
 
     const cleanConfigString = JSON.stringify(cleanConfig, (key, value) => {
@@ -108,9 +112,9 @@ export class DynamicHardhatConfig {
         return value.toString();
       }
       return value;
-    }, 2).replaceAll("NETWORK_NAME_PLACEHOLDER", this.networkName)
-    .replace("\"NETWORK_PLACEHOLDER\"", () => JSON.stringify(this.e2eNetworkConfig))
-    .replace("\"DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER\"",`{${configEntries.join(',')}}`);
+    }, 2).replaceAll('NETWORK_NAME_PLACEHOLDER', this.networkName)
+      .replace('"NETWORK_PLACEHOLDER"', () => JSON.stringify(this.e2eNetworkConfig))
+      .replace('"DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER"',`{${configEntries.join(',')}}`);
 
     // Calculate relative paths for task imports
     const taskImports = [
