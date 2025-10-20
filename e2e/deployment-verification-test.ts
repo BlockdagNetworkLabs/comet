@@ -1,7 +1,7 @@
-import { expect } from "chai";
-import { ethers, network } from "hardhat";
-import { Contract } from "ethers";
-import { DEFAULT_REWARDS_FUNDING_AMOUNT } from "../src/constants";
+import { expect } from 'chai';
+import { ethers, network } from 'hardhat';
+import { Contract } from 'ethers';
+import { DEFAULT_REWARDS_FUNDING_AMOUNT } from '../src/constants';
 import {
   getGovAdmins,
   getMultisigThreshold,
@@ -9,10 +9,10 @@ import {
   getGracePeriod,
   getMinimumDelay,
   getMaximumDelay,
-} from "../src/deploy/helpers/govConfiguration";
-import { runSpiderForMarket } from "../scripts/helpers/commandUtil";
+} from '../src/deploy/helpers/govConfiguration';
+import { runSpiderForMarket } from '../scripts/helpers/commandUtil';
 
-describe("Market Verification", function() {
+describe('Market Verification', function() {
   // This test verifies the deployment configuration for any network/market
   // export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local
   let deployedContracts: any;
@@ -24,13 +24,13 @@ describe("Market Verification", function() {
   function convertScientificNotation(value: string | number): string {
     const valueStr = value.toString();
 
-    if (valueStr.includes("e")) {
+    if (valueStr.includes('e')) {
       // Handle scientific notation: split on 'e' and use the exponent
-      const [base, exponent] = valueStr.split("e");
+      const [base, exponent] = valueStr.split('e');
       const expNum = parseInt(exponent);
 
       // Handle small decimal numbers (e.g., "0.000011574074074074073e15")
-      if (base.startsWith("0.")) {
+      if (base.startsWith('0.')) {
         // For small decimals, convert to the actual value
         // "0.000011574074074074073e15" means 0.000011574074074074073 * 10^15
         // This equals 11574074074074073
@@ -38,9 +38,9 @@ describe("Market Verification", function() {
         return Math.floor(decimalValue).toString();
       } else {
         // Handle regular large numbers (e.g., "7500e8")
-        const baseWithoutDecimal = base.replace(".", "");
-        const zerosToAdd = expNum - (base.split(".")[1]?.length || 0);
-        return baseWithoutDecimal + "0".repeat(zerosToAdd);
+        const baseWithoutDecimal = base.replace('.', '');
+        const zerosToAdd = expNum - (base.split('.')[1]?.length || 0);
+        return baseWithoutDecimal + '0'.repeat(zerosToAdd);
       }
     } else {
       return valueStr;
@@ -50,8 +50,9 @@ describe("Market Verification", function() {
   // Helper function to convert decimal values to 18-decimal format (for Comet factors)
   function convertDecimalTo18Decimals(value: string | number): string {
     const numValue = parseFloat(value.toString());
-    // Convert to 18 decimal places: 0.75 -> 0.75 * 10^18 = 750000000000000000
-    const result = (numValue * Math.pow(10, 18)).toString();
+    // Convert to 18 decimal places using BigInt to avoid floating point precision issues
+    // This matches the floor(n * 1e18) logic used in deployment
+    const result = BigInt(Math.floor(numValue * Math.pow(10, 18))).toString();
     return result;
   }
 
@@ -64,14 +65,14 @@ describe("Market Verification", function() {
 
     // Get market from environment variable or throw error
     if(!process.env.MARKET) {
-      throw new Error("❌ MARKET environment variable is required. Usage: export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local");
+      throw new Error('❌ MARKET environment variable is required. Usage: export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local');
     }
     
     market = process.env.MARKET;
 
     if (!market) {
       throw new Error(
-        "❌ MARKET environment variable is required. Usage: export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local"
+        '❌ MARKET environment variable is required. Usage: export MARKET=dai && yarn hardhat test test/deployment-verification-test.ts --network local'
       );
     }
 
@@ -86,7 +87,7 @@ describe("Market Verification", function() {
       console.log(`✅ Spider completed successfully`);
     } catch (error) {
       throw new Error(
-        "❌ SPIDER is not running correctly. Please verify aliases and roots files"
+        '❌ SPIDER is not running correctly. Please verify aliases and roots files'
       );
     }
 
@@ -98,24 +99,24 @@ describe("Market Verification", function() {
     // Load each contract from aliases
     if (roots.comet) {
       contracts.comet = await ethers.getContractAt(
-        "CometHarnessInterface",
+        'CometHarnessInterface',
         roots.comet
       );
     }
     if (roots.governor) {
       contracts.governor = await ethers.getContractAt(
-        "CustomGovernor",
+        'CustomGovernor',
         roots.governor
       );
     }
     if (roots.timelock) {
       contracts.timelock = await ethers.getContractAt(
-        "Timelock",
+        'Timelock',
         roots.timelock
       );
     }
     if (roots.COMP) {
-      contracts.COMP = await ethers.getContractAt("IComp", roots.COMP);
+      contracts.COMP = await ethers.getContractAt('IComp', roots.COMP);
     }
 
     deployedContracts = contracts;
@@ -133,7 +134,7 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have correct ownership relationships", async function() {
+  it('should have correct ownership relationships', async function() {
     const { comet, governor, timelock } = deployedContracts;
 
     // Verify timelock admin is set to governor
@@ -148,7 +149,7 @@ describe("Market Verification", function() {
     expect(await proxyAdmin.owner()).to.equal(timelock.address);
   });
 
-  it("should have timelock holding expected COMP supply after rewards funding", async function() {
+  it('should have timelock holding expected COMP supply after rewards funding', async function() {
     const { timelock, COMP } = deployedContracts;
 
     // Get total supply of COMP tokens
@@ -179,15 +180,15 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have valid configuration structure", async function() {
+  it('should have valid configuration structure', async function() {
     // Basic validation that config has expected structure
-    expect(config).to.have.property("baseToken");
-    expect(config).to.have.property("assets");
-    expect(config.assets).to.be.an("object");
+    expect(config).to.have.property('baseToken');
+    expect(config).to.have.property('assets');
+    expect(config.assets).to.be.an('object');
     expect(Object.keys(config.assets).length).to.be.gt(0);
   });
 
-  it("should have storage initialized with totalsBasic and accrualTime", async function() {
+  it('should have storage initialized with totalsBasic and accrualTime', async function() {
     const { comet } = deployedContracts;
 
     // Get totalsBasic struct which contains all the initialized storage values
@@ -197,7 +198,7 @@ describe("Market Verification", function() {
     expect(totalsBasic.lastAccrualTime).to.be.gt(0);
 
     // BASE_INDEX_SCALE is 1e15 in Comet (from CometCore.sol)
-    const BASE_INDEX_SCALE = ethers.utils.parseUnits("1", 15);
+    const BASE_INDEX_SCALE = ethers.utils.parseUnits('1', 15);
 
     // Check baseSupplyIndex is initialized to BASE_INDEX_SCALE
     expect(totalsBasic.baseSupplyIndex).to.be.gte(BASE_INDEX_SCALE);
@@ -208,7 +209,7 @@ describe("Market Verification", function() {
 
   // ===== COMET-SPECIFIC PARAMETER TESTS =====
 
-  it("should have correct proxy implementation", async function() {
+  it('should have correct proxy implementation', async function() {
     const { comet } = deployedContracts;
 
     // Get proxy admin
@@ -224,7 +225,7 @@ describe("Market Verification", function() {
     expect(implementation).to.not.equal(comet.address);
   });
 
-  it("should have base token price feed address matching configuration.json", async function() {
+  it('should have base token price feed address matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     // Validate base token price feed configuration
@@ -241,7 +242,7 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have base borrow min matching configuration.json", async function() {
+  it('should have base borrow min matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const deployedBaseBorrowMin = await comet.baseBorrowMin();
@@ -252,7 +253,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have store front price factor matching configuration.json", async function() {
+  it('should have store front price factor matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const deployedStoreFrontPriceFactor = await comet.storeFrontPriceFactor();
@@ -267,7 +268,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have target reserves matching configuration.json", async function() {
+  it('should have target reserves matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const deployedTargetReserves = await comet.targetReserves();
@@ -280,7 +281,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have market name matching configuration.json", async function() {
+  it('should have market name matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const deployedName = await comet.name();
@@ -289,7 +290,7 @@ describe("Market Verification", function() {
     console.log(`✅ Market name matches: ${deployedName}`);
   });
 
-  it("should have market symbol matching configuration.json", async function() {
+  it('should have market symbol matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const deployedSymbol = await comet.symbol();
@@ -300,7 +301,7 @@ describe("Market Verification", function() {
 
   // == TRACKING VALUES ==
 
-  it("should have tracking index scale matching configuration.json", async function() {
+  it('should have tracking index scale matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { tracking } = config;
@@ -318,7 +319,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have base tracking min for rewards matching configuration.json", async function() {
+  it('should have base tracking min for rewards matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { tracking } = config;
@@ -336,7 +337,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have base tracking supply speed matching configuration.json", async function() {
+  it('should have base tracking supply speed matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { tracking } = config;
@@ -354,7 +355,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have base tracking borrow speed matching configuration.json", async function() {
+  it('should have base tracking borrow speed matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { tracking } = config;
@@ -374,7 +375,7 @@ describe("Market Verification", function() {
 
   // == RATES VALUES ==
 
-  it("should have supply kink matching configuration.json", async function() {
+  it('should have supply kink matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -386,7 +387,7 @@ describe("Market Verification", function() {
     console.log(`✅ Supply kink matches: ${deployedSupplyKink.toString()}`);
   });
 
-  it("should have supply slope low matching configuration.json", async function() {
+  it('should have supply slope low matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -404,7 +405,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have supply slope high matching configuration.json", async function() {
+  it('should have supply slope high matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -423,7 +424,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have supply base matching configuration.json", async function() {
+  it('should have supply base matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -438,7 +439,7 @@ describe("Market Verification", function() {
     console.log(`✅ Supply base matches: ${deployedSupplyBase.toString()}`);
   });
 
-  it("should have borrow kink matching configuration.json", async function() {
+  it('should have borrow kink matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -450,7 +451,7 @@ describe("Market Verification", function() {
     console.log(`✅ Borrow kink matches: ${deployedBorrowKink.toString()}`);
   });
 
-  it("should have borrow slope low matching configuration.json", async function() {
+  it('should have borrow slope low matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -467,7 +468,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have borrow slope high matching configuration.json", async function() {
+  it('should have borrow slope high matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -486,7 +487,7 @@ describe("Market Verification", function() {
     );
   });
 
-  it("should have borrow base matching configuration.json", async function() {
+  it('should have borrow base matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     const { rates } = config;
@@ -503,17 +504,17 @@ describe("Market Verification", function() {
 
   // ===== ASSET CONFIGURATION TESTS =====
 
-  it("should have correct number of assets matching configuration.json", async function() {
+  it('should have correct number of assets matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const numAssets = await comet.numAssets();
       expect(numAssets).to.equal(Object.keys(config.assets).length);
       console.log(`✅ Number of assets matches: ${numAssets}`);
     }
   });
 
-  it("should have asset price feeds matching configuration.json", async function() {
+  it('should have asset price feeds matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     // Load roots.json to get the actual addresses
@@ -521,7 +522,7 @@ describe("Market Verification", function() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const roots = require(rootsPath);
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -530,7 +531,7 @@ describe("Market Verification", function() {
 
         // Price feed is required - fail if missing
         expect(configAsset.priceFeed).to.exist;
-        expect(configAsset.priceFeed).to.be.a("string");
+        expect(configAsset.priceFeed).to.be.a('string');
         expect(configAsset.priceFeed).to.not.be.empty;
 
         const expectedPriceFeedAddress = roots[configAsset.priceFeed];
@@ -554,10 +555,10 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have asset supply caps matching configuration.json", async function() {
+  it('should have asset supply caps matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -581,10 +582,10 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have asset borrow collateral factors matching configuration.json", async function() {
+  it('should have asset borrow collateral factors matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -609,10 +610,10 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have asset liquidate collateral factors matching configuration.json", async function() {
+  it('should have asset liquidate collateral factors matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -637,10 +638,10 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have asset liquidation factors matching configuration.json", async function() {
+  it('should have asset liquidation factors matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -665,7 +666,7 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have interest rate model matching configuration.json", async function() {
+  it('should have interest rate model matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     // Load roots.json to get the actual addresses
@@ -694,7 +695,7 @@ describe("Market Verification", function() {
     }
   });
 
-  it("should have reward configuration matching configuration.json", async function() {
+  it('should have reward configuration matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
     // Load roots.json to get the actual addresses
@@ -704,7 +705,7 @@ describe("Market Verification", function() {
 
     if (config.rewards) {
       const rewards = await ethers.getContractAt(
-        "CometRewards",
+        'CometRewards',
         await comet.rewards()
       );
 
@@ -732,10 +733,10 @@ describe("Market Verification", function() {
 
   // ===== ASSET PARAMETER TESTS =====
 
-  it("should have asset decimals matching configuration.json", async function() {
+  it('should have asset decimals matching configuration.json', async function() {
     const { comet } = deployedContracts;
 
-    if (config.assets && typeof config.assets === "object") {
+    if (config.assets && typeof config.assets === 'object') {
       const assetKeys = Object.keys(config.assets);
       for (let i = 0; i < assetKeys.length; i++) {
         const assetKey = assetKeys[i];
@@ -747,7 +748,7 @@ describe("Market Verification", function() {
           // Get decimals from the asset contract using a minimal interface with decimals
           try {
             const assetContract = await ethers.getContractAt(
-              ["function decimals() external view returns (uint8)"],
+              ['function decimals() external view returns (uint8)'],
               deployedAssetInfo.asset
             );
             const deployedDecimals = await assetContract.decimals();
@@ -766,7 +767,7 @@ describe("Market Verification", function() {
   });
 });
 
-describe("Governance Verification", function() {
+describe('Governance Verification', function() {
   let deployedContracts: any;
   let networkName: string;
 
@@ -785,20 +786,20 @@ describe("Governance Verification", function() {
 
     if (roots.governor) {
       contracts.governor = await ethers.getContractAt(
-        "CustomGovernor",
+        'CustomGovernor',
         roots.governor
       );
     }
     if (roots.timelock) {
       contracts.timelock = await ethers.getContractAt(
-        "Timelock",
+        'Timelock',
         roots.timelock
       );
     }
     deployedContracts = contracts;
   });
 
-  it("should validate BDAG governor configuration matches deployed contract", async function() {
+  it('should validate BDAG governor configuration matches deployed contract', async function() {
     const { governor } = deployedContracts;
 
     const admins = await getGovAdmins(networkName);
@@ -814,7 +815,7 @@ describe("Governance Verification", function() {
     }
   });
 
-  it("should validate BDAG timelock delay configuration matches deployed contract", async function() {
+  it('should validate BDAG timelock delay configuration matches deployed contract', async function() {
     const { timelock } = deployedContracts;
 
     const delay = await getTimelockDelay(networkName);
@@ -828,7 +829,7 @@ describe("Governance Verification", function() {
     );
   });
 
-  it("should validate BDAG timelock grace period configuration matches deployed contract", async function() {
+  it('should validate BDAG timelock grace period configuration matches deployed contract', async function() {
     const { timelock } = deployedContracts;
 
     const gracePeriod = await getGracePeriod(networkName);
@@ -842,7 +843,7 @@ describe("Governance Verification", function() {
     );
   });
 
-  it("should validate BDAG timelock minimum delay configuration matches deployed contract", async function() {
+  it('should validate BDAG timelock minimum delay configuration matches deployed contract', async function() {
     const { timelock } = deployedContracts;
 
     const minimumDelay = await getMinimumDelay(networkName);
@@ -856,7 +857,7 @@ describe("Governance Verification", function() {
     );
   });
 
-  it("should validate BDAG timelock maximum delay configuration matches deployed contract", async function() {
+  it('should validate BDAG timelock maximum delay configuration matches deployed contract', async function() {
     const { timelock } = deployedContracts;
 
     const maximumDelay = await getMaximumDelay(networkName);
@@ -878,7 +879,7 @@ async function getProxyAdmin(contractAddress: string): Promise<Contract> {
     // Method 1: Try to get admin directly from contract
     const contract = new Contract(
       contractAddress,
-      ["function admin() external view returns (address)"],
+      ['function admin() external view returns (address)'],
       ethers.provider
     );
     const adminAddress = await contract.admin();
@@ -886,15 +887,15 @@ async function getProxyAdmin(contractAddress: string): Promise<Contract> {
     return new Contract(
       adminAddress,
       [
-        "function owner() external view returns (address)",
-        "function getProxyImplementation(address) external view returns (address)",
+        'function owner() external view returns (address)',
+        'function getProxyImplementation(address) external view returns (address)',
       ],
       ethers.provider
     );
   } catch (error) {
     // Method 2: Try to get admin using storage slot
     const adminSlot =
-      "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+      '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103';
     const adminAddress = await ethers.provider.getStorageAt(
       contractAddress,
       adminSlot
@@ -903,8 +904,8 @@ async function getProxyAdmin(contractAddress: string): Promise<Contract> {
     return new Contract(
       ethers.utils.getAddress(adminAddress.slice(26)), // Remove padding
       [
-        "function owner() external view returns (address)",
-        "function getProxyImplementation(address) external view returns (address)",
+        'function owner() external view returns (address)',
+        'function getProxyImplementation(address) external view returns (address)',
       ],
       ethers.provider
     );

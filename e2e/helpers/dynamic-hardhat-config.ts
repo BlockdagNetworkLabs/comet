@@ -17,14 +17,33 @@ export class DynamicHardhatConfig {
   ) {
     this.networkName = networkName;
     this.e2eNetworkConfig = {
-        ...e2eNetworkConfig,
-        gas: 'auto',
-        gasPrice: 'auto',
+      ...e2eNetworkConfig,
+      gas: 'auto',
+      gasPrice: 'auto',
     };
     this.testHardhatConfigPath = testHardhatConfigPath;
     this.testDeploymentPath = testDeploymentPath;
   }
 
+  /**
+   * Converts kebab-case or dot-separated strings to camelCase
+   * Examples: 'wbtc-low-rewards' -> 'wbtcLowRewards', 'usdc.e' -> 'usdcE'
+   */
+  private toCamelCase(str: string): string {
+    return str.replace(/[-.]([a-z])/g, (_, letter) => letter.toUpperCase());
+  }
+
+  /**
+   * Formats a property key, adding quotes if it contains special characters
+   * Examples: 'wbtc-low-rewards' -> '"wbtc-low-rewards"', 'dai' -> 'dai'
+   */
+  private formatPropertyKey(key: string): string {
+    // If the key contains hyphens, dots, or other special characters, wrap it in quotes
+    if (/[-.]/.test(key)) {
+      return `"${key}"`;
+    }
+    return key;
+  }
 
   private async updateHardhatEnvironment(discoveredMarkets: string[]): Promise<void> {
     const { imports, configEntries } = await this.getRelationConfigs(discoveredMarkets);
@@ -43,7 +62,7 @@ export class DynamicHardhatConfig {
       // Fix: Calculate relative path from the e2e directory, not from helpers/
       const relativePath = path.relative(path.join(__dirname, '..'), infrastructureRelationPath).replace(/\\/g, '/');
       const importName = `infrastructureRelationConfig`;
-      imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
+      imports.push(`import ${importName} from '${relativePath}';`.replace('.ts', ''));
       
       configEntries.push(`_infrastructure: ${importName}`);
       console.log(`✅ Loaded infrastructure relation config`);
@@ -58,10 +77,10 @@ export class DynamicHardhatConfig {
       if (fs.existsSync(relationPath)) {
         // Fix: Calculate relative path from the e2e directory, not from helpers/
         const relativePath = path.relative(path.join(__dirname, '..'), relationPath).replace(/\\/g, '/');
-        const importName = `${market}RelationConfig`;
-        imports.push(`import ${importName} from '${relativePath}';`.replace(".ts", ""));
+        const importName = `${this.toCamelCase(market)}RelationConfig`;
+        imports.push(`import ${importName} from '${relativePath}';`.replace('.ts', ''));
         
-        configEntries.push(`${market}: ${importName}`);
+        configEntries.push(`${this.formatPropertyKey(market)}: ${importName}`);
         console.log(`✅ Loaded ${market} relation config`);
       } else {
         throw new Error(`No relations.ts found for ${market}`);
@@ -82,6 +101,10 @@ export class DynamicHardhatConfig {
           'NETWORK_NAME_PLACEHOLDER':'DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER'
         }
       },
+      mocha: {
+        ...(config as any).mocha,
+        timeout: 30 * 60 * 1000, // 30 minutes for E2E tests
+      },
     };
 
     const cleanConfigString = JSON.stringify(cleanConfig, (key, value) => {
@@ -89,9 +112,9 @@ export class DynamicHardhatConfig {
         return value.toString();
       }
       return value;
-    }, 2).replaceAll("NETWORK_NAME_PLACEHOLDER", this.networkName)
-    .replace("\"NETWORK_PLACEHOLDER\"", () => JSON.stringify(this.e2eNetworkConfig))
-    .replace("\"DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER\"",`{${configEntries.join(',')}}`);
+    }, 2).replaceAll('NETWORK_NAME_PLACEHOLDER', this.networkName)
+      .replace('"NETWORK_PLACEHOLDER"', () => JSON.stringify(this.e2eNetworkConfig))
+      .replace('"DEPLOYMENT_MANAGER_CONFIG_PLACEHOLDER"',`{${configEntries.join(',')}}`);
 
     // Calculate relative paths for task imports
     const taskImports = [

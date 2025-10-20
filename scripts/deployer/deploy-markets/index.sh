@@ -38,9 +38,8 @@ show_help() {
     echo "Options:"
     echo "  -n, --network <network>     Network to deploy to (default: local)"
     echo "  -d, --deployment <market>   Market to deploy (default: dai)"
-    
-echo "  -c, --clean                 Clean deployment cache before deploying"
-    
+    echo "  -c, --clean                 Clean deployment cache before deploying"
+    echo "  -y, --yes                   Automatically answer yes to all prompts"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Examples:"
@@ -53,7 +52,8 @@ echo "  -c, --clean                 Clean deployment cache before deploying"
     echo "  # Deploy with clean cache"
     echo "  ./scripts/deployer/deploy-markets/index.sh -n local -d dai -c"
     echo ""
-    
+    echo "  # Deploy with auto-confirm (skip all prompts)"
+    echo "  ./scripts/deployer/deploy-markets/index.sh -n local -d dai -y"
     echo ""
     echo "Available networks: local, hardhat, mainnet, polygon, arbitrum, optimism, base, etc."
     echo "Available markets: dai, usdc, usdt, weth, wbtc, etc."
@@ -83,8 +83,8 @@ check_requirements() {
 # Parse command line arguments
 NETWORK="local"
 DEPLOYMENT="dai"
-
 CLEAN_FLAG=""
+YES_FLAG=""
 
 
 while [[ $# -gt 0 ]]; do
@@ -102,7 +102,10 @@ while [[ $# -gt 0 ]]; do
             CLEAN_FLAG="--clean"
             shift
             ;;
-
+        -y|--yes)
+            YES_FLAG="--yes"
+            shift
+            ;;
         -h|--help)
             show_help
             exit 0
@@ -127,7 +130,9 @@ main() {
         print_info "Clean mode enabled"
     fi
     
-
+    if [[ -n "$YES_FLAG" ]]; then
+        print_info "Auto-confirm mode enabled (all prompts will be skipped)"
+    fi
     
     # Check requirements
     check_requirements
@@ -138,7 +143,8 @@ main() {
     yarn ts-node scripts/deployer/deploy-markets/index.ts \
         --network "$NETWORK" \
         --deployment "$DEPLOYMENT" \
-        $CLEAN_FLAG
+        $CLEAN_FLAG \
+        $YES_FLAG
     
     print_success "Deployment script completed"
 }

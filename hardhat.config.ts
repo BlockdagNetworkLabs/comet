@@ -54,6 +54,8 @@ import bdagPrimordialDaiRelationConfigMap from './deployments/bdag-primordial/da
 import bdagPrimordialInfrastructureRelationConfigMap from './deployments/bdag-primordial/_infrastructure/relations';
 import bdagAwakeningDaiRelationConfigMap from './deployments/bdag-awakening/dai/relations';
 import bdagAwakeningUsdcRelationConfigMap from './deployments/bdag-awakening/usdc/relations';
+import bdagAwakeningWethHighRewardsRelationConfigMap from './deployments/bdag-awakening/weth-high-rewards/relations';
+import bdagAwakeningWbtcLowRewardsRelationConfigMap from './deployments/bdag-awakening/wbtc-low-rewards/relations';
 import bdagAwakeningInfrastructureRelationConfigMap from './deployments/bdag-awakening/_infrastructure/relations';
 
 task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
@@ -484,6 +486,8 @@ const config: HardhatUserConfig = {
       'bdag-awakening': {
         dai: bdagAwakeningDaiRelationConfigMap,
         usdc: bdagAwakeningUsdcRelationConfigMap,
+        'weth-high-rewards': bdagAwakeningWethHighRewardsRelationConfigMap,
+        'wbtc-low-rewards': bdagAwakeningWbtcLowRewardsRelationConfigMap,
         _infrastructure: bdagAwakeningInfrastructureRelationConfigMap
       }
     },
