@@ -43,6 +43,10 @@ describe('E2E Protocol Governance Test Suite', function () {
   describe('Complete Protocol Deployment', function () {
     // Tests deploying all markets at once
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -53,11 +57,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -87,14 +89,18 @@ describe('E2E Protocol Governance Test Suite', function () {
 
   describe('Incremental Protocol Deployment', function () {
     // Tests deploying subset of markets + governance proposals
-    let excludedDeployment: string = '';
-    let marketPhase1ProposalId: string = '';
+    let excludedDeployment = '';
+    let marketPhase1ProposalId = '';
     let marketPhase1ExecutionTimestamp: number | null = null;
     let newCometAddress: string | null = null;
     let marketPhase2ProposalId: string | null = null;
     let marketPhase2ExecutionTimestamp: number | null = null;
 
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -106,11 +112,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy all deployments except one', async function () {
@@ -160,12 +164,11 @@ describe('E2E Protocol Governance Test Suite', function () {
         throw new Error('⚠️  No excluded deployment to propose');
       }
 
-      await runWithSigner(getAdminPrivateKey(0), async () => {
-
+      await runWithSigner(getAdminPrivateKey(0), async () => {      
         console.log(`🚀 Testing governance proposal for excluded deployment: ${excludedDeployment}`);
         // Create a proposal to deploy the excluded market
         const command = `yes | npx ts-node scripts/governor/propose/market-phase-1/index.ts --network ${NETWORK_NAME} --deployment ${excludedDeployment}`;
-
+      
         console.log(`📝 Running proposal command: ${command}`);
         console.log(`📝 Using admin private key for governance operations`);
 
@@ -174,7 +177,7 @@ describe('E2E Protocol Governance Test Suite', function () {
           stdio: 'pipe',
           cwd: process.cwd(),
         });
-          
+        
         try {
           marketPhase1ProposalId = extractProposalId(result);
           console.log(`📝 Proposal ID: ${marketPhase1ProposalId}`);
@@ -501,14 +504,18 @@ describe('E2E Protocol Governance Test Suite', function () {
   
   describe('Protocol Deployment with Market Update', function () {
     // Tests deploying all markets + updating one market via governance
-    let targetMarketForUpdate: string = '';
-    let marketPhase1ProposalId: string = '';
+    let targetMarketForUpdate = '';
+    let marketPhase1ProposalId = '';
     let marketPhase1ExecutionTimestamp: number | null = null;
     let newCometAddress: string | null = null;
     let marketPhase2ProposalId: string | null = null;
     let marketPhase2ExecutionTimestamp: number | null = null;
 
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -521,11 +528,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -979,11 +984,15 @@ describe('E2E Protocol Governance Test Suite', function () {
   
   describe('Comet Reward Funding', function () {
     // Tests comet reward funding governance flow
-    let cometRewardFundingProposalId: string = '';
+    let cometRewardFundingProposalId = '';
     let cometRewardFundingExecutionTimestamp: number | null = null;
-    let cometRewardFunder = new CometRewardFunder({network: NETWORK_NAME})
+    let cometRewardFunder = new CometRewardFunder({network: NETWORK_NAME});
     
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -996,11 +1005,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1174,10 +1181,14 @@ describe('E2E Protocol Governance Test Suite', function () {
   
   describe('Governance Update (Admins and Timelock Delay)', function () {
     // Tests governance update proposal flow for both admins and timelock delay
-    let governanceUpdateProposalId: string = '';
+    let governanceUpdateProposalId = '';
     let governanceUpdateExecutionTimestamp: number | null = null;
     
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -1190,11 +1201,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1407,10 +1416,14 @@ describe('E2E Protocol Governance Test Suite', function () {
 
   describe('Governance Update (Admins Only)', function () {
     // Tests governance update proposal flow for admins only
-    let governanceUpdateAdminsProposalId: string = '';
+    let governanceUpdateAdminsProposalId = '';
     let governanceUpdateAdminsExecutionTimestamp: number | null = null;
     
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -1423,11 +1436,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -1636,10 +1647,14 @@ describe('E2E Protocol Governance Test Suite', function () {
 
   describe('Governance Update (Timelock Only)', function () {
     // Tests governance update proposal flow for timelock delay only
-    let governanceUpdateTimelockProposalId: string = '';
+    let governanceUpdateTimelockProposalId = '';
     let governanceUpdateTimelockExecutionTimestamp: number | null = null;
     
     before(async function () {
+      // Clean up any previous test artifacts
+      await deleteDirectory();
+      await deleteHardhatConfigFile();
+      
       // Set test environment variables
       process.env.TEST = 'true';
       process.env.TEST_HARDHAT_CONFIG = TEST_HARDHAT_CONFIG_PATH;
@@ -1652,11 +1667,9 @@ describe('E2E Protocol Governance Test Suite', function () {
     });
 
     after(async function () {
-      await deleteDirectory();
       // Clean up test environment variables
       delete process.env.TEST;
       delete process.env.TEST_HARDHAT_CONFIG;
-      await deleteHardhatConfigFile();
     });
 
     it('should deploy protocol successfully', async function () {
@@ -2008,9 +2021,9 @@ describe('E2E Protocol Governance Test Suite', function () {
 
   async function setupTestAccounts(testContext: any): Promise<void> {
     // Fund accounts for local networks
-    if(E2E_NETWORK_CONFIG.chainId == "31337") {
+    if(E2E_NETWORK_CONFIG.chainId == '31337') {
       await fundPrivateKeysInAnvil(ADMIN_PKS, E2E_NETWORK_CONFIG.url);
-    } else if(E2E_NETWORK_CONFIG.chainId == "1337") {
+    } else if(E2E_NETWORK_CONFIG.chainId == '1337') {
       await fundPrivateKeysInHardhat(ADMIN_PKS, E2E_NETWORK_CONFIG.url);
     }
     
