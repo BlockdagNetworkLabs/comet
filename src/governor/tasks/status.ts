@@ -156,7 +156,8 @@ async function decodeAction(hre: HardhatRuntimeEnvironment, _deploymentManager: 
       'CometProxyAdmin',
       'Comet',
       'CometProxy',
-      'CometFactory'
+      'CometFactory',
+      'CometRewards'
     ];
     
     for (const contractName of contractNames) {
