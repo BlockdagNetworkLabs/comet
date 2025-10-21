@@ -142,7 +142,10 @@ describe('Market Verification', function() {
 
     // Verify comet governor is set correctly
     expect(await comet.governor()).to.equal(timelock.address);
-    expect(await comet.pauseGuardian()).to.equal(timelock.address);
+    if(config.pauseGuardian)
+      expect(await comet.pauseGuardian()).to.equal(config.pauseGuardian);
+    else
+      expect(await comet.pauseGuardian()).to.equal(timelock.address);
 
     // Verify proxy admin ownership
     const proxyAdmin = await getProxyAdmin(comet.address);

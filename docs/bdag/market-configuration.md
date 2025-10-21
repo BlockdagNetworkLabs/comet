@@ -19,6 +19,9 @@ Each market deployment requires a `configuration.json` file in `deployments/{net
 - `baseTokenPriceFeed`: Price feed address for base token
 - `rewardToken`: Token used for protocol rewards (e.g., "COMP")
 
+**Security Parameters:**
+- `pauseGuardian`: (Optional) Address authorized to pause protocol operations. The pause guardian can pause specific protocol functions (supply, transfer, withdraw, absorb, buy) in emergency situations without requiring a full governance proposal. If not specified, the Timelock is set as pauseGuardian by default.
+
 **Borrowing Parameters:**
 - `borrowMin`: The minimum base amount required to initiate a borrow (prevents dust borrows)
 
@@ -110,6 +113,7 @@ Here's a complete example based on the DAI market configuration:
   "borrowMin": "1000e6",
   "storeFrontPriceFactor": 0.5,
   "targetReserves": "5000000e6",
+  "pauseGuardian": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
   "rates": {
     "supplyKink": 0.8,
     "supplySlopeLow": 0.0325,
@@ -148,7 +152,16 @@ Here's a complete example based on the DAI market configuration:
 }
 ```
 
-## Network-Specific Considerations
+## Pause Guardian
+
+The pause guardian can quickly pause specific protocol operations (supply, transfer, withdraw, absorb, buy) in emergency situations. If `pauseGuardian` is not defined in the configuration, the timelock will be set as the pause guardian, which means it won't be able to act fast in case of emergency due to timelock delays and multisig governance.
+
+Foundry's `cast` tool can be used to call the pause function:
+
+```bash
+# Pause supply only
+cast send <COMET_ADDRESS> "pause(bool,bool,bool,bool,bool)" true false false false false --rpc-url <RPC_URL> --private-key <PAUSE_GUARDIAN_PRIVATE_KEY>
+```
 
 ### Price Feed Requirements
 
