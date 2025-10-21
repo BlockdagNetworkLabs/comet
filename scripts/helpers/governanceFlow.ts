@@ -10,6 +10,12 @@ export interface GovernanceFlowOptions {
 }
 
 export class GovernanceFlowHelper {
+  private async checkStatus(options: GovernanceFlowOptions): Promise<string> {
+    const command = `yarn hardhat governor:status --network ${options.network} --proposal-id ${options.proposalId}`;
+    
+    return await runCommand(command, 'Checking proposal status');
+  }
+
   private async approveProposal(options: GovernanceFlowOptions): Promise<string> {
     const command = `yarn hardhat governor:approve --network ${options.network} --proposal-id ${options.proposalId}`;
     
@@ -27,6 +33,14 @@ export class GovernanceFlowHelper {
     const command = `yarn hardhat governor:execute --network ${options.network} --proposal-id ${options.proposalId} --execution-type ${executionType}`;
     
     return await runCommand(command, 'Executing proposal');
+  }
+
+  /**
+   * Check the status of a proposal
+   * @param options - Governance flow options including network and proposal ID
+   */
+  public async getProposalStatus(options: GovernanceFlowOptions): Promise<string> {
+    return await this.checkStatus(options);
   }
 
   /**
