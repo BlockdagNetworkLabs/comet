@@ -149,6 +149,7 @@ The BDAG governance system includes a comprehensive set of scripts located in `s
 - **`comet-reward-funding/`** - Propose funding for CometRewards with COMP tokens
 
 **2. Proposal Management Scripts**
+- **`status-proposal/`** - Check proposal status and details
 - **`accept-proposal/`** - Approve proposals (multisig voting)
 - **`queue-proposal/`** - Queue approved proposals for execution
 - **`execute-proposal/`** - Execute queued proposals after timelock delay
@@ -162,6 +163,13 @@ The BDAG governance system includes a comprehensive set of scripts located in `s
 **Creating a New Market Proposal:**
 ```bash
 yarn ts-node scripts/governor/propose/market-phase-1/index.ts --network local --deployment usdc
+```
+
+**Checking Proposal Status:**
+```bash
+./scripts/governor/status-proposal/index.sh -n local -p 1
+# or
+yarn ts-node scripts/governor/status-proposal/index.ts --network local --proposal-id 1
 ```
 
 **Approving a Proposal:**
@@ -183,6 +191,59 @@ yarn ts-node scripts/governor/execute-proposal/index.ts --network local --propos
 ```bash
 yarn ts-node scripts/governor/propose/comet-reward-funding/index.ts --network local
 ```
+
+#### Managing Proposals
+
+Once proposals are created, they follow a standard governance lifecycle managed through dedicated scripts.
+
+**Check Proposal Status:**
+
+Script:
+```bash
+./scripts/governor/status-proposal/index.sh -n [network] -p [proposal-id]
+```
+
+**Information displayed:**
+- **Current proposal state** - Shows whether the proposal is Pending, Active, Queued, Executed, etc.
+- **Number of approvals received** - Displays current approvals vs required approvals
+- **Time remaining until executable** - For queued proposals, shows countdown to when execution is possible
+- **Proposal actions and parameters** - Lists all actions included in the proposal with decoded calldata
+- **Next recommended steps** - Provides guidance on what to do next based on the current state
+
+**Example output:**
+```
+📊 PROPOSAL STATUS - ID: 1
+======================================================================
+
+🎯 Current State:
+   ⏰ Queued
+
+👥 Approval Status:
+   Current approvals: 2
+   Required approvals: 2
+   Total admins: 3
+   Has enough approvals: ✅ Yes
+
+⏰ Timing Information:
+   Proposer: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+   ETA (Execution Time After): Tue, Oct 21, 2025, 10:30:00 AM UTC
+   Time until executable: 5m 30s
+
+📋 Proposal Actions:
+   Description: Update governance configuration
+   Number of actions: 2
+   
+   Action 1:
+      Target: 0x5FbDB2315678afecb367f032d93F642f64180aa3
+      Value: 0.0 ETH
+      Calldata: setMultisigThreshold(newThreshold: 3)
+
+💡 Next Steps:
+   Timelock delay has passed, ready to execute
+   📝 ./scripts/governor/execute-proposal/index.sh -n local -p 1 -t governance-update
+```
+
+This comprehensive status check helps admins understand exactly where a proposal is in the governance lifecycle and what actions are needed next.
 
 #### Execution Types for Log Parsing
 
